@@ -1,0 +1,1207 @@
+Using configuration file /home/wowx/trinity/4.3.4/server/etc/worldserver.conf.
+Using SSL version: OpenSSL 1.0.1e-fips 11 Feb 2013 (library: OpenSSL 1.0.1e-fips 11 Feb 2013)
+Using ACE version: 6.0.3
+TrinityCore rev. f1e1a5cad0fb+ 2014-01-22 14:28:40 +0100 (4.3.4 branch) (Unix, Release) (worldserver-daemon)
+<Ctrl-C> to stop.
+
+ ______                       __
+/\__  _\       __          __/\ \__
+\/_/\ \/ _ __ /\_\    ___ /\_\ \, _\  __  __
+   \ \ \/\`'__\/\ \ /' _ `\/\ \ \ \/ /\ \/\ \
+    \ \ \ \ \/ \ \ \/\ \/\ \ \ \ \ \_\ \ \_\ \
+     \ \_\ \_\  \ \_\ \_\ \_\ \_\ \__\\/`____ \
+      \/_/\/_/   \/_/\/_/\/_/\/_/\/__/ `/___/> \
+                                 C O R E  /\___/
+http://TrinityCore.org                    \/__/
+
+Realm running as realm ID 1
+Using World DB: TDB 434.05
+Using enUS DBC Locale
+Will clear `logs` table of entries older than 1209600 seconds every 10 minutes.
+Using DataDir ./
+WORLD: MMap data directory is: ./mmaps
+VMap support included. LineOfSight: 1, getHeight: 1, indoorCheck: 1
+VMap data directory is: ./vmaps
+Loading Trinity strings...
+>> Loaded 1085 Trinity strings from table trinity_string in 2 ms
+Initialize data stores...
+>> Initialized 144 DBC data stores in 268 ms
+Loading SpellInfo store...
+>> Loaded SpellInfo store in 81 ms
+Loading SpellInfo corrections...
+>> Loaded SpellInfo corrections in 6 ms
+Loading SkillLineAbilityMultiMap Data...
+>> Loaded 8384 SkillLineAbility MultiMap Data in 2 ms
+Loading SpellInfo custom attributes...
+>> Loaded SpellInfo custom attributes in 20 ms
+Loading GameObject models...
+Loading Script Names...
+>> Loaded 2394 Script Names in 98 ms
+Loading Instance Template...
+>> Loaded 99 instance templates in 0 ms
+Loading instances...
+>> Loaded instances in 3 ms
+Loading Localization strings...
+>> Localization strings loaded in 3 ms
+Loading Account Roles and Permissions...
+>> Loaded 616 permission definitions, 599 linked permissions and 4 default permissions in 2 ms
+Loading Page Texts...
+>> Loaded 1876 page texts in 3 ms
+Loading Game Object Templates...
+>> Loaded 24372 game object templates in 245 ms
+Loading Transport templates...
+>> Loaded 43 transport templates in 17 ms
+Loading Spell Rank Data...
+>> Loaded 172 spell rank records in 1 ms
+Loading Spell Required Data...
+>> Loaded 22 spell required records in 0 ms
+Loading Spell Group types...
+>> Loaded 408 spell group definitions in 1 ms
+Loading Spell Learn Skills...
+>> Loaded 129 Spell Learn Skills from DBC in 3 ms
+Loading Spell Learn Spells...
+>> Loaded 19 spell learn spells, 510 found in Spell.dbc and 31 from TalentTab.dbc in 6 ms
+Loading Spell Proc Event conditions...
+>> Loaded 700 extra spell proc event conditions in 4 ms
+Loading Spell Proc conditions and data...
+>> Loaded 0 spell proc conditions and data. DB table `spell_proc` is empty.
+Loading Spell Bonus Data...
+>> Loaded 249 extra spell bonus data in 2 ms
+Loading Aggro Spells Definitions...
+>> Loaded 40 SpellThreatEntries in 0 ms
+Loading Spell Group Stack Rules...
+>> Loaded 50 spell group stack rules in 0 ms
+Loading Spell Phase Dbc Info...
+>> Loaded 0 spell dbc infos. DB table `spell_phase` is empty.
+Loading NPC Texts...
+>> Loaded 7868 npc texts in 135 ms
+Loading Enchant Spells Proc datas...
+>> Loaded 42 enchant proc data definitions in 1 ms
+Loading Item Random Enchantments Table...
+>> Loaded 28607 Item Enchantment definitions in 36 ms
+Loading Disables
+>> Loaded 5142 disables in 8 ms
+Loading Items...
+>> Loaded 54085 item templates from Item-sparse.db2 and 182 from database in 188 ms
+Loading Item set names...
+>> Loaded 622 item addon templates in 3 ms
+>> Loaded 17 item script names in 0 ms
+Loading Creature Model Based Info Data...
+>> Loaded 31773 creature model based info in 83 ms
+Loading Creature templates...
+>> Loaded 46627 creature definitions in 1080 ms
+Loading Equipment templates...
+>> Loaded 10066 equipment templates in 20 ms
+Loading Creature template addons...
+>> Loaded 14337 creature template addons in 37 ms
+Loading Reputation Reward Rates...
+>> Loaded 14 reputation_reward_rate in 1 ms
+Loading Creature Reputation OnKill Data...
+>> Loaded 2002 creature award reputation definitions in 7 ms
+Loading Reputation Spillover Data...
+>> Loaded 28 reputation_spillover_template in 0 ms
+Loading Points Of Interest Data...
+>> Loaded 490 Points of Interest definitions in 3 ms
+Loading Creature Base Stats...
+>> Loaded 400 creature base stats in 7 ms
+Loading Creature Data...
+>> Loaded 173762 creatures in 1983 ms
+Loading Temporary Summon Data...
+>> Loaded 132 temp summons in 1 ms
+Loading pet levelup spells...
+>> Loaded 263 pet levelup and default spells for 50 families in 8 ms
+Loading pet default spells additional to levelup spells...
+>> Loaded addition spells for 0 pet spell data entries in 2 ms
+Loading summonable creature templates...
+>> Loaded 338 summonable creature templates in 7 ms
+Loading Creature Addon Data...
+>> Loaded 16066 creature addons in 29 ms
+Loading Gameobject Data...
+>> Loaded 57812 gameobjects in 690 ms
+Loading Creature Linked Respawn...
+>> Loaded 5312 linked respawns in 6 ms
+Loading Weather Data...
+>> Loaded 35 weather definitions in 1 ms
+Loading Quests...
+>> Loaded 14987 quests definitions in 529 ms
+Checking Quest Disables
+>> Checked 5123 quest disables in 0 ms
+Loading Quest POI
+>> Loaded 22136 quest POI definitions in 184 ms
+Loading Quests Starters and Enders...
+Loading GO Start Quest Data...
+>> Loaded 608 quest relations from gameobject_queststarter in 2 ms
+Loading GO End Quest Data...
+>> Loaded 514 quest relations from gameobject_questender in 1 ms
+Loading Creature Start Quest Data...
+>> Loaded 8888 quest relations from creature_queststarter in 16 ms
+Loading Creature End Quest Data...
+>> Loaded 9137 quest relations from creature_questender in 17 ms
+Loading Objects Pooling Data...
+>> Loaded 3049 objects pools in 2 ms
+Loading Creatures Pooling Data...
+>> Loaded 325 creatures in pools in 1 ms
+Loading Gameobject Pooling Data...
+>> Loaded 5776 gameobject in pools in 10 ms
+Loading Mother Pooling Data...
+>> Loaded 2259 pools in mother pools in 9 ms
+Loading Quest Pooling Data...
+>> Loaded 246 quests in pools in 2 ms
+Starting objects pooling system...
+Loading Game Event Data...
+>> Loaded 49 game events in 0 ms
+Loading Game Event Saves Data...
+>> Loaded 0 game event saves in game events. DB table `game_event_save` is empty.
+Loading Game Event Prerequisite Data...
+>> Loaded 0 game event prerequisites in game events. DB table `game_event_prerequisite` is empty.
+Loading Game Event Creature Data...
+>> Loaded 1250 creatures in game events in 1 ms
+Loading Game Event GO Data...
+>> Loaded 7353 gameobjects in game events in 5 ms
+Loading Game Event Model/Equipment Change Data...
+>> Loaded 0 model/equipment changes in game events. DB table `game_event_model_equip` is empty.
+Loading Game Event Quest Data...
+>> Loaded 327 quests additions in game events in 0 ms
+Loading Game Event GO Quest Data...
+>> Loaded 189 quests additions in game events in 0 ms
+Loading Game Event Quest Condition Data...
+>> Loaded 0 quest event conditions in game events. DB table `game_event_quest_condition` is empty.
+Loading Game Event Condition Data...
+>> Loaded 0 conditions in game events. DB table `game_event_condition` is empty.
+Loading Game Event Condition Save Data...
+>> Loaded 0 condition saves in game events. DB table `game_event_condition_save` is empty.
+Loading Game Event NPCflag Data...
+>> Loaded 0 npcflags in game events. DB table `game_event_npcflag` is empty.
+Loading Game Event Seasonal Quest Relations...
+>> Loaded 614 quests additions in game events in 1 ms
+Loading Game Event Vendor Additions Data...
+>> Loaded 2 vendor additions in game events in 0 ms
+Loading Game Event Battleground Data...
+>> Loaded 6 battleground holidays in game events in 0 ms
+Loading Game Event Pool Data...
+>> Loaded 8 pools for game events in 0 ms
+Loading UNIT_NPC_FLAG_SPELLCLICK Data...
+>> Loaded 297 spellclick definitions in 4 ms
+Loading Vehicle Template Accessories...
+>> Loaded 133 Vehicle Template Accessories in 1 ms
+Loading Vehicle Accessories...
+>> Loaded 0 Vehicle Accessories in 0 ms
+Loading SpellArea Data...
+>> Loaded 436 spell area requirements in 1 ms
+Loading AreaTrigger definitions...
+>> Loaded 314 area trigger teleport definitions in 1 ms
+Loading Access Requirements...
+>> Loaded 147 access requirement definitions in 1 ms
+Loading Quest Area Triggers...
+>> Loaded 55 quest trigger points in 0 ms
+Loading Tavern Area Triggers...
+>> Loaded 174 tavern triggers in 0 ms
+Loading AreaTrigger script names...
+>> Loaded 100 areatrigger scripts in 1 ms
+Loading LFG entrance positions...
+>> Loaded 16 lfg entrance positions in 0 ms
+Loading Dungeon boss data...
+>> Loaded 367 instance encounters in 4 ms
+Loading LFG rewards...
+>> Loaded 15 lfg dungeon rewards in 0 ms
+Loading Graveyard-zone links...
+>> Loaded 854 graveyard-zone links in 1 ms
+Loading Graveyard Orientations...
+>> Loaded 1016 graveyard orientations in 2 ms
+Loading spell pet auras...
+>> Loaded 33 spell pet auras in 0 ms
+Loading Spell target coordinates...
+>> Loaded 1399 spell teleport coordinates in 7 ms
+Loading enchant custom attributes...
+>> Loaded 3 custom enchant attributes in 1 ms
+Loading linked spells...
+>> Loaded 307 linked spells in 2 ms
+Loading Player Create Data...
+>> Loaded 91 player create definitions in 0 ms
+Loading Player Create Items Data...
+>> Loaded 1 custom player create items in 0 ms
+Loading Player Create Spell Data...
+>> Loaded 5119 player create spells in 1 ms
+Loading Player Create Action Data...
+>> Loaded 352 player create actions in 0 ms
+Loading Player Create Level Stats Data...
+>> Loaded 9635 level stats definitions in 12 ms
+Loading Player Create XP Data...
+>> Loaded 84 xp for level definitions in 0 ms
+Loading Exploration BaseXP Data...
+>> Loaded 80 BaseXP definitions in 0 ms
+Loading Pet Name Parts...
+>> Loaded 313 pet name parts in 1 ms
+Loading the max pet number...
+>> Loaded the max pet number: 18 in 0 ms
+Loading pet level stats...
+>> Loaded 2480 level pet stats definitions in 7 ms
+Loading Player Corpses...
+>> Loaded 0 corpses. DB table `corpse` is empty.
+Loading Player level dependent mail rewards...
+>> Loaded 24 level dependent mail rewards in 0 ms
+Loading creature loot templates...
+>> Loaded 338344 creature loot templates in 722 ms
+Loading fishing loot templates...
+>> Loaded 245 fishing loot templates in 1 ms
+Loading gameobject loot templates...
+>> Loaded 18873 gameobject loot templates in 43 ms
+Loading item loot templates...
+>> Loaded 4961 item loot templates in 13 ms
+Loading mail loot templates...
+>> Loaded 81 mail loot templates in 1 ms
+Loading milling loot templates...
+>> Loaded 45 milling loot templates in 2 ms
+Loading pickpocketing loot templates...
+>> Loaded 11041 pickpocketing loot templates in 26 ms
+Loading skinning loot templates...
+>> Loaded 1922 skinning loot templates in 7 ms
+Loading disenchanting loot templates...
+>> Loaded 180 disenchanting loot templates in 1 ms
+Loading prospecting loot templates...
+>> Loaded 38 prospecting loot templates in 3 ms
+Loading spell loot templates...
+>> Loaded 227 spell loot templates in 5 ms
+Loading reference loot templates...
+>> Loaded refence loot templates in 43 ms
+Loading Skill Discovery Table...
+>> Loaded 348 skill discovery definitions in 5 ms
+Loading Skill Extra Item Table...
+>> Loaded 225 spell specialization definitions in 1 ms
+Loading Skill Fishing base level requirements...
+>> Loaded 89 areas for fishing base skill level in 0 ms
+Loading Achievements...
+>> Loaded 47 achievement references in 0 ms
+Loading Achievement Criteria Lists...
+>> Loaded 9803 achievement criteria and 952 guild achievement crieteria in 3 ms
+Loading Achievement Criteria Data...
+>> Loaded 1258 additional achievement criteria data in 3 ms
+Loading Achievement Rewards...
+>> Loaded 99 achievement rewards in 1 ms
+Loading Achievement Reward Locales...
+>> Loaded 0 achievement reward locale strings.  DB table `locales_achievement_reward` is empty
+Loading Completed Achievements...
+>> Loaded 12 realm first completed achievements in 1 ms
+Deleting expired auctions...
+>> No expired auctions to delete
+Loading Item Auctions...
+>> Loaded 0 auction items. DB table `auctionhouse` or `item_instance` is empty!
+Loading Auctions...
+>> Loaded 0 auctions. DB table `auctionhouse` is empty.
+Loading Guild XP for level...
+>> Loaded 24 xp for guild level definitions in 0 ms
+Loading Guild rewards...
+>> Loaded 42 guild reward definitions in 0 ms
+Loading Guilds...
+Loading guilds definitions...
+>> Loaded 1 guild definitions in 1 ms
+Loading guild ranks...
+>> Loaded 5 guild ranks in 1 ms
+Loading guild members...
+>> Loaded 2 guild members in 1 ms
+Loading bank tab rights...
+>> Loaded 0 guild bank tab rights. DB table `guild_bank_right` is empty.
+Loading guild event logs...
+>> Loaded 8 guild event logs in 0 ms
+Loading guild bank event logs...
+>> Loaded 0 guild bank event logs. DB table `guild_bank_eventlog` is empty.
+Loading Guild News...
+>> Loaded 0 guild event logs. DB table `guild_newslog` is empty.
+Loading guild bank tabs...
+>> Loaded 0 guild bank tabs. DB table `guild_bank_tab` is empty.
+>> Loaded 0 guild bank tab items. DB table `guild_bank_item` or `item_instance` is empty.
+>> Validated data of loaded guilds in 0 ms
+Loading guild finder guild-related settings...
+>> Loaded 1 guild finder guild-related settings in 0 ms.
+Loading guild finder membership requests...
+>> Loaded 0 guild finder membership requests. Table `guild_finder_applicant` is empty.
+Loading ArenaTeams...
+>> Loaded 0 arena teams. DB table `arena_team` is empty!
+Loading Groups...
+>> Loaded 1 group definitions in 1 ms
+Loading Group members...
+>> Loaded 2 group members in 1 ms
+Loading Group instance saves...
+>> Loaded 1 group-instance saves in 1 ms
+Loading ReservedNames...
+>> Loaded 0 reserved player names. DB table `reserved_name` is empty!
+Loading GameObjects for quests...
+>> Loaded 1632 GameObjects for quests in 2 ms
+Loading BattleMasters...
+>> Loaded 156 battlemaster entries in 1 ms
+Loading GameTeleports...
+>> Loaded 1521 GameTeleports in 9 ms
+Loading Gossip menu...
+>> Loaded 4731 gossip_menu entries in 4 ms
+Loading Gossip menu options...
+>> Loaded 5177 gossip_menu_option entries in 20 ms
+Loading Vendors...
+>> Loaded 42379 Vendors in 89 ms
+Loading Trainers...
+>> Loaded 89546 Trainers in 330 ms
+Loading Waypoints...
+>> Loaded 76948 waypoints in 506 ms
+Loading SmartAI Waypoints...
+>> Loaded 158 SmartAI waypoint paths (total 1967 waypoints) in 4 ms
+Loading Creature Formations...
+>> Loaded 202 creatures in formations in 1 ms
+Loading World States...
+>> Loaded 10 world states in 0 ms
+Loading Phase definitions...
+>> Loaded 11 phasing definitions in 0 ms.
+Loading Conditions...
+>> Loaded 9961 conditions in 48 ms
+Loading faction change achievement pairs...
+>> Loaded 125 faction change achievement pairs in 1 ms
+Loading faction change spell pairs...
+>> Loaded 109 faction change spell pairs in 0 ms
+Loading faction change item pairs...
+>> Loaded 740 faction change item pairs in 1 ms
+Loading faction change reputation pairs...
+>> Loaded 15 faction change reputation pairs in 1 ms
+Loading faction change title pairs...
+>> Loaded 22 faction change title pairs in 0 ms
+Loading GM tickets...
+>> Loaded 1 GM tickets in 1 ms
+Loading GM surveys...
+>> Loaded GM Survey count from database in 0 ms
+Loading client addons...
+>> Loaded 35 known addons in 0 ms
+Returning old mails...
+>> No expired mails found.
+Loading Autobroadcasts...
+>> Loaded 0 autobroadcasts definitions. DB table `autobroadcast` is empty for this realm!
+Loading spell_scripts...
+>> Loaded 104 script definitions in 0 ms
+Loading event_scripts...
+>> Loaded 436 script definitions in 3 ms
+Loading waypoint_scripts...
+>> Loaded 702 script definitions in 2 ms
+Loading Scripts text locales...
+>> Loaded 184 string templates from db_script_string in 0 ms
+Loading spell script names...
+>> Loaded 1301 spell script names in 3 ms
+Loading Creature Texts...
+>> Loaded 8540 creature texts for 1974 creatures in 22 ms
+Loading Creature Text Locales...
+Initializing Scripts...
+Loading Script Waypoints for 78 creature(s)...
+>> Loaded 2063 Script Waypoint nodes in 14 ms
+Loading C++ scripts
+>> Loaded 2339 C++ scripts in 79 ms
+Validating spell scripts...
+>> Validated 1380 scripts in 3 ms
+Loading SmartAI scripts...
+>> Loaded SmartAIMgr Helpers in 13 ms
+>> Loaded 7001 SmartAI scripts in 161 ms
+Loading Calendar data...
+>> Loaded 0 calendar events
+>> Loaded 0 calendar invites
+Initialize game time and timers
+Mail timer set to: 600, mail return is called every 1440 minutes
+Starting Map System
+Starting Game Event system...
+Starting Arena Season...
+Starting Battleground System
+>> Loaded 13 battlegrounds in 0 ms
+Starting Outdoor PvP System
+>> Loaded 5 outdoor PvP definitions in 0 ms
+Starting Battlefield System
+Loading Transports...
+>> Spawned 27 continent transports in 2 ms
+Loading Warden Checks...
+Loading Warden Action Overrides...
+Deleting expired bans...
+Calculate next daily quest reset time...
+Calculate next weekly quest reset time...
+Calculate next monthly quest reset time...
+Calculate random battleground reset time...
+Calculate guild limitation(s) reset time...
+Calculate next currency reset time...
+Loading character name data
+Loaded name data for 20 characters
+>> Loaded 0 hotfix info entries. DB table `hotfix_data` is empty.
+Loading missing KeyChains...
+>> Loaded 4 KeyChain entries in 1 ms
+World initialized in 0 minutes 8 seconds
+TrinityCore rev. f1e1a5cad0fb+ 2014-01-22 14:28:40 +0100 (4.3.4 branch) (Unix, Release) (worldserver-daemon) ready...
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GROUP_REQUEST_JOIN_UPDATES 0x2583 (9603)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GROUP_REQUEST_JOIN_UPDATES 0x2583 (9603)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_UPDATE 0x135 (309)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_LFG_SET_ROLES 0x480 (1152)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_LFG_SET_ROLES 0x480 (1152)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Beaster (Guid: 1, Account: 1)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Beaster (Guid: 1, Account: 1)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Beaster (Guid: 1, Account: 1)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Beaster (Guid: 1, Account: 1)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Beaster (Guid: 1, Account: 1)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Beaster (Guid: 1, Account: 1)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GROUP_REQUEST_JOIN_UPDATES 0x2583 (9603)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GROUP_REQUEST_JOIN_UPDATES 0x2583 (9603)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_WALK_SPEED 0x54A2 (21666)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_MOVE_KNOCK_BACK_ACK 0x721C (29212)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_WALK_SPEED 0x54A2 (21666)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_FORCE_MOVE_ROOT_ACK 0x701E (28702)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_FORCE_MOVE_UNROOT_ACK 0x7808 (30728)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_RUN_BACK_SPEED 0x3DA6 (15782)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_BACK_SPEED 0x30B5 (12469)] to [Player: Admin (Guid: 24, Account: 12)]
+Unit::WriteMovementInfo: No movement sequence found for opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_BACK_SPEED 0x74A0 (29856)] to [Player: Admin (Guid: 24, Account: 12)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_SWIM_BACK_SPEED_CHANGE_ACK 0x7A16 (31254)]
+Player::ReadMovementInfo: No movement sequence found for opcode [CMSG_MOVE_FORCE_FLIGHT_BACK_SPEED_CHANGE_ACK 0x310E (12558)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_USERLIST_ADD 0xF37 (3895)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_QUERY_BATTLEFIELD_STATE 0x7202 (29186)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_GUILD_SET_ACHIEVEMENT_TRACKING 0x1027 (4135)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_REQUEST_CEMETERY_LIST 0x720A (29194)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_WALK_SPEED 0x54A2 (21666)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_SWIM_SPEED 0x59B5 (22965)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [MSG_MOVE_SET_WALK_MODE 0x7002 (28674)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [MSG_MOVE_SET_RUN_MODE 0x791A (31002)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [MSG_MOVE_SET_WALK_MODE 0x7002 (28674)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [MSG_MOVE_SET_RUN_MODE 0x791A (31002)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_COLLISION_HEIGHT 0x59A3 (22947)] to [Player: Admin (Guid: 24, Account: 12)]
+Prevented sending disabled opcode [SMSG_MOVE_UPDATE_FLIGHT_SPEED 0x30B1 (12465)] to [Player: Admin (Guid: 24, Account: 12)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+Prevented sending disabled opcode [SMSG_USERLIST_REMOVE 0x2006 (8198)] to [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_FALL_RESET 0x310A (12554)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_WATER_WALK_ACK 0x3B00 (15104)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY 0x720E (29198)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
+No defined handler for opcode [CMSG_MOVE_SET_CAN_FLY_ACK 0x790C (30988)] sent by [Player: Youngtolly (Guid: 26, Account: 21)]
