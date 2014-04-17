@@ -7790,7 +7790,7 @@ void Player::UpdateArea(uint32 newArea)
 
     // previously this was in UpdateZone (but after UpdateArea) so nothing will break
     pvpInfo.IsInNoPvPArea = false;
-    if (area && area->IsSanctuary())    // in sanctuary
+    if (area && (area->IsSanctuary() || GetZoneId() == 2037))  // in sanctuary + Global duel zone
     {
         SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
         pvpInfo.IsInNoPvPArea = true;
@@ -25535,6 +25535,9 @@ void Player::HandleFall(MovementInfo const& movementInfo)
                 // Gust of Wind
                 if (HasAura(43621))
                     damage = GetMaxHealth()/2;
+
+				if (GetAreaId() == 2037) //no fall damge in global duel zone
+				    damage = 0;
 
                 uint32 original_health = GetHealth();
                 uint32 final_damage = EnvironmentalDamage(DAMAGE_FALL, damage);
