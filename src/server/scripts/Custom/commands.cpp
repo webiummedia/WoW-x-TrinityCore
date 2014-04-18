@@ -7,13 +7,13 @@ public:
 
     ChatCommand* GetCommands() const
     {
-        static ChatCommand wow-xCommandTable[] =
+        static ChatCommand wow_x_CommandTable[] =
         {
             { "duel",             SEC_PLAYER,  false, &HandleDuelCommand,         "", NULL },
-			{ "unstuck",          SEC_PLAYER,  false, &HandleUnstuckCommand,      "", NULL },
+			{ "stuck",            SEC_PLAYER,  false, &HandleUnstuckCommand,      "", NULL },
             { NULL,               0,           false, NULL,                       "", NULL }
         };
-        return wow_x_commandscript;
+        return wow_x_CommandTable;
     }
 
     static bool HandleDuelCommand(ChatHandler* handler, const char* args)
