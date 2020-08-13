@@ -1,5 +1,5 @@
  /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,10 +16,12 @@
  */
 
 #include "ScriptMgr.h"
+#include "GameObject.h"
 #include "InstanceScript.h"
-#include "zulfarrak.h"
-#include "Player.h"
+#include "Map.h"
+#include "MotionMaster.h"
 #include "TemporarySummon.h"
+#include "zulfarrak.h"
 
 enum Misc
 {
@@ -99,41 +101,19 @@ float Spawnsway[2][3] =
 class instance_zulfarrak : public InstanceMapScript
 {
 public:
-    instance_zulfarrak() : InstanceMapScript("instance_zulfarrak", 209) { }
+    instance_zulfarrak() : InstanceMapScript(ZFScriptName, 209) { }
 
-    InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
+    InstanceScript* GetInstanceScript(InstanceMap* map) const override
     {
         return new instance_zulfarrak_InstanceMapScript(map);
     }
 
     struct instance_zulfarrak_InstanceMapScript : public InstanceScript
     {
-        instance_zulfarrak_InstanceMapScript(Map* map) : InstanceScript(map) { }
-
-        uint32 GahzRillaEncounter;
-        uint64 ZumrahGUID;
-        uint64 BlyGUID;
-        uint64 WeegliGUID;
-        uint64 OroGUID;
-        uint64 RavenGUID;
-        uint64 MurtaGUID;
-        uint64 EndDoorGUID;
-        uint32 PyramidPhase;
-        uint32 major_wave_Timer;
-        uint32 minor_wave_Timer;
-        uint32 addGroupSize;
-        uint32 waypoint;
-
-        void Initialize() OVERRIDE
+        instance_zulfarrak_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
             GahzRillaEncounter = NOT_STARTED;
-            ZumrahGUID = 0;
-            BlyGUID = 0;
-            WeegliGUID = 0;
-            OroGUID = 0;
-            RavenGUID = 0;
-            MurtaGUID = 0;
-            EndDoorGUID = 0;
             PyramidPhase = 0;
             major_wave_Timer = 0;
             minor_wave_Timer = 0;
@@ -141,7 +121,21 @@ public:
             waypoint = 0;
         }
 
-        void OnCreatureCreate(Creature* creature) OVERRIDE
+        uint32 GahzRillaEncounter;
+        ObjectGuid ZumrahGUID;
+        ObjectGuid BlyGUID;
+        ObjectGuid WeegliGUID;
+        ObjectGuid OroGUID;
+        ObjectGuid RavenGUID;
+        ObjectGuid MurtaGUID;
+        ObjectGuid EndDoorGUID;
+        uint32 PyramidPhase;
+        uint32 major_wave_Timer;
+        uint32 minor_wave_Timer;
+        uint32 addGroupSize;
+        uint32 waypoint;
+
+        void OnCreatureCreate(Creature* creature) override
         {
             switch (creature->GetEntry())
             {
@@ -177,7 +171,7 @@ public:
             }
         }
 
-        void OnGameObjectCreate(GameObject* go) OVERRIDE
+        void OnGameObjectCreate(GameObject* go) override
         {
             switch (go->GetEntry())
             {
@@ -187,7 +181,7 @@ public:
             }
         }
 
-        uint32 GetData(uint32 type) const OVERRIDE
+        uint32 GetData(uint32 type) const override
         {
             switch (type)
             {
@@ -197,7 +191,7 @@ public:
             return 0;
         }
 
-        uint64 GetData64(uint32 data) const OVERRIDE
+        ObjectGuid GetGuidData(uint32 data) const override
         {
             switch (data)
             {
@@ -216,10 +210,10 @@ public:
                 case GO_END_DOOR:
                     return EndDoorGUID;
             }
-            return 0;
+            return ObjectGuid::Empty;
         }
 
-        void SetData(uint32 type, uint32 data) OVERRIDE
+        void SetData(uint32 type, uint32 data) override
         {
             switch (type)
             {
@@ -229,7 +223,7 @@ public:
             };
         }
 
-        virtual void Update(uint32 diff)
+        virtual void Update(uint32 diff) override
         {
             switch (PyramidPhase)
             {
@@ -314,11 +308,11 @@ public:
             };
         }
 
-        std::list<uint64> addsAtBase, movedadds;
+        GuidList addsAtBase, movedadds;
 
         void MoveNPCIfAlive(uint32 entry, float x, float y, float z, float o)
         {
-           if (Creature* npc = instance->GetCreature(GetData64(entry)))
+           if (Creature* npc = instance->GetCreature(GetGuidData(entry)))
            {
                if (npc->IsAlive())
                {
@@ -336,16 +330,18 @@ public:
                 if (pyramidSpawns[i][0] == (float)wave)
                 {
                     Position pos = {pyramidSpawns[i][2], pyramidSpawns[i][3], 8.87f, 0};
-                    TempSummon* ts = instance->SummonCreature(uint32(pyramidSpawns[i][1]), pos);
-                    ts->GetMotionMaster()->MoveRandom(10);
-                    addsAtBase.push_back(ts->GetGUID());
+                    if (TempSummon* ts = instance->SummonCreature(uint32(pyramidSpawns[i][1]), pos))
+                    {
+                        ts->GetMotionMaster()->MoveRandom(10);
+                        addsAtBase.push_back(ts->GetGUID());
+                    }
                 }
             }
         }
 
         bool IsWaveAllDead()
         {
-            for (std::list<uint64>::iterator itr = addsAtBase.begin(); itr != addsAtBase.end(); ++itr)
+            for (GuidList::iterator itr = addsAtBase.begin(); itr != addsAtBase.end(); ++itr)
             {
                 if (Creature* add = instance->GetCreature((*itr)))
                 {
@@ -353,7 +349,7 @@ public:
                         return false;
                 }
             }
-            for (std::list<uint64>::iterator itr = movedadds.begin(); itr != movedadds.end(); ++itr)
+            for (GuidList::iterator itr = movedadds.begin(); itr != movedadds.end(); ++itr)
             {
                 if (Creature* add = instance->GetCreature(((*itr))))
                 {
@@ -367,7 +363,7 @@ public:
         void SendAddsUpStairs(uint32 count)
         {
             //pop a add from list, send him up the stairs...
-            for (uint32 addCount = 0; addCount<count && !addsAtBase.empty(); addCount++)
+            for (uint32 addCount = 0; addCount < count && !addsAtBase.empty(); addCount++)
             {
                 if (Creature* add = instance->GetCreature(*addsAtBase.begin()))
                 {

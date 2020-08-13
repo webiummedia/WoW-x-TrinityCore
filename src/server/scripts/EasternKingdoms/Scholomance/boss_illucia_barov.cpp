@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -28,10 +28,11 @@ Category: Scholomance
 
 enum Spells
 {
-    SPELL_CURSEOFAGONY          = 34794,
-    SPELL_SHADOWSHOCK           = 34799,
-    SPELL_SILENCE               = 34803,
-    SPELL_FEAR                  = 34803
+    SPELL_CURSEOFAGONY          = 18671,
+    SPELL_DOMINATE              = 7645, // UNUSED YET added for documentation
+    SPELL_FEAR                  = 12542,
+    SPELL_SHADOWSHOCK           = 17234,
+    SPELL_SILENCE               = 12528
 };
 
 enum Events
@@ -50,7 +51,7 @@ class boss_illucia_barov : public CreatureScript
         {
             boss_illuciabarovAI(Creature* creature) : BossAI(creature, DATA_LADYILLUCIABAROV) { }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_CURSEOFAGONY, 18000);
@@ -59,7 +60,7 @@ class boss_illucia_barov : public CreatureScript
                 events.ScheduleEvent(EVENT_FEAR, 30000);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -92,15 +93,18 @@ class boss_illucia_barov : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_illuciabarovAI(creature);
+            return GetScholomanceAI<boss_illuciabarovAI>(creature);
         }
 };
 

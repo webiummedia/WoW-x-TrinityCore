@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,8 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "razorfen_downs.h"
+#include "ScriptedCreature.h"
 
 enum Say
 {
@@ -50,17 +50,25 @@ public:
 
     struct boss_amnennar_the_coldbringerAI : public BossAI
     {
-        boss_amnennar_the_coldbringerAI(Creature* creature) : BossAI(creature, DATA_AMNENNAR_THE_COLD_BRINGER) { }
-
-        void Reset() OVERRIDE
+        boss_amnennar_the_coldbringerAI(Creature* creature) : BossAI(creature, DATA_AMNENNAR_THE_COLD_BRINGER)
         {
-            _Reset();
-            hp60Spectrals = false;
-            hp30Spectrals = false;
-            hp50          = false;
+            Initialize();
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void Initialize()
+        {
+            hp60Spectrals = false;
+            hp30Spectrals = false;
+            hp50 = false;
+        }
+
+        void Reset() override
+        {
+            _Reset();
+            Initialize();
+        }
+
+        void EnterCombat(Unit* /*who*/) override
         {
             _EnterCombat();
             events.ScheduleEvent(EVENT_AMNENNARSWRATH, 8000);
@@ -69,18 +77,18 @@ public:
             Talk(SAY_AGGRO);
         }
 
-        void KilledUnit(Unit* who) OVERRIDE
+        void KilledUnit(Unit* who) override
         {
             if (who->GetTypeId() == TYPEID_PLAYER)
                 Talk(SAY_KILL);
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             _JustDied();
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -107,6 +115,9 @@ public:
                         events.ScheduleEvent(EVENT_FROST_NOVA, 15000);
                         break;
                 }
+
+                if (me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
             }
 
             if (!hp60Spectrals && HealthBelowPct(60))
@@ -138,9 +149,9 @@ public:
         bool hp50;
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_amnennar_the_coldbringerAI(creature);
+        return GetRazorfenDownsAI<boss_amnennar_the_coldbringerAI>(creature);
     }
 };
 

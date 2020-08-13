@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,9 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "blackrock_spire.h"
+#include "InstanceScript.h"
+#include "ScriptedCreature.h"
 
 enum Spells
 {
@@ -46,28 +47,36 @@ public:
 
     struct boss_lord_valthalakAI : public BossAI
     {
-        boss_lord_valthalakAI(Creature* creature) : BossAI(creature, DATA_LORD_VALTHALAK) { }
-
-        void Reset() OVERRIDE
+        boss_lord_valthalakAI(Creature* creature) : BossAI(creature, DATA_LORD_VALTHALAK)
         {
-            _Reset();
+            Initialize();
+        }
+
+        void Initialize()
+        {
             frenzy40 = false;
             frenzy15 = false;
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void Reset() override
+        {
+            _Reset();
+            Initialize();
+        }
+
+        void EnterCombat(Unit* /*who*/) override
         {
             _EnterCombat();
             events.ScheduleEvent(EVENT_SUMMON_SPECTRAL_ASSASSIN, urand(6000,8000));
             events.ScheduleEvent(EVENT_SHADOW_WRATH, urand(9000,18000));
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             instance->SetData(DATA_LORD_VALTHALAK, DONE);
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -96,6 +105,9 @@ public:
                     default:
                         break;
                 }
+
+                if (me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
             }
 
             if (!frenzy40)
@@ -125,9 +137,9 @@ public:
             bool frenzy15;
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<boss_lord_valthalakAI>(creature);
+        return GetBlackrockSpireAI<boss_lord_valthalakAI>(creature);
     }
 };
 

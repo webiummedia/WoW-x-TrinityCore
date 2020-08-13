@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,11 +18,14 @@
 #ifndef HALLS_OF_LIGHTNING_H_
 #define HALLS_OF_LIGHTNING_H_
 
+#include "CreatureAIImpl.h"
+
 #define HoLScriptName "instance_halls_of_lightning"
+#define DataHeader    "HOL"
 
 uint32 const EncounterCount = 4;
 
-enum DataTypes
+enum HOLDataTypes
 {
     // Encounter States/Boss GUIDs
     DATA_BJARNGRIM          = 0,
@@ -31,7 +34,7 @@ enum DataTypes
     DATA_LOKEN              = 3
 };
 
-enum CreaturesIds
+enum HOLCreaturesIds
 {
     NPC_BJARNGRIM           = 28586,
     NPC_VOLKHAN             = 28587,
@@ -39,7 +42,7 @@ enum CreaturesIds
     NPC_LOKEN               = 28923
 };
 
-enum GameObjectIds
+enum HOLGameObjectIds
 {
     GO_BJARNGRIM_DOOR       = 191416,
     GO_VOLKHAN_DOOR         = 191325,
@@ -48,8 +51,8 @@ enum GameObjectIds
     GO_LOKEN_THRONE         = 192654
 };
 
-template<class AI>
-AI* GetHallsOfLightningAI(Creature* creature)
+template<typename AI>
+inline AI* GetHallsOfLightningAI(Creature* creature)
 {
     return GetInstanceAI<AI>(creature, HoLScriptName);
 }

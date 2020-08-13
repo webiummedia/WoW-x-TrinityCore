@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,39 +24,39 @@
 */
 
 #include "ScriptMgr.h"
+#include "CellImpl.h"
 #include "Chat.h"
-#include "ObjectMgr.h"
+#include "DisableMgr.h"
+#include "GridNotifiersImpl.h"
+#include "Map.h"
+#include "MMapFactory.h"
+#include "PathGenerator.h"
+#include "PhasingHandler.h"
 #include "Player.h"
 #include "PointMovementGenerator.h"
-#include "PathGenerator.h"
-#include "MMapFactory.h"
-#include "Map.h"
+#include "RBAC.h"
 #include "TargetedMovementGenerator.h"
-#include "GridNotifiers.h"
-#include "GridNotifiersImpl.h"
-#include "CellImpl.h"
+#include "WorldSession.h"
 
 class mmaps_commandscript : public CommandScript
 {
 public:
     mmaps_commandscript() : CommandScript("mmaps_commandscript") { }
 
-    ChatCommand* GetCommands() const OVERRIDE
+    std::vector<ChatCommand> GetCommands() const override
     {
-        static ChatCommand mmapCommandTable[] =
+        static std::vector<ChatCommand> mmapCommandTable =
         {
-            { "loadedtiles", rbac::RBAC_PERM_COMMAND_MMAP_LOADEDTILES, false, &HandleMmapLoadedTilesCommand, "", NULL },
-            { "loc",         rbac::RBAC_PERM_COMMAND_MMAP_LOC,         false, &HandleMmapLocCommand,         "", NULL },
-            { "path",        rbac::RBAC_PERM_COMMAND_MMAP_PATH,        false, &HandleMmapPathCommand,        "", NULL },
-            { "stats",       rbac::RBAC_PERM_COMMAND_MMAP_STATS,       false, &HandleMmapStatsCommand,       "", NULL },
-            { "testarea",    rbac::RBAC_PERM_COMMAND_MMAP_TESTAREA,    false, &HandleMmapTestArea,           "", NULL },
-            { NULL,          0,                                  false, NULL,                          "", NULL }
+            { "loadedtiles", rbac::RBAC_PERM_COMMAND_MMAP_LOADEDTILES, false, &HandleMmapLoadedTilesCommand, "" },
+            { "loc",         rbac::RBAC_PERM_COMMAND_MMAP_LOC,         false, &HandleMmapLocCommand,         "" },
+            { "path",        rbac::RBAC_PERM_COMMAND_MMAP_PATH,        false, &HandleMmapPathCommand,        "" },
+            { "stats",       rbac::RBAC_PERM_COMMAND_MMAP_STATS,       false, &HandleMmapStatsCommand,       "" },
+            { "testarea",    rbac::RBAC_PERM_COMMAND_MMAP_TESTAREA,    false, &HandleMmapTestArea,           "" },
         };
 
-        static ChatCommand commandTable[] =
+        static std::vector<ChatCommand> commandTable =
         {
-            { "mmap", rbac::RBAC_PERM_COMMAND_MMAP, true, NULL, "", mmapCommandTable  },
-            { NULL,   0,                     false, NULL, "", NULL }
+            { "mmap", rbac::RBAC_PERM_COMMAND_MMAP, true, NULL, "", mmapCommandTable },
         };
         return commandTable;
     }
@@ -86,6 +86,10 @@ public:
         if (para && strcmp(para, "true") == 0)
             useStraightPath = true;
 
+        bool useStraightLine = false;
+        if (para && strcmp(para, "line") == 0)
+            useStraightLine = true;
+
         // unit locations
         float x, y, z;
         player->GetPosition(x, y, z);
@@ -93,12 +97,12 @@ public:
         // path
         PathGenerator path(target);
         path.SetUseStraightPath(useStraightPath);
-        bool result = path.CalculatePath(x, y, z);
+        bool result = path.CalculatePath(x, y, z, false, useStraightLine);
 
         Movement::PointsArray const& pointPath = path.GetPath();
         handler->PSendSysMessage("%s's path to %s:", target->GetName().c_str(), player->GetName().c_str());
-        handler->PSendSysMessage("Building: %s", useStraightPath ? "StraightPath" : "SmoothPath");
-        handler->PSendSysMessage("Result: %s - Length: " SIZEFMTD " - Type: %u", (result ? "true" : "false"), pointPath.size(), path.GetPathType());
+        handler->PSendSysMessage("Building: %s", useStraightPath ? "StraightPath" : useStraightLine ? "Raycast" : "SmoothPath");
+        handler->PSendSysMessage("Result: %s - Length: %zu - Type: %u", (result ? "true" : "false"), pointPath.size(), path.GetPathType());
 
         G3D::Vector3 const &start = path.GetStartPosition();
         G3D::Vector3 const &end = path.GetEndPosition();
@@ -127,12 +131,16 @@ public:
         int32 gx = 32 - player->GetPositionX() / SIZE_OF_GRIDS;
         int32 gy = 32 - player->GetPositionY() / SIZE_OF_GRIDS;
 
-        handler->PSendSysMessage("%03u%02i%02i.mmtile", player->GetMapId(), gy, gx);
-        handler->PSendSysMessage("gridloc [%i, %i]", gx, gy);
+        float x, y, z;
+        player->GetPosition(x, y, z);
+
+        handler->PSendSysMessage("%04u%02i%02i.mmtile", player->GetMapId(), gx, gy);
+        handler->PSendSysMessage("gridloc [%i, %i]", gy, gx);
 
         // calculate navmesh tile location
-        dtNavMesh const* navmesh = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMesh(handler->GetSession()->GetPlayer()->GetMapId());
-        dtNavMeshQuery const* navmeshquery = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMeshQuery(handler->GetSession()->GetPlayer()->GetMapId(), player->GetInstanceId());
+        uint32 terrainMapId = PhasingHandler::GetTerrainMapId(player->GetPhaseShift(), player->GetMap(), x, y);
+        dtNavMesh const* navmesh = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMesh(terrainMapId);
+        dtNavMeshQuery const* navmeshquery = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMeshQuery(terrainMapId, player->GetInstanceId());
         if (!navmesh || !navmeshquery)
         {
             handler->PSendSysMessage("NavMesh not loaded for current map.");
@@ -140,10 +148,8 @@ public:
         }
 
         float const* min = navmesh->getParams()->orig;
-        float x, y, z;
-        player->GetPosition(x, y, z);
-        float location[VERTEX_SIZE] = {y, z, x};
-        float extents[VERTEX_SIZE] = {3.0f, 5.0f, 3.0f};
+        float location[VERTEX_SIZE] = { y, z, x };
+        float extents[VERTEX_SIZE] = { 3.0f, 5.0f, 3.0f };
 
         int32 tilex = int32((y - min[0]) / SIZE_OF_GRIDS);
         int32 tiley = int32((x - min[2]) / SIZE_OF_GRIDS);
@@ -182,9 +188,10 @@ public:
 
     static bool HandleMmapLoadedTilesCommand(ChatHandler* handler, char const* /*args*/)
     {
-        uint32 mapid = handler->GetSession()->GetPlayer()->GetMapId();
-        dtNavMesh const* navmesh = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMesh(mapid);
-        dtNavMeshQuery const* navmeshquery = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMeshQuery(mapid, handler->GetSession()->GetPlayer()->GetInstanceId());
+        Player* player = handler->GetSession()->GetPlayer();
+        uint32 terrainMapId = PhasingHandler::GetTerrainMapId(player->GetPhaseShift(), player->GetMap(), player->GetPositionX(), player->GetPositionY());
+        dtNavMesh const* navmesh = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMesh(terrainMapId);
+        dtNavMeshQuery const* navmeshquery = MMAP::MMapFactory::createOrGetMMapManager()->GetNavMeshQuery(terrainMapId, player->GetInstanceId());
         if (!navmesh || !navmeshquery)
         {
             handler->PSendSysMessage("NavMesh not loaded for current map.");
@@ -207,14 +214,15 @@ public:
 
     static bool HandleMmapStatsCommand(ChatHandler* handler, char const* /*args*/)
     {
-        uint32 mapId = handler->GetSession()->GetPlayer()->GetMapId();
+        Player* player = handler->GetSession()->GetPlayer();
+        uint32 terrainMapId = PhasingHandler::GetTerrainMapId(player->GetPhaseShift(), player->GetMap(), player->GetPositionX(), player->GetPositionY());
         handler->PSendSysMessage("mmap stats:");
-        handler->PSendSysMessage("  global mmap pathfinding is %sabled", MMAP::MMapFactory::IsPathfindingEnabled(mapId) ? "en" : "dis");
+        handler->PSendSysMessage("  global mmap pathfinding is %sabled", DisableMgr::IsPathfindingEnabled(player->GetMapId()) ? "en" : "dis");
 
         MMAP::MMapManager* manager = MMAP::MMapFactory::createOrGetMMapManager();
         handler->PSendSysMessage(" %u maps loaded with %u tiles overall", manager->getLoadedMapsCount(), manager->getLoadedTilesCount());
 
-        dtNavMesh const* navmesh = manager->GetNavMesh(handler->GetSession()->GetPlayer()->GetMapId());
+        dtNavMesh const* navmesh = manager->GetNavMesh(terrainMapId);
         if (!navmesh)
         {
             handler->PSendSysMessage("NavMesh not loaded for current map.");
@@ -258,22 +266,15 @@ public:
         float radius = 40.0f;
         WorldObject* object = handler->GetSession()->GetPlayer();
 
-        CellCoord pair(Trinity::ComputeCellCoord(object->GetPositionX(), object->GetPositionY()));
-        Cell cell(pair);
-        cell.SetNoCreate();
-
+        // Get Creatures
         std::list<Creature*> creatureList;
-
         Trinity::AnyUnitInObjectRangeCheck go_check(object, radius);
         Trinity::CreatureListSearcher<Trinity::AnyUnitInObjectRangeCheck> go_search(object, creatureList, go_check);
-        TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-        // Get Creatures
-        cell.Visit(pair, go_visit, *(object->GetMap()), *object, radius);
+        Cell::VisitGridObjects(object, go_search, radius);
 
         if (!creatureList.empty())
         {
-            handler->PSendSysMessage("Found " SIZEFMTD " Creatures.", creatureList.size());
+            handler->PSendSysMessage("Found %zu Creatures.", creatureList.size());
 
             uint32 paths = 0;
             uint32 uStartTime = getMSTime();

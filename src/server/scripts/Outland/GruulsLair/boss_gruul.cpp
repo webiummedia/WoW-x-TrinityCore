@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,9 +23,11 @@ SDCategory: Gruul's Lair
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "SpellScript.h"
 #include "gruuls_lair.h"
+#include "MotionMaster.h"
+#include "ScriptedCreature.h"
+#include "SpellInfo.h"
+#include "SpellScript.h"
 
 enum Yells
 {
@@ -72,7 +73,21 @@ class boss_gruul : public CreatureScript
 
         struct boss_gruulAI : public BossAI
         {
-            boss_gruulAI(Creature* creature) : BossAI(creature, DATA_GRUUL) { }
+            boss_gruulAI(Creature* creature) : BossAI(creature, DATA_GRUUL)
+            {
+                Initialize();
+            }
+
+            void Initialize()
+            {
+                m_uiGrowth_Timer = 30000;
+                m_uiCaveIn_Timer = 27000;
+                m_uiCaveIn_StaticTimer = 30000;
+                m_uiGroundSlamTimer = 35000;
+                m_bPerformingGroundSlam = false;
+                m_uiHurtfulStrike_Timer = 8000;
+                m_uiReverberation_Timer = 60000 + 45000;
+            }
 
             uint32 m_uiGrowth_Timer;
             uint32 m_uiCaveIn_Timer;
@@ -83,37 +98,31 @@ class boss_gruul : public CreatureScript
 
             bool m_bPerformingGroundSlam;
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 _Reset();
-                m_uiGrowth_Timer= 30000;
-                m_uiCaveIn_Timer= 27000;
-                m_uiCaveIn_StaticTimer = 30000;
-                m_uiGroundSlamTimer= 35000;
-                m_bPerformingGroundSlam= false;
-                m_uiHurtfulStrike_Timer= 8000;
-                m_uiReverberation_Timer= 60000+45000;
+                Initialize();
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 Talk(SAY_AGGRO);
             }
 
-            void KilledUnit(Unit* who) OVERRIDE
+            void KilledUnit(Unit* who) override
             {
                 if (who->GetTypeId() == TYPEID_PLAYER)
                     Talk(SAY_SLAY);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
             }
 
-            void SpellHitTarget(Unit* target, const SpellInfo* pSpell) OVERRIDE
+            void SpellHitTarget(Unit* target, const SpellInfo* pSpell) override
             {
                 //This to emulate effect1 (77) of SPELL_GROUND_SLAM, knock back to any direction
                 //It's initially wrong, since this will cause fall damage, which is by comments, not intended.
@@ -153,7 +162,7 @@ class boss_gruul : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -196,7 +205,7 @@ class boss_gruul : public CreatureScript
                     // Hurtful Strike
                     if (m_uiHurtfulStrike_Timer <= diff)
                     {
-                        Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO, 1);
+                        Unit* target = SelectTarget(SELECT_TARGET_MAXTHREAT, 1);
 
                         if (target && me->IsWithinMeleeRange(me->GetVictim()))
                             DoCast(target, SPELL_HURTFUL_STRIKE);
@@ -226,7 +235,7 @@ class boss_gruul : public CreatureScript
                         if (m_uiCaveIn_StaticTimer >= 4000)
                             m_uiCaveIn_StaticTimer -= 2000;
 
-                            m_uiCaveIn_Timer = m_uiCaveIn_StaticTimer;
+                        m_uiCaveIn_Timer = m_uiCaveIn_StaticTimer;
                     }
                     else
                         m_uiCaveIn_Timer -= diff;
@@ -250,7 +259,7 @@ class boss_gruul : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetGruulsLairAI<boss_gruulAI>(creature);
         }
@@ -265,13 +274,9 @@ class spell_gruul_shatter : public SpellScriptLoader
         {
             PrepareSpellScript(spell_gruul_shatter_SpellScript);
 
-            bool Validate(SpellInfo const* /*spell*/) OVERRIDE
+            bool Validate(SpellInfo const* /*spell*/) override
             {
-                if (!sSpellMgr->GetSpellInfo(SPELL_STONED))
-                    return false;
-                if (!sSpellMgr->GetSpellInfo(SPELL_SHATTER_EFFECT))
-                    return false;
-                return true;
+                return ValidateSpellInfo({ SPELL_STONED, SPELL_SHATTER_EFFECT });
             }
 
             void HandleScript(SpellEffIndex /*effIndex*/)
@@ -283,13 +288,13 @@ class spell_gruul_shatter : public SpellScriptLoader
                 }
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnEffectHitTarget += SpellEffectFn(spell_gruul_shatter_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
             }
         };
 
-        SpellScript* GetSpellScript() const OVERRIDE
+        SpellScript* GetSpellScript() const override
         {
             return new spell_gruul_shatter_SpellScript();
         }
@@ -309,7 +314,7 @@ class spell_gruul_shatter_effect : public SpellScriptLoader
                 if (!GetHitUnit())
                     return;
 
-                float radius = GetSpellInfo()->Effects[EFFECT_0].CalcRadius(GetCaster());
+                float radius = GetSpellInfo()->GetEffect(EFFECT_0)->CalcRadius(GetCaster());
                 if (!radius)
                     return;
 
@@ -318,13 +323,13 @@ class spell_gruul_shatter_effect : public SpellScriptLoader
                     SetHitDamage(int32(GetHitDamage() * ((radius - distance) / radius)));
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnHit += SpellHitFn(spell_gruul_shatter_effect_SpellScript::CalculateDamage);
             }
         };
 
-        SpellScript* GetSpellScript() const OVERRIDE
+        SpellScript* GetSpellScript() const override
         {
             return new spell_gruul_shatter_effect_SpellScript();
         }

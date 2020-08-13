@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -25,13 +24,13 @@ EndScriptData */
 
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "uldaman.h"
 
 enum Ironaya
 {
-    SAY_AGGRO                   = 0,
     SPELL_ARCINGSMASH           = 8374,
     SPELL_KNOCKAWAY             = 10101,
-    SPELL_WSTOMP                = 11876,
+    SPELL_WSTOMP                = 11876
 };
 
 class boss_ironaya : public CreatureScript
@@ -45,43 +44,40 @@ class boss_ironaya : public CreatureScript
 
         struct boss_ironayaAI : public ScriptedAI
         {
-            boss_ironayaAI(Creature* creature) : ScriptedAI(creature) { }
+            boss_ironayaAI(Creature* creature) : ScriptedAI(creature)
+            {
+                Initialize();
+            }
 
-            uint32 uiArcingTimer;
-            bool bHasCastWstomp;
-            bool bHasCastKnockaway;
-
-            void Reset() OVERRIDE
+            void Initialize()
             {
                 uiArcingTimer = 3000;
                 bHasCastKnockaway = false;
                 bHasCastWstomp = false;
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            uint32 uiArcingTimer;
+            bool bHasCastWstomp;
+            bool bHasCastKnockaway;
+
+            void Reset() override
             {
-                Talk(SAY_AGGRO);
+                Initialize();
             }
 
-            void UpdateAI(uint32 uiDiff) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override { }
+
+            void UpdateAI(uint32 uiDiff) override
             {
                 //Return since we have no target
                 if (!UpdateVictim())
                     return;
 
                 //If we are <50% hp do knockaway ONCE
-                if (!bHasCastKnockaway && HealthBelowPct(50))
+                if (!bHasCastKnockaway && HealthBelowPct(50) && me->GetVictim())
                 {
                     DoCastVictim(SPELL_KNOCKAWAY, true);
-
-                    // current aggro target is knocked away pick new target
-                    Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO, 0);
-
-                    if (!target || target == me->GetVictim())
-                        target = SelectTarget(SELECT_TARGET_TOPAGGRO, 1);
-
-                    if (target)
-                        me->TauntApply(target);
+                    me->GetThreatManager().ResetThreat(me->EnsureVictim());
 
                     //Shouldn't cast this agian
                     bHasCastKnockaway = true;
@@ -104,9 +100,9 @@ class boss_ironaya : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_ironayaAI(creature);
+            return GetUldamanAI<boss_ironayaAI>(creature);
         }
 };
 

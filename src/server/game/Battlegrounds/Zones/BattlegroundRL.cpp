@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -17,30 +16,13 @@
  */
 
 #include "BattlegroundRL.h"
-#include "Language.h"
-#include "Object.h"
-#include "ObjectMgr.h"
+#include "Log.h"
 #include "Player.h"
-#include "WorldPacket.h"
+#include "WorldStatePackets.h"
 
-BattlegroundRL::BattlegroundRL()
+BattlegroundRL::BattlegroundRL(BattlegroundTemplate const* battlegroundTemplate) : Arena(battlegroundTemplate)
 {
     BgObjects.resize(BG_RL_OBJECT_MAX);
-
-    StartDelayTimes[BG_STARTING_EVENT_FIRST]  = BG_START_DELAY_1M;
-    StartDelayTimes[BG_STARTING_EVENT_SECOND] = BG_START_DELAY_30S;
-    StartDelayTimes[BG_STARTING_EVENT_THIRD]  = BG_START_DELAY_15S;
-    StartDelayTimes[BG_STARTING_EVENT_FOURTH] = BG_START_DELAY_NONE;
-    //we must set messageIds
-    StartMessageIds[BG_STARTING_EVENT_FIRST]  = LANG_ARENA_ONE_MINUTE;
-    StartMessageIds[BG_STARTING_EVENT_SECOND] = LANG_ARENA_THIRTY_SECONDS;
-    StartMessageIds[BG_STARTING_EVENT_THIRD]  = LANG_ARENA_FIFTEEN_SECONDS;
-    StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_ARENA_HAS_BEGUN;
-}
-
-BattlegroundRL::~BattlegroundRL()
-{
-
 }
 
 void BattlegroundRL::StartingEventCloseDoors()
@@ -58,40 +40,7 @@ void BattlegroundRL::StartingEventOpenDoors()
         SpawnBGObject(i, 60);
 }
 
-void BattlegroundRL::AddPlayer(Player* player)
-{
-    Battleground::AddPlayer(player);
-    PlayerScores[player->GetGUID()] = new BattlegroundScore;
-    UpdateArenaWorldState();
-}
-
-void BattlegroundRL::RemovePlayer(Player* /*player*/, uint64 /*guid*/, uint32 /*team*/)
-{
-    if (GetStatus() == STATUS_WAIT_LEAVE)
-        return;
-
-    UpdateArenaWorldState();
-    CheckArenaWinConditions();
-}
-
-void BattlegroundRL::HandleKillPlayer(Player* player, Player* killer)
-{
-    if (GetStatus() != STATUS_IN_PROGRESS)
-        return;
-
-    if (!killer)
-    {
-        TC_LOG_ERROR("bg.battleground", "Killer player not found");
-        return;
-    }
-
-    Battleground::HandleKillPlayer(player, killer);
-
-    UpdateArenaWorldState();
-    CheckArenaWinConditions();
-}
-
-void BattlegroundRL::HandleAreaTrigger(Player* player, uint32 trigger)
+void BattlegroundRL::HandleAreaTrigger(Player* player, uint32 trigger, bool entered)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;
@@ -102,21 +51,15 @@ void BattlegroundRL::HandleAreaTrigger(Player* player, uint32 trigger)
         case 4697:                                          // buff trigger?
             break;
         default:
-            Battleground::HandleAreaTrigger(player, trigger);
+            Battleground::HandleAreaTrigger(player, trigger, entered);
             break;
     }
 }
 
-void BattlegroundRL::FillInitialWorldStates(WorldPacket &data)
+void BattlegroundRL::FillInitialWorldStates(WorldPackets::WorldState::InitWorldStates& packet)
 {
-    data << uint32(0xbba) << uint32(1);           // 9
-    UpdateArenaWorldState();
-}
-
-void BattlegroundRL::Reset()
-{
-    //call parent's reset
-    Battleground::Reset();
+    packet.Worldstates.emplace_back(0xbba, 1);
+    Arena::FillInitialWorldStates(packet);
 }
 
 bool BattlegroundRL::SetupBattleground()

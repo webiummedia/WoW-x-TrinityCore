@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,29 +23,28 @@ Category: commandscripts
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "Chat.h"
 #include "BattlefieldMgr.h"
+#include "Chat.h"
+#include "RBAC.h"
 
 class bf_commandscript : public CommandScript
 {
 public:
     bf_commandscript() : CommandScript("bf_commandscript") { }
 
-    ChatCommand* GetCommands() const OVERRIDE
+    std::vector<ChatCommand> GetCommands() const override
     {
-        static ChatCommand battlefieldcommandTable[] =
+        static std::vector<ChatCommand> battlefieldcommandTable =
         {
-            { "start",          rbac::RBAC_PERM_COMMAND_BF_START,  false, &HandleBattlefieldStart,  "", NULL },
-            { "stop",           rbac::RBAC_PERM_COMMAND_BF_STOP,   false, &HandleBattlefieldEnd,    "", NULL },
-            { "switch",         rbac::RBAC_PERM_COMMAND_BF_SWITCH, false, &HandleBattlefieldSwitch, "", NULL },
-            { "timer",          rbac::RBAC_PERM_COMMAND_BF_TIMER,  false, &HandleBattlefieldTimer,  "", NULL },
-            { "enable",         rbac::RBAC_PERM_COMMAND_BF_ENABLE, false, &HandleBattlefieldEnable, "", NULL },
-            { NULL,             0,                           false, NULL,                     "", NULL }
+            { "start",          rbac::RBAC_PERM_COMMAND_BF_START,  false, &HandleBattlefieldStart,  "" },
+            { "stop",           rbac::RBAC_PERM_COMMAND_BF_STOP,   false, &HandleBattlefieldEnd,    "" },
+            { "switch",         rbac::RBAC_PERM_COMMAND_BF_SWITCH, false, &HandleBattlefieldSwitch, "" },
+            { "timer",          rbac::RBAC_PERM_COMMAND_BF_TIMER,  false, &HandleBattlefieldTimer,  "" },
+            { "enable",         rbac::RBAC_PERM_COMMAND_BF_ENABLE, false, &HandleBattlefieldEnable, "" },
         };
-        static ChatCommand commandTable[] =
+        static std::vector<ChatCommand> commandTable =
         {
             { "bf",             rbac::RBAC_PERM_COMMAND_BF,        false, NULL,                     "", battlefieldcommandTable },
-            { NULL,             0,                           false, NULL,                     "", NULL }
         };
         return commandTable;
     }

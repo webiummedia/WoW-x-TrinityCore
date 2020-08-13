@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,8 +24,8 @@ SDCategory: CrystalsongForest
 Script Data End */
 
 #include "ScriptMgr.h"
+#include "ObjectAccessor.h"
 #include "ScriptedCreature.h"
-#include "Player.h"
 
 /*******************************************************
  * npc_warmage_violetstand
@@ -56,54 +56,46 @@ public:
             SetCombatMovement(false);
         }
 
-        uint64 targetGUID;
+        ObjectGuid targetGUID;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            targetGUID = 0;
+            targetGUID.Clear();
         }
 
-        void UpdateAI(uint32 /*diff*/) OVERRIDE
+        void UpdateAI(uint32 /*diff*/) override
         {
             if (me->IsNonMeleeSpellCast(false))
                 return;
 
-            if (me->GetEntry() == NPC_WARMAGE_SARINA)
+            if (!targetGUID)
             {
-                if (!targetGUID)
+                if (me->GetEntry() == NPC_WARMAGE_SARINA)
                 {
                     std::list<Creature*> orbList;
                     GetCreatureListWithEntryInGrid(orbList, me, NPC_TRANSITUS_SHIELD_DUMMY, 32.0f);
                     if (!orbList.empty())
                     {
-                        for (std::list<Creature*>::const_iterator itr = orbList.begin(); itr != orbList.end(); ++itr)
+                        for (Creature* orb : orbList)
                         {
-                            if (Creature* pOrb = *itr)
+                            if (orb->GetPositionY() < 1000)
                             {
-                                if (pOrb->GetPositionY() < 1000)
-                                {
-                                    targetGUID = pOrb->GetGUID();
-                                    break;
-                                }
+                                targetGUID = orb->GetGUID();
+                                break;
                             }
                         }
                     }
                 }
-            }else
-            {
-                if (!targetGUID)
-                    if (Creature* pOrb = GetClosestCreatureWithEntry(me, NPC_TRANSITUS_SHIELD_DUMMY, 32.0f))
-                        targetGUID = pOrb->GetGUID();
-
+                else if (Creature* pOrb = GetClosestCreatureWithEntry(me, NPC_TRANSITUS_SHIELD_DUMMY, 32.0f))
+                    targetGUID = pOrb->GetGUID();
             }
 
-            if (Creature* pOrb = me->GetCreature(*me, targetGUID))
+            if (Creature* pOrb = ObjectAccessor::GetCreature(*me, targetGUID))
                 DoCast(pOrb, SPELL_TRANSITUS_SHIELD_BEAM);
-
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
         return new npc_warmage_violetstandAI(creature);
     }
@@ -111,5 +103,5 @@ public:
 
 void AddSC_crystalsong_forest()
 {
-    new npc_warmage_violetstand;
+    new npc_warmage_violetstand();
 }

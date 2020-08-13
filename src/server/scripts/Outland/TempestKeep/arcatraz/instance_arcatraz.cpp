@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,14 +16,16 @@
  */
 
 #include "ScriptMgr.h"
-#include "InstanceScript.h"
 #include "arcatraz.h"
+#include "Creature.h"
+#include "GameObject.h"
+#include "InstanceScript.h"
 
 DoorData const doorData[] =
 {
-    { GO_CONTAINMENT_CORE_SECURITY_FIELD_ALPHA, DATA_SOCCOTHRATES,  DOOR_TYPE_PASSAGE,  BOUNDARY_NONE },
-    { GO_CONTAINMENT_CORE_SECURITY_FIELD_BETA,  DATA_DALLIAH,       DOOR_TYPE_PASSAGE,  BOUNDARY_NONE },
-    { 0,                                        0,                  DOOR_TYPE_ROOM,     BOUNDARY_NONE } // END
+    { GO_CONTAINMENT_CORE_SECURITY_FIELD_ALPHA, DATA_SOCCOTHRATES,  DOOR_TYPE_PASSAGE },
+    { GO_CONTAINMENT_CORE_SECURITY_FIELD_BETA,  DATA_DALLIAH,       DOOR_TYPE_PASSAGE },
+    { 0,                                        0,                  DOOR_TYPE_ROOM } // END
 };
 
 class instance_arcatraz : public InstanceMapScript
@@ -33,23 +35,18 @@ class instance_arcatraz : public InstanceMapScript
 
         struct instance_arcatraz_InstanceMapScript : public InstanceScript
         {
-            instance_arcatraz_InstanceMapScript(Map* map) : InstanceScript(map)
+            instance_arcatraz_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
             {
+                SetHeaders(DataHeader);
                 SetBossNumber(EncounterCount);
                 LoadDoorData(doorData);
 
-                DalliahGUID       = 0;
-                SoccothratesGUID  = 0;
-                MellicharGUID     = 0;
-                WardensShieldGUID = 0;
-
                 ConversationState = NOT_STARTED;
 
-                memset(StasisPodGUIDs, 0, 5 * sizeof(uint64));
                 memset(StasisPodStates, NOT_STARTED, 5 * sizeof(uint8));
             }
 
-            void OnCreatureCreate(Creature* creature) OVERRIDE
+            void OnCreatureCreate(Creature* creature) override
             {
                 switch (creature->GetEntry())
                 {
@@ -67,7 +64,7 @@ class instance_arcatraz : public InstanceMapScript
                 }
             }
 
-            void OnGameObjectCreate(GameObject* go) OVERRIDE
+            void OnGameObjectCreate(GameObject* go) override
             {
                 switch (go->GetEntry())
                 {
@@ -98,7 +95,7 @@ class instance_arcatraz : public InstanceMapScript
                 }
             }
 
-            void OnGameObjectRemove(GameObject* go) OVERRIDE
+            void OnGameObjectRemove(GameObject* go) override
             {
                 switch (go->GetEntry())
                 {
@@ -111,7 +108,7 @@ class instance_arcatraz : public InstanceMapScript
                 }
             }
 
-            void SetData(uint32 type, uint32 data) OVERRIDE
+            void SetData(uint32 type, uint32 data) override
             {
                 switch (type)
                 {
@@ -132,7 +129,7 @@ class instance_arcatraz : public InstanceMapScript
                 }
             }
 
-            uint32 GetData(uint32 type) const OVERRIDE
+            uint32 GetData(uint32 type) const override
             {
                 switch (type)
                 {
@@ -150,7 +147,7 @@ class instance_arcatraz : public InstanceMapScript
                 return 0;
             }
 
-            uint64 GetData64(uint32 data) const OVERRIDE
+            ObjectGuid GetGuidData(uint32 data) const override
             {
                 switch (data)
                 {
@@ -165,10 +162,10 @@ class instance_arcatraz : public InstanceMapScript
                     default:
                         break;
                 }
-                return 0;
+                return ObjectGuid::Empty;
             }
 
-            bool SetBossState(uint32 type, EncounterState state) OVERRIDE
+            bool SetBossState(uint32 type, EncounterState state) override
             {
                 if (!InstanceScript::SetBossState(type, state))
                     return false;
@@ -191,61 +188,18 @@ class instance_arcatraz : public InstanceMapScript
                 return true;
             }
 
-            std::string GetSaveData() OVERRIDE
-            {
-                OUT_SAVE_INST_DATA;
-
-                std::ostringstream saveStream;
-                saveStream << "A Z " << GetBossSaveData();
-
-                OUT_SAVE_INST_DATA_COMPLETE;
-                return saveStream.str();
-            }
-
-            void Load(char const* str) OVERRIDE
-            {
-                if (!str)
-                {
-                    OUT_LOAD_INST_DATA_FAIL;
-                    return;
-                }
-
-                OUT_LOAD_INST_DATA(str);
-
-                char dataHead1, dataHead2;
-
-                std::istringstream loadStream(str);
-                loadStream >> dataHead1 >> dataHead2;
-
-                if (dataHead1 == 'A' && dataHead2 == 'Z')
-                {
-                    for (uint32 i = 0; i < EncounterCount; ++i)
-                    {
-                        uint32 tmpState;
-                        loadStream >> tmpState;
-                        if (tmpState == IN_PROGRESS || tmpState > SPECIAL)
-                            tmpState = NOT_STARTED;
-                        SetBossState(i, EncounterState(tmpState));
-                    }
-                }
-                else
-                    OUT_LOAD_INST_DATA_FAIL;
-
-                OUT_LOAD_INST_DATA_COMPLETE;
-            }
-
         protected:
-            uint64 DalliahGUID;
-            uint64 SoccothratesGUID;
-            uint64 StasisPodGUIDs[5];
-            uint64 MellicharGUID;
-            uint64 WardensShieldGUID;
+            ObjectGuid DalliahGUID;
+            ObjectGuid SoccothratesGUID;
+            ObjectGuid StasisPodGUIDs[5];
+            ObjectGuid MellicharGUID;
+            ObjectGuid WardensShieldGUID;
 
             uint8 ConversationState;
             uint8 StasisPodStates[5];
         };
 
-        InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
+        InstanceScript* GetInstanceScript(InstanceMap* map) const override
         {
             return new instance_arcatraz_InstanceMapScript(map);
         }
@@ -255,4 +209,3 @@ void AddSC_instance_arcatraz()
 {
     new instance_arcatraz();
 }
-

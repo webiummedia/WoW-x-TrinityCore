@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,8 +29,10 @@ npc_zerekethvoidzone
 EndContentData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "arcatraz.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "ScriptedCreature.h"
 
 /*#####
 # npc_millhouse_manastorm
@@ -75,7 +76,19 @@ class npc_millhouse_manastorm : public CreatureScript
         {
             npc_millhouse_manastormAI(Creature* creature) : ScriptedAI(creature)
             {
+                Initialize();
                 instance = creature->GetInstanceScript();
+            }
+
+            void Initialize()
+            {
+                EventProgress_Timer = 2000;
+                LowHp = false;
+                Init = false;
+                Phase = 1;
+
+                Pyroblast_Timer = 1000;
+                Fireball_Timer = 2500;
             }
 
             InstanceScript* instance;
@@ -88,15 +101,9 @@ class npc_millhouse_manastorm : public CreatureScript
             uint32 Pyroblast_Timer;
             uint32 Fireball_Timer;
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
-                EventProgress_Timer = 2000;
-                LowHp = false;
-                Init = false;
-                Phase = 1;
-
-                Pyroblast_Timer = 1000;
-                Fireball_Timer = 2500;
+                Initialize();
 
                 if (instance->GetData(DATA_WARDEN_2) == DONE)
                     Init = true;
@@ -105,24 +112,24 @@ class npc_millhouse_manastorm : public CreatureScript
                     Talk(SAY_COMPLETE);
             }
 
-            void AttackStart(Unit* who) OVERRIDE
+            void AttackStart(Unit* who) override
             {
                 if (me->Attack(who, true))
                 {
-                    me->AddThreat(who, 0.0f);
+                    AddThreat(who, 0.0f);
                     me->SetInCombatWith(who);
                     who->SetInCombatWith(me);
                     me->GetMotionMaster()->MoveChase(who, 25.0f);
                 }
             }
 
-            void KilledUnit(Unit* who) OVERRIDE
+            void KilledUnit(Unit* who) override
             {
                 if (who->GetTypeId() == TYPEID_PLAYER)
                     Talk(SAY_KILL);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 Talk(SAY_DEATH);
 
@@ -131,7 +138,7 @@ class npc_millhouse_manastorm : public CreatureScript
                 ->FailQuest();*/
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!Init)
                 {
@@ -213,7 +220,7 @@ class npc_millhouse_manastorm : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetArcatrazAI<npc_millhouse_manastormAI>(creature);
         }
@@ -271,7 +278,17 @@ class npc_warden_mellichar : public CreatureScript
         {
             npc_warden_mellicharAI(Creature* creature) : ScriptedAI(creature)
             {
+                Initialize();
                 instance = creature->GetInstanceScript();
+            }
+
+            void Initialize()
+            {
+                IsRunning = false;
+                CanSpawn = false;
+
+                EventProgress_Timer = 22000;
+                Phase = 1;
             }
 
             InstanceScript* instance;
@@ -282,23 +299,19 @@ class npc_warden_mellichar : public CreatureScript
             uint32 EventProgress_Timer;
             uint32 Phase;
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
-                IsRunning = false;
-                CanSpawn = false;
+                Initialize();
 
-                EventProgress_Timer = 22000;
-                Phase = 1;
-
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 DoCast(me, SPELL_TARGET_OMEGA);
 
                 instance->SetBossState(DATA_HARBINGER_SKYRISS, NOT_STARTED);
             }
 
-            void AttackStart(Unit* /*who*/) OVERRIDE { }
+            void AttackStart(Unit* /*who*/) override { }
 
-            void MoveInLineOfSight(Unit* who) OVERRIDE
+            void MoveInLineOfSight(Unit* who) override
             {
                 if (IsRunning)
                     return;
@@ -316,14 +329,21 @@ class npc_warden_mellichar : public CreatureScript
                 }
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 Talk(YELL_INTRO1);
                 DoCast(me, SPELL_BUBBLE_VISUAL);
 
                 instance->SetBossState(DATA_HARBINGER_SKYRISS, IN_PROGRESS);
-                instance->HandleGameObject(instance->GetData64(DATA_WARDENS_SHIELD), false);
+                instance->HandleGameObject(instance->GetGuidData(DATA_WARDENS_SHIELD), false);
                 IsRunning = true;
+            }
+
+            void JustSummoned(Creature* summon) override
+            {
+                DoZoneInCombat(summon);
+                if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                    summon->AI()->AttackStart(target);
             }
 
             bool CanProgress()
@@ -356,7 +376,7 @@ class npc_warden_mellichar : public CreatureScript
                     case 2:
                         DoCast(me, SPELL_TARGET_ALPHA);
                         instance->SetData(DATA_WARDEN_1, IN_PROGRESS);
-                        instance->HandleGameObject(instance->GetData64(DATA_WARDENS_SHIELD), false);
+                        instance->HandleGameObject(instance->GetGuidData(DATA_WARDENS_SHIELD), false);
                         break;
                     case 3:
                         DoCast(me, SPELL_TARGET_BETA);
@@ -377,7 +397,7 @@ class npc_warden_mellichar : public CreatureScript
                 CanSpawn = true;
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!IsRunning)
                     return;
@@ -490,7 +510,7 @@ class npc_warden_mellichar : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetArcatrazAI<npc_warden_mellicharAI>(creature);
         }
@@ -516,21 +536,21 @@ class npc_zerekethvoidzone : public CreatureScript
         {
             npc_zerekethvoidzoneAI(Creature* creature) : ScriptedAI(creature) { }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
-                me->SetUInt32Value(UNIT_NPC_FLAGS, 0);
-                me->setFaction(16);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetNpcFlags(UNIT_NPC_FLAG_NONE);
+                me->SetFaction(FACTION_MONSTER_2);
+                me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
 
                 DoCast(me, SPELL_VOID_ZONE_DAMAGE);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE { }
+            void EnterCombat(Unit* /*who*/) override { }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new npc_zerekethvoidzoneAI(creature);
+            return GetArcatrazAI<npc_zerekethvoidzoneAI>(creature);
         }
 };
 

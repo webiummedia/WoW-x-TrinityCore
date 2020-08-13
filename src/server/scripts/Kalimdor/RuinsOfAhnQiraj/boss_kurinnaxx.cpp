@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -15,11 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ObjectMgr.h"
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "ruins_of_ahnqiraj.h"
 #include "CreatureTextMgr.h"
+#include "InstanceScript.h"
+#include "ObjectAccessor.h"
+#include "ruins_of_ahnqiraj.h"
+#include "ScriptedCreature.h"
 
 enum Spells
 {
@@ -53,19 +54,25 @@ class boss_kurinnaxx : public CreatureScript
         {
             boss_kurinnaxxAI(Creature* creature) : BossAI(creature, DATA_KURINNAXX)
             {
+                Initialize();
             }
 
-            void Reset() OVERRIDE
+            void Initialize()
+            {
+                _enraged = false;
+            }
+
+            void Reset() override
             {
                 _Reset();
-                _enraged = false;
+                Initialize();
                 events.ScheduleEvent(EVENT_MORTAL_WOUND, 8000);
                 events.ScheduleEvent(EVENT_SANDTRAP, urand(5000, 15000));
                 events.ScheduleEvent(EVENT_TRASH, 1000);
                 events.ScheduleEvent(EVENT_WIDE_SLASH, 11000);
             }
 
-            void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/) OVERRIDE
+            void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/) override
             {
                 if (!_enraged && HealthBelowPct(30))
                 {
@@ -74,14 +81,14 @@ class boss_kurinnaxx : public CreatureScript
                 }
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
-                if (Creature* Ossirian = me->GetMap()->GetCreature(instance->GetData64(DATA_OSSIRIAN)))
+                if (Creature* Ossirian = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_OSSIRIAN)))
                     sCreatureTextMgr->SendChat(Ossirian, SAY_KURINAXX_DEATH, NULL, CHAT_MSG_ADDON, LANG_ADDON, TEXT_RANGE_ZONE);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -117,6 +124,9 @@ class boss_kurinnaxx : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
@@ -125,9 +135,9 @@ class boss_kurinnaxx : public CreatureScript
                 bool _enraged;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<boss_kurinnaxxAI>(creature);
+            return GetAQ20AI<boss_kurinnaxxAI>(creature);
         }
 };
 

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,9 +22,13 @@ SDComment:
 SDCategory: Shadowfang Keep
 EndScriptData */
 
-#include "ScriptedCreature.h"
 #include "ScriptMgr.h"
+#include "Creature.h"
+#include "CreatureAI.h"
+#include "GameObject.h"
 #include "InstanceScript.h"
+#include "Log.h"
+#include "Map.h"
 #include "shadowfang_keep.h"
 #include "TemporarySummon.h"
 
@@ -69,48 +72,39 @@ const Position SpawnLocation[] =
 class instance_shadowfang_keep : public InstanceMapScript
 {
 public:
-    instance_shadowfang_keep() : InstanceMapScript("instance_shadowfang_keep", 33) { }
+    instance_shadowfang_keep() : InstanceMapScript(SFKScriptName, 33) { }
 
-    InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
+    InstanceScript* GetInstanceScript(InstanceMap* map) const override
     {
         return new instance_shadowfang_keep_InstanceMapScript(map);
     }
 
     struct instance_shadowfang_keep_InstanceMapScript : public InstanceScript
     {
-        instance_shadowfang_keep_InstanceMapScript(Map* map) : InstanceScript(map) { }
-
-        uint32 m_auiEncounter[MAX_ENCOUNTER];
-        std::string str_data;
-
-        uint64 uiAshGUID;
-        uint64 uiAdaGUID;
-        uint64 uiArchmageArugalGUID;
-
-        uint64 DoorCourtyardGUID;
-        uint64 DoorSorcererGUID;
-        uint64 DoorArugalGUID;
-
-        uint8 uiPhase;
-        uint16 uiTimer;
-
-        void Initialize() OVERRIDE
+        instance_shadowfang_keep_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
         {
+            SetHeaders(DataHeader);
             memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
-
-            uiAshGUID = 0;
-            uiAdaGUID = 0;
-            uiArchmageArugalGUID = 0;
-
-            DoorCourtyardGUID = 0;
-            DoorSorcererGUID = 0;
-            DoorArugalGUID = 0;
 
             uiPhase = 0;
             uiTimer = 0;
         }
 
-        void OnCreatureCreate(Creature* creature) OVERRIDE
+        uint32 m_auiEncounter[MAX_ENCOUNTER];
+        std::string str_data;
+
+        ObjectGuid uiAshGUID;
+        ObjectGuid uiAdaGUID;
+        ObjectGuid uiArchmageArugalGUID;
+
+        ObjectGuid DoorCourtyardGUID;
+        ObjectGuid DoorSorcererGUID;
+        ObjectGuid DoorArugalGUID;
+
+        uint8 uiPhase;
+        uint16 uiTimer;
+
+        void OnCreatureCreate(Creature* creature) override
         {
             switch (creature->GetEntry())
             {
@@ -120,24 +114,24 @@ public:
             }
         }
 
-        void OnGameObjectCreate(GameObject* go) OVERRIDE
+        void OnGameObjectCreate(GameObject* go) override
         {
             switch (go->GetEntry())
             {
                 case GO_COURTYARD_DOOR:
                     DoorCourtyardGUID = go->GetGUID();
                     if (m_auiEncounter[0] == DONE)
-                        HandleGameObject(0, true, go);
+                        HandleGameObject(ObjectGuid::Empty, true, go);
                     break;
                 case GO_SORCERER_DOOR:
                     DoorSorcererGUID = go->GetGUID();
                     if (m_auiEncounter[2] == DONE)
-                        HandleGameObject(0, true, go);
+                        HandleGameObject(ObjectGuid::Empty, true, go);
                     break;
                 case GO_ARUGAL_DOOR:
                     DoorArugalGUID = go->GetGUID();
                     if (m_auiEncounter[3] == DONE)
-                        HandleGameObject(0, true, go);
+                        HandleGameObject(ObjectGuid::Empty, true, go);
                     break;
             }
         }
@@ -154,7 +148,7 @@ public:
             }
         }
 
-        void SetData(uint32 type, uint32 data) OVERRIDE
+        void SetData(uint32 type, uint32 data) override
         {
             switch (type)
             {
@@ -202,7 +196,7 @@ public:
             }
         }
 
-        uint32 GetData(uint32 type) const OVERRIDE
+        uint32 GetData(uint32 type) const override
         {
             switch (type)
             {
@@ -218,12 +212,12 @@ public:
             return 0;
         }
 
-        std::string GetSaveData() OVERRIDE
+        std::string GetSaveData() override
         {
             return str_data;
         }
 
-        void Load(const char* in) OVERRIDE
+        void Load(const char* in) override
         {
             if (!in)
             {
@@ -245,7 +239,7 @@ public:
             OUT_LOAD_INST_DATA_COMPLETE;
         }
 
-        void Update(uint32 uiDiff)
+        void Update(uint32 uiDiff) override
         {
             if (GetData(TYPE_FENRUS) != DONE)
                 return;
@@ -264,7 +258,7 @@ public:
                         case 1:
                         {
                             Creature* summon = pArchmage->SummonCreature(pArchmage->GetEntry(), SpawnLocation[4], TEMPSUMMON_TIMED_DESPAWN, 10000);
-                            summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC);
+                            summon->AddUnitFlag(UNIT_FLAG_IMMUNE_TO_PC);
                             summon->SetReactState(REACT_DEFENSIVE);
                             summon->CastSpell(summon, SPELL_ASHCROMBE_TELEPORT, true);
                             summon->AI()->Talk(SAY_ARCHMAGE);

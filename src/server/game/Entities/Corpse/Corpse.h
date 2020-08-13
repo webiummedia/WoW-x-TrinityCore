@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,9 +19,9 @@
 #define TRINITYCORE_CORPSE_H
 
 #include "Object.h"
-#include "DatabaseEnv.h"
+#include "DatabaseEnvFwd.h"
 #include "GridDefines.h"
-#include "LootMgr.h"
+#include "Loot.h"
 
 enum CorpseType
 {
@@ -40,48 +39,77 @@ enum CorpseFlags
     CORPSE_FLAG_NONE        = 0x00,
     CORPSE_FLAG_BONES       = 0x01,
     CORPSE_FLAG_UNK1        = 0x02,
-    CORPSE_FLAG_UNK2        = 0x04,
+    CORPSE_FLAG_PVP         = 0x04,
     CORPSE_FLAG_HIDE_HELM   = 0x08,
     CORPSE_FLAG_HIDE_CLOAK  = 0x10,
-    CORPSE_FLAG_LOOTABLE    = 0x20
+    CORPSE_FLAG_SKINNABLE   = 0x20,
+    CORPSE_FLAG_FFA_PVP     = 0x40
 };
 
-class Corpse : public WorldObject, public GridObject<Corpse>
+class TC_GAME_API Corpse : public WorldObject, public GridObject<Corpse>
 {
     public:
         explicit Corpse(CorpseType type = CORPSE_BONES);
         ~Corpse();
 
-        void AddToWorld();
-        void RemoveFromWorld();
+    protected:
+        void BuildValuesCreate(ByteBuffer* data, Player const* target) const override;
+        void BuildValuesUpdate(ByteBuffer* data, Player const* target) const override;
+        void ClearUpdateMask(bool remove) override;
 
-        bool Create(uint32 guidlow, Map* map);
-        bool Create(uint32 guidlow, Player* owner);
+    public:
+        void BuildValuesUpdateForPlayerWithMask(UpdateData* data, UF::ObjectData::Mask const& requestedObjectMask,
+            UF::CorpseData::Mask const& requestedCorpseMask, Player const* target) const;
+
+        void AddToWorld() override;
+        void RemoveFromWorld() override;
+
+        bool Create(ObjectGuid::LowType guidlow, Map* map);
+        bool Create(ObjectGuid::LowType guidlow, Player* owner);
 
         void SaveToDB();
-        bool LoadCorpseFromDB(uint32 guid, Field* fields);
+        bool LoadCorpseFromDB(ObjectGuid::LowType guid, Field* fields);
 
-        void DeleteBonesFromWorld();
-        void DeleteFromDB(SQLTransaction& trans);
+        void DeleteFromDB(CharacterDatabaseTransaction& trans);
+        static void DeleteFromDB(ObjectGuid const& ownerGuid, CharacterDatabaseTransaction& trans);
 
-        uint64 GetOwnerGUID() const { return GetUInt64Value(CORPSE_FIELD_OWNER); }
+        void AddCorpseDynamicFlag(CorpseDynFlags dynamicFlags) { SetUpdateFieldFlagValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::DynamicFlags), dynamicFlags); }
+        void RemoveCorpseDynamicFlag(CorpseDynFlags dynamicFlags) { RemoveUpdateFieldFlagValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::DynamicFlags), dynamicFlags); }
+        void SetCorpseDynamicFlags(CorpseDynFlags dynamicFlags) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::DynamicFlags), dynamicFlags); }
+        ObjectGuid GetOwnerGUID() const { return m_corpseData->Owner; }
+        void SetOwnerGUID(ObjectGuid owner) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::Owner), owner); }
+        void SetPartyGUID(ObjectGuid partyGuid) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::PartyGUID), partyGuid); }
+        void SetGuildGUID(ObjectGuid guildGuid) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::GuildGUID), guildGuid); }
+        void SetDisplayId(uint32 displayId) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::DisplayID), displayId); }
+        void SetRace(uint8 race) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::RaceID), race); }
+        void SetSex(uint8 sex) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::Sex), sex); }
+        void SetSkin(uint8 skin) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::SkinID), skin); }
+        void SetFace(uint8 face) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::FaceID), face); }
+        void SetHairStyle(uint8 hairStyle) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::HairStyleID), hairStyle); }
+        void SetHairColor(uint8 hairColor) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::HairColorID), hairColor); }
+        void SetFacialHairStyle(uint8 facialHairStyle) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::FacialHairStyleID), facialHairStyle); }
+        void SetFlags(uint32 flags) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::Flags), flags); }
+        void SetFactionTemplate(int32 factionTemplate) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::FactionTemplate), factionTemplate); }
+        void SetItem(uint32 slot, uint32 item) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::Items, slot), item); }
+        void SetCustomDisplayOption(uint32 slot, uint8 customDisplayOption) { SetUpdateFieldValue(m_values.ModifyValue(&Corpse::m_corpseData).ModifyValue(&UF::CorpseData::CustomDisplayOption, slot), customDisplayOption); }
 
         time_t const& GetGhostTime() const { return m_time; }
         void ResetGhostTime() { m_time = time(NULL); }
         CorpseType GetType() const { return m_type; }
 
-        GridCoord const& GetGridCoord() const { return _gridCoord; }
-        void SetGridCoord(GridCoord const& gridCoord) { _gridCoord = gridCoord; }
+        CellCoord const& GetCellCoord() const { return _cellCoord; }
+        void SetCellCoord(CellCoord const& cellCoord) { _cellCoord = cellCoord; }
 
         Loot loot;                                          // remove insignia ONLY at BG
         Player* lootRecipient;
-        bool lootForBody;
 
         bool IsExpired(time_t t) const;
+
+        UF::UpdateField<UF::CorpseData, 0, TYPEID_CORPSE> m_corpseData;
 
     private:
         CorpseType m_type;
         time_t m_time;
-        GridCoord _gridCoord;                                    // gride for corpse position for fast search
+        CellCoord _cellCoord;
 };
 #endif

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,8 +23,11 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
+#include "InstanceScript.h"
 #include "molten_core.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
+#include "TemporarySummon.h"
 
 enum Texts
 {
@@ -82,22 +84,29 @@ class boss_ragnaros : public CreatureScript
         {
             boss_ragnarosAI(Creature* creature) : BossAI(creature, BOSS_RAGNAROS)
             {
+                Initialize();
                 _introState = 0;
                 me->SetReactState(REACT_PASSIVE);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
+                SetCombatMovement(false);
             }
 
-            void Reset() OVERRIDE
+            void Initialize()
             {
-                BossAI::Reset();
                 _emergeTimer = 90000;
                 _hasYelledMagmaBurst = false;
                 _hasSubmergedOnce = false;
                 _isBanished = false;
-                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
             }
 
-            void EnterCombat(Unit* victim) OVERRIDE
+            void Reset() override
+            {
+                BossAI::Reset();
+                Initialize();
+                me->SetEmoteState(EMOTE_ONESHOT_NONE);
+            }
+
+            void EnterCombat(Unit* victim) override
             {
                 BossAI::EnterCombat(victim);
                 events.ScheduleEvent(EVENT_ERUPTION, 15000);
@@ -109,13 +118,13 @@ class boss_ragnaros : public CreatureScript
                 events.ScheduleEvent(EVENT_SUBMERGE, 180000);
             }
 
-            void KilledUnit(Unit* /*victim*/) OVERRIDE
+            void KilledUnit(Unit* /*victim*/) override
             {
                 if (urand(0, 99) < 25)
                     Talk(SAY_KILL);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (_introState != 2)
                 {
@@ -147,12 +156,12 @@ class boss_ragnaros : public CreatureScript
                             break;
                         case EVENT_INTRO_4:
                             Talk(SAY_ARRIVAL5_RAG);
-                            if (Creature* executus = Unit::GetCreature(*me, instance->GetData64(BOSS_MAJORDOMO_EXECUTUS)))
+                            if (Creature* executus = ObjectAccessor::GetCreature(*me, instance->GetGuidData(BOSS_MAJORDOMO_EXECUTUS)))
                                 me->Kill(executus);
                             break;
                         case EVENT_INTRO_5:
                             me->SetReactState(REACT_AGGRESSIVE);
-                            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                            me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC));
                             _introState = 2;
                             break;
                         default:
@@ -166,9 +175,9 @@ class boss_ragnaros : public CreatureScript
                     {
                         //Become unbanished again
                         me->SetReactState(REACT_AGGRESSIVE);
-                        me->setFaction(14);
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                        me->SetUInt32Value(UNIT_NPC_EMOTESTATE, 0);
+                        me->SetFaction(FACTION_MONSTER);
+                        me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                        me->SetEmoteState(EMOTE_ONESHOT_NONE);
                         me->HandleEmoteCommand(EMOTE_ONESHOT_EMERGE);
                         if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0))
                             AttackStart(target);
@@ -219,7 +228,7 @@ class boss_ragnaros : public CreatureScript
                                 events.ScheduleEvent(EVENT_ELEMENTAL_FIRE, urand(10000, 14000));
                                 break;
                             case EVENT_MAGMA_BLAST:
-                                if (me->IsWithinMeleeRange(me->GetVictim()))
+                                if (!me->IsWithinMeleeRange(me->GetVictim()))
                                 {
                                     DoCastVictim(SPELL_MAGMA_BLAST);
                                     if (!_hasYelledMagmaBurst)
@@ -233,20 +242,20 @@ class boss_ragnaros : public CreatureScript
                                 break;
                             case EVENT_SUBMERGE:
                             {
-                                if (instance && !_isBanished)
+                                if (!_isBanished)
                                 {
                                     //Creature spawning and ragnaros becomming unattackable
                                     //is not very well supported in the core //no it really isnt
                                     //so added normaly spawning and banish workaround and attack again after 90 secs.
                                     me->AttackStop();
-                                    DoResetThreat();
+                                    ResetThreatList();
                                     me->SetReactState(REACT_PASSIVE);
                                     me->InterruptNonMeleeSpells(false);
                                     //Root self
                                     //DoCast(me, 23973);
-                                    me->setFaction(35);
-                                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                                    me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
+                                    me->SetFaction(FACTION_FRIENDLY);
+                                    me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                                    me->SetEmoteState(EMOTE_STATE_SUBMERGED);
                                     me->HandleEmoteCommand(EMOTE_ONESHOT_SUBMERGE);
                                     instance->SetData(DATA_RAGNAROS_ADDS, 0);
 
@@ -300,9 +309,9 @@ class boss_ragnaros : public CreatureScript
             bool _isBanished;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<boss_ragnarosAI>(creature);
+            return GetMoltenCoreAI<boss_ragnarosAI>(creature);
         }
 };
 
@@ -318,12 +327,12 @@ class npc_son_of_flame : public CreatureScript
                 instance = me->GetInstanceScript();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 instance->SetData(DATA_RAGNAROS_ADDS, 1);
             }
 
-            void UpdateAI(uint32 /*diff*/) OVERRIDE
+            void UpdateAI(uint32 /*diff*/) override
             {
                 if (!UpdateVictim())
                     return;
@@ -335,9 +344,9 @@ class npc_son_of_flame : public CreatureScript
             InstanceScript* instance;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<npc_son_of_flameAI>(creature);
+            return GetMoltenCoreAI<npc_son_of_flameAI>(creature);
         }
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,20 +24,21 @@ gets instead the deserter debuff.
 
 #include "ScriptMgr.h"
 #include "InstanceScript.h"
+#include "the_underbog.h"
 
 class instance_the_underbog : public InstanceMapScript
 {
 public:
-    instance_the_underbog() : InstanceMapScript("instance_the_underbog", 546) { }
+    instance_the_underbog() : InstanceMapScript(TheUndebogScriptName, 546) { }
 
-    InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
+    InstanceScript* GetInstanceScript(InstanceMap* map) const override
     {
         return new instance_the_underbog_InstanceMapScript(map);
     }
 
     struct instance_the_underbog_InstanceMapScript : public InstanceScript
     {
-        instance_the_underbog_InstanceMapScript(Map* map) : InstanceScript(map) { }
+        instance_the_underbog_InstanceMapScript(InstanceMap* map) : InstanceScript(map) { }
     };
 };
 

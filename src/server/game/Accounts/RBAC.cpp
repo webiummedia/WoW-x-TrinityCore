@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,6 +19,7 @@
 #include "AccountMgr.h"
 #include "DatabaseEnv.h"
 #include "Log.h"
+#include <sstream>
 
 namespace rbac
 {
@@ -129,7 +130,7 @@ RBACCommandResult RBACData::DenyPermission(uint32 permissionId, int32 realmId /*
 
 void RBACData::SavePermission(uint32 permission, bool granted, int32 realmId)
 {
-    PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_INS_RBAC_ACCOUNT_PERMISSION);
+    LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_INS_RBAC_ACCOUNT_PERMISSION);
     stmt->setUInt32(0, GetId());
     stmt->setUInt32(1, permission);
     stmt->setBool(2, granted);
@@ -155,7 +156,7 @@ RBACCommandResult RBACData::RevokePermission(uint32 permissionId, int32 realmId 
     {
         TC_LOG_TRACE("rbac", "RBACData::RevokePermission [Id: %u Name: %s] (Permission %u, RealmId %d). Ok and DB updated",
                        GetId(), GetName().c_str(), permissionId, realmId);
-        PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_DEL_RBAC_ACCOUNT_PERMISSION);
+        LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_DEL_RBAC_ACCOUNT_PERMISSION);
         stmt->setUInt32(0, GetId());
         stmt->setUInt32(1, permissionId);
         stmt->setInt32(2, realmId);
@@ -176,11 +177,28 @@ void RBACData::LoadFromDB()
 
     TC_LOG_DEBUG("rbac", "RBACData::LoadFromDB [Id: %u Name: %s]: Loading permissions", GetId(), GetName().c_str());
     // Load account permissions (granted and denied) that affect current realm
-    PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_RBAC_ACCOUNT_PERMISSIONS);
+    LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_RBAC_ACCOUNT_PERMISSIONS);
     stmt->setUInt32(0, GetId());
     stmt->setInt32(1, GetRealmId());
 
-    PreparedQueryResult result = LoginDatabase.Query(stmt);
+    LoadFromDBCallback(LoginDatabase.Query(stmt));
+}
+
+QueryCallback RBACData::LoadFromDBAsync()
+{
+    ClearData();
+
+    TC_LOG_DEBUG("rbac", "RBACData::LoadFromDB [Id: %u Name: %s]: Loading permissions", GetId(), GetName().c_str());
+    // Load account permissions (granted and denied) that affect current realm
+    LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_RBAC_ACCOUNT_PERMISSIONS);
+    stmt->setUInt32(0, GetId());
+    stmt->setInt32(1, GetRealmId());
+
+    return LoginDatabase.AsyncQuery(stmt);
+}
+
+void RBACData::LoadFromDBCallback(PreparedQueryResult result)
+{
     if (result)
     {
         do
@@ -190,8 +208,7 @@ void RBACData::LoadFromDB()
                 GrantPermission(fields[0].GetUInt32());
             else
                 DenyPermission(fields[0].GetUInt32());
-        }
-        while (result->NextRow());
+        } while (result->NextRow());
     }
 
     // Add default permissions
@@ -221,10 +238,10 @@ void RBACData::AddPermissions(RBACPermissionContainer const& permsFrom, RBACPerm
         permsTo.insert(*itr);
 }
 
-void RBACData::RemovePermissions(RBACPermissionContainer const& permsFrom, RBACPermissionContainer& permsTo)
+void RBACData::RemovePermissions(RBACPermissionContainer& permsFrom, RBACPermissionContainer const& permsToRemove)
 {
-    for (RBACPermissionContainer::const_iterator itr = permsFrom.begin(); itr != permsFrom.end(); ++itr)
-        permsTo.erase(*itr);
+    for (RBACPermissionContainer::const_iterator itr = permsToRemove.begin(); itr != permsToRemove.end(); ++itr)
+        permsFrom.erase(*itr);
 }
 
 void RBACData::ExpandPermissions(RBACPermissionContainer& permissions)

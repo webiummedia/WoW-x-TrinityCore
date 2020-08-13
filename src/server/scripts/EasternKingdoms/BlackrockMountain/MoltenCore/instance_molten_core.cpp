@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,18 +15,12 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* ScriptData
-SDName: Instance_Molten_Core
-SD%Complete: 0
-SDComment: Place Holder
-SDCategory: Molten Core
-EndScriptData */
-
-#include "ObjectMgr.h"
 #include "ScriptMgr.h"
+#include "GameObject.h"
 #include "InstanceScript.h"
-#include "CreatureAI.h"
+#include "Map.h"
 #include "molten_core.h"
+#include "ScriptedCreature.h"
 #include "TemporarySummon.h"
 
 Position const SummonPositions[10] =
@@ -44,42 +37,31 @@ Position const SummonPositions[10] =
     {838.510f, -829.840f, -232.000f, 2.00000f},
 };
 
+Position const RagnarosTelePos   = {829.159f, -815.773f, -228.972f, 5.30500f};
+Position const RagnarosSummonPos = {838.510f, -829.840f, -232.000f, 2.00000f};
+
 class instance_molten_core : public InstanceMapScript
 {
     public:
-        instance_molten_core() : InstanceMapScript("instance_molten_core", 409) { }
+        instance_molten_core() : InstanceMapScript(MCScriptName, 409) { }
 
         struct instance_molten_core_InstanceMapScript : public InstanceScript
         {
-            instance_molten_core_InstanceMapScript(Map* map) : InstanceScript(map)
+            instance_molten_core_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
             {
+                SetHeaders(DataHeader);
                 SetBossNumber(MAX_ENCOUNTER);
-                _golemaggTheIncineratorGUID = 0;
-                _majordomoExecutusGUID = 0;
-                _cacheOfTheFirelordGUID = 0;
-                _executusSchedule = NULL;
-                _deadBossCount = 0;
+                _executusSchedule = false;
                 _ragnarosAddDeaths = 0;
-                _isLoading = false;
-                _summonedExecutus = false;
             }
 
-            ~instance_molten_core_InstanceMapScript()
-            {
-                delete _executusSchedule;
-            }
-
-            void OnPlayerEnter(Player* /*player*/)
+            void OnPlayerEnter(Player* /*player*/) override
             {
                 if (_executusSchedule)
-                {
-                    SummonMajordomoExecutus(*_executusSchedule);
-                    delete _executusSchedule;
-                    _executusSchedule = NULL;
-                }
+                    SummonMajordomoExecutus();
             }
 
-            void OnCreatureCreate(Creature* creature) OVERRIDE
+            void OnCreatureCreate(Creature* creature) override
             {
                 switch (creature->GetEntry())
                 {
@@ -94,7 +76,7 @@ class instance_molten_core : public InstanceMapScript
                 }
             }
 
-            void OnGameObjectCreate(GameObject* go) OVERRIDE
+            void OnGameObjectCreate(GameObject* go) override
             {
                 switch (go->GetEntry())
                 {
@@ -106,7 +88,7 @@ class instance_molten_core : public InstanceMapScript
                 }
             }
 
-            void SetData(uint32 type, uint32 data) OVERRIDE
+            void SetData(uint32 type, uint32 data) override
             {
                 if (type == DATA_RAGNAROS_ADDS)
                 {
@@ -117,7 +99,7 @@ class instance_molten_core : public InstanceMapScript
                 }
             }
 
-            uint32 GetData(uint32 type) const OVERRIDE
+            uint32 GetData(uint32 type) const override
             {
                 switch (type)
                 {
@@ -128,7 +110,7 @@ class instance_molten_core : public InstanceMapScript
                 return 0;
             }
 
-            uint64 GetData64(uint32 type) const OVERRIDE
+            ObjectGuid GetGuidData(uint32 type) const override
             {
                 switch (type)
                 {
@@ -138,22 +120,17 @@ class instance_molten_core : public InstanceMapScript
                         return _majordomoExecutusGUID;
                 }
 
-                return 0;
+                return ObjectGuid::Empty;
             }
 
-            bool SetBossState(uint32 bossId, EncounterState state)
+            bool SetBossState(uint32 bossId, EncounterState state) override
             {
                 if (!InstanceScript::SetBossState(bossId, state))
                     return false;
 
                 if (state == DONE && bossId < BOSS_MAJORDOMO_EXECUTUS)
-                    ++_deadBossCount;
-
-                if (_isLoading)
-                    return true;
-
-                if (_deadBossCount == 8)
-                    SummonMajordomoExecutus(false);
+                    if (CheckMajordomoExecutus())
+                        SummonMajordomoExecutus();
 
                 if (bossId == BOSS_MAJORDOMO_EXECUTUS && state == DONE)
                     DoRespawnGameObject(_cacheOfTheFirelordGUID, 7 * DAY);
@@ -161,13 +138,13 @@ class instance_molten_core : public InstanceMapScript
                 return true;
             }
 
-            void SummonMajordomoExecutus(bool done)
+            void SummonMajordomoExecutus()
             {
-                if (_summonedExecutus)
+                _executusSchedule = false;
+                if (!_majordomoExecutusGUID.IsEmpty())
                     return;
 
-                _summonedExecutus = true;
-                if (!done)
+                if (GetBossState(BOSS_MAJORDOMO_EXECUTUS) != DONE)
                 {
                     instance->SummonCreature(NPC_MAJORDOMO_EXECUTUS, SummonPositions[0]);
                     instance->SummonCreature(NPC_FLAMEWAKER_HEALER, SummonPositions[1]);
@@ -180,79 +157,36 @@ class instance_molten_core : public InstanceMapScript
                     instance->SummonCreature(NPC_FLAMEWAKER_ELITE, SummonPositions[8]);
                 }
                 else if (TempSummon* summon = instance->SummonCreature(NPC_MAJORDOMO_EXECUTUS, RagnarosTelePos))
-                        summon->AI()->DoAction(ACTION_START_RAGNAROS_ALT);
+                    summon->AI()->DoAction(ACTION_START_RAGNAROS_ALT);
             }
 
-            std::string GetSaveData() OVERRIDE
+            bool CheckMajordomoExecutus() const
             {
-                OUT_SAVE_INST_DATA;
+                if (GetBossState(BOSS_RAGNAROS) == DONE)
+                    return false;
 
-                std::ostringstream saveStream;
-                saveStream << "M C " << GetBossSaveData();
+                for (uint8 i = 0; i < BOSS_MAJORDOMO_EXECUTUS; ++i)
+                    if (GetBossState(i) != DONE)
+                        return false;
 
-                OUT_SAVE_INST_DATA_COMPLETE;
-                return saveStream.str();
+                return true;
             }
 
-            void Load(char const* data)
+            void ReadSaveDataMore(std::istringstream& /*data*/) override
             {
-                if (!data)
-                {
-                    OUT_LOAD_INST_DATA_FAIL;
-                    return;
-                }
-
-                _isLoading = true;
-                OUT_LOAD_INST_DATA(data);
-
-                char dataHead1, dataHead2;
-
-                std::istringstream loadStream(data);
-                loadStream >> dataHead1 >> dataHead2;
-
-                if (dataHead1 == 'M' && dataHead2 == 'C')
-                {
-                    EncounterState states[MAX_ENCOUNTER];
-                    uint8 executusCounter = 0;
-
-                    // need 2 loops to check spawning executus/ragnaros
-                    for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-                    {
-                        uint32 tmpState;
-                        loadStream >> tmpState;
-                        if (tmpState == IN_PROGRESS || tmpState > TO_BE_DECIDED)
-                            tmpState = NOT_STARTED;
-                        states[i] = EncounterState(tmpState);
-
-                         if (tmpState == DONE && i < BOSS_MAJORDOMO_EXECUTUS)
-                            ++executusCounter;
-                   }
-
-                    if (executusCounter >= 8 && states[BOSS_RAGNAROS] != DONE)
-                        _executusSchedule = new bool(states[BOSS_MAJORDOMO_EXECUTUS] == DONE);
-
-                    for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
-                        SetBossState(i, states[i]);
-                }
-                else
-                    OUT_LOAD_INST_DATA_FAIL;
-
-                OUT_LOAD_INST_DATA_COMPLETE;
-                _isLoading = false;
+                if (CheckMajordomoExecutus())
+                    _executusSchedule = true;
             }
 
         private:
-            uint64 _golemaggTheIncineratorGUID;
-            uint64 _majordomoExecutusGUID;
-            uint64 _cacheOfTheFirelordGUID;
-            bool* _executusSchedule;
-            uint8 _deadBossCount;
+            ObjectGuid _golemaggTheIncineratorGUID;
+            ObjectGuid _majordomoExecutusGUID;
+            ObjectGuid _cacheOfTheFirelordGUID;
+            bool  _executusSchedule;
             uint8 _ragnarosAddDeaths;
-            bool _isLoading;
-            bool _summonedExecutus;
         };
 
-        InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
+        InstanceScript* GetInstanceScript(InstanceMap* map) const override
         {
             return new instance_molten_core_InstanceMapScript(map);
         }

@@ -25,6 +25,9 @@
 
 # http://www.slproweb.com/products/Win32OpenSSL.html
 
+set(OPENSSL_EXPECTED_VERSION "1.0")
+set(OPENSSL_MAX_VERSION "1.2")
+
 SET(_OPENSSL_ROOT_HINTS
   "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenSSL (32-bit)_is1;Inno Setup: App Path]"
   "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\OpenSSL (64-bit)_is1;Inno Setup: App Path]"
@@ -77,38 +80,45 @@ IF(WIN32 AND NOT CYGWIN)
     # libeay32MD.lib is identical to ../libeay32.lib, and
     # ssleay32MD.lib is identical to ../ssleay32.lib
 
+    # Since OpenSSL 1.1, lib names are like libcrypto32MTd.lib and libssl32MTd.lib
+    if( "${CMAKE_SIZEOF_VOID_P}" STREQUAL "8" )
+        set(_OPENSSL_MSVC_ARCH_SUFFIX "64")
+    else()
+        set(_OPENSSL_MSVC_ARCH_SUFFIX "32")
+    endif()
+
     FIND_LIBRARY(LIB_EAY_DEBUG
       NAMES
-        libeay32MDd libeay32
+        libcrypto${_OPENSSL_MSVC_ARCH_SUFFIX}MDd libeay32MDd libeay32
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
 
     FIND_LIBRARY(LIB_EAY_RELEASE
       NAMES
-        libeay32MD libeay32
+        libcrypto${_OPENSSL_MSVC_ARCH_SUFFIX}MD libeay32MD libeay32
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
 
     FIND_LIBRARY(SSL_EAY_DEBUG
       NAMES
-        ssleay32MDd ssleay32 ssl
+        libssl${_OPENSSL_MSVC_ARCH_SUFFIX}MDd ssleay32MDd ssleay32 ssl
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
 
     FIND_LIBRARY(SSL_EAY_RELEASE
       NAMES
-        ssleay32MD ssleay32 ssl
+        libssl${_OPENSSL_MSVC_ARCH_SUFFIX}MD ssleay32MD ssleay32 ssl
       PATHS
         ${OPENSSL_ROOT_DIR}/lib/VC
     )
 
     if( CMAKE_CONFIGURATION_TYPES OR CMAKE_BUILD_TYPE )
       set( OPENSSL_LIBRARIES
-        optimized ${SSL_EAY_RELEASE} ${LIB_EAY_RELEASE}
-        debug ${SSL_EAY_DEBUG} ${LIB_EAY_DEBUG}
+        optimized ${SSL_EAY_RELEASE} optimized ${LIB_EAY_RELEASE}
+        debug ${SSL_EAY_DEBUG} debug ${LIB_EAY_DEBUG}
       )
     else()
       set( OPENSSL_LIBRARIES
@@ -186,7 +196,7 @@ if (OPENSSL_INCLUDE_DIR)
     set(OPENSSL_VERSION "${_OPENSSL_VERSION}")
   else (_OPENSSL_VERSION)
     file(STRINGS "${OPENSSL_INCLUDE_DIR}/openssl/opensslv.h" openssl_version_str
-         REGEX "^#define[\t ]+OPENSSL_VERSION_NUMBER[\t ]+0x[0-9][0-9][0-9][0-9][0-9][0-9].*")
+         REGEX "^# *define[\t ]+OPENSSL_VERSION_NUMBER[\t ]+0x[0-9][0-9][0-9][0-9][0-9][0-9].*")
 
     # The version number is encoded as 0xMNNFFPPS: major minor fix patch status
     # The status gives if this is a developer or prerelease and is ignored here.
@@ -218,7 +228,7 @@ if (OPENSSL_INCLUDE_DIR)
   endif (_OPENSSL_VERSION)
 
   include(EnsureVersion)
-  ENSURE_VERSION( "${OPENSSL_EXPECTED_VERSION}" "${OPENSSL_VERSION}" OPENSSL_VERSION_OK)
+  ENSURE_VERSION_RANGE("${OPENSSL_EXPECTED_VERSION}" "${OPENSSL_VERSION}" "${OPENSSL_MAX_VERSION}" OPENSSL_VERSION_OK)
   if (NOT OPENSSL_VERSION_OK)
       message(FATAL_ERROR "TrinityCore needs OpenSSL version ${OPENSSL_EXPECTED_VERSION} but found version ${OPENSSL_VERSION}")
   endif()

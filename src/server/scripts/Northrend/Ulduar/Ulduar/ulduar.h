@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,8 +18,12 @@
 #ifndef DEF_ULDUAR_H
 #define DEF_ULDUAR_H
 
-#include "ObjectMgr.h"
+#include "CreatureAIImpl.h"
+
+struct Position;
+
 #define UlduarScriptName "instance_ulduar"
+#define DataHeader "UU"
 
 extern Position const ObservationRingKeepersPos[4];
 extern Position const YSKeepersPos[4];
@@ -36,16 +40,16 @@ enum UlduarBosses
     BOSS_ASSEMBLY_OF_IRON    = 4,
     BOSS_KOLOGARN            = 5,
     BOSS_AURIAYA             = 6,
-    BOSS_MIMIRON             = 7,
-    BOSS_HODIR               = 8,
-    BOSS_THORIM              = 9,
-    BOSS_FREYA               = 10,
-    BOSS_BRIGHTLEAF          = 11,
-    BOSS_IRONBRANCH          = 12,
-    BOSS_STONEBARK           = 13,
-    BOSS_VEZAX               = 14,
-    BOSS_YOGG_SARON          = 15,
-    BOSS_ALGALON             = 16,
+    BOSS_HODIR               = 7,
+    BOSS_THORIM              = 8,
+    BOSS_FREYA               = 9,
+    BOSS_MIMIRON             = 10,
+    BOSS_VEZAX               = 11,
+    BOSS_YOGG_SARON          = 12,
+    BOSS_ALGALON             = 13,
+    BOSS_BRIGHTLEAF          = 14,
+    BOSS_IRONBRANCH          = 15,
+    BOSS_STONEBARK           = 16,
 };
 
 enum UlduarNPCs
@@ -54,6 +58,7 @@ enum UlduarNPCs
     NPC_LEVIATHAN                           = 33113,
     NPC_SALVAGED_DEMOLISHER                 = 33109,
     NPC_SALVAGED_SIEGE_ENGINE               = 33060,
+    NPC_SALVAGED_CHOPPER                    = 33062,
     NPC_IGNIS                               = 33118,
     NPC_RAZORSCALE                          = 33186,
     NPC_RAZORSCALE_CONTROLLER               = 33233,
@@ -79,10 +84,42 @@ enum UlduarNPCs
     NPC_YOGG_SARON                          = 33288,
     NPC_ALGALON                             = 32871,
 
+    //XT002
+    NPC_XS013_SCRAPBOT                      = 33343,
+
+    // Flame Leviathan
+    NPC_ULDUAR_COLOSSUS                     = 33237,
+    NPC_BRANN_BRONZEBEARD_INTRO             = 33579,
+    NPC_BRANN_BRONZEBEARD_FLYING_MACHINE    = 34119,
+    NPC_BRANN_S_FLYING_MACHINE              = 34120,
+    NPC_ARCHMAGE_PENTARUS                   = 33624,
+    NPC_ARCHMAGE_RHYDIAN                    = 33696,
+    NPC_LORE_KEEPER_OF_NORGANNON            = 33686,
+    NPC_HIGH_EXPLORER_DELLORAH              = 33701,
+    NPC_BRONZEBEARD_RADIO                   = 34054,
+    NPC_FLAME_LEVIATHAN                     = 33113,
+    NPC_FLAME_LEVIATHAN_SEAT                = 33114,
+    NPC_FLAME_LEVIATHAN_TURRET              = 33139,
+    NPC_LEVIATHAN_DEFENSE_TURRET            = 33142,
+    NPC_OVERLOAD_CONTROL_DEVICE             = 33143,
+    NPC_ORBITAL_SUPPORT                     = 34286,
+
     // Mimiron
     NPC_LEVIATHAN_MKII                      = 33432,
     NPC_VX_001                              = 33651,
     NPC_AERIAL_COMMAND_UNIT                 = 33670,
+    NPC_ASSAULT_BOT                         = 34057,
+    NPC_BOMB_BOT                            = 33836,
+    NPC_JUNK_BOT                            = 33855,
+    NPC_EMERGENCY_FIRE_BOT                  = 34147,
+    NPC_FROST_BOMB                          = 34149,
+    NPC_BURST_TARGET                        = 34211,
+    NPC_FLAME                               = 34363,
+    NPC_FLAME_SPREAD                        = 34121,
+    NPC_DB_TARGET                           = 33576,
+    NPC_ROCKET_MIMIRON_VISUAL               = 34050,
+    NPC_WORLD_TRIGGER_MIMIRON               = 21252,
+    NPC_COMPUTER                            = 34143,
 
     // Freya's Keepers
     NPC_IRONBRANCH                          = 32913,
@@ -116,6 +153,34 @@ enum UlduarNPCs
     NPC_IRONROOT_LASHER                     = 33526,
     NPC_NATURES_BLADE                       = 33527,
     NPC_GUARDIAN_OF_LIFE                    = 33528,
+
+    // Freya Achievement Trigger
+    NPC_FREYA_ACHIEVE_TRIGGER               = 33406,
+
+    // Thorim
+    NPC_THORIM_INVISIBLE_STALKER            = 32780,
+    NPC_JORMUNGAR_BEHEMOTH                  = 32882,
+    NPC_MERCENARY_CAPTAIN_A                 = 32908,
+    NPC_MERCENARY_CAPTAIN_H                 = 32907,
+    NPC_MERCENARY_SOLDIER_A                 = 32885,
+    NPC_MERCENARY_SOLDIER_H                 = 32883,
+    NPC_DARK_RUNE_ACOLYTE_PRE               = 32886,
+    NPC_RUNIC_COLOSSUS                      = 32872,
+    NPC_RUNE_GIANT                          = 32873,
+    NPC_IRON_RING_GUARD                     = 32874,
+    NPC_IRON_HONOR_GUARD                    = 32875,
+    NPC_DARK_RUNE_CHAMPION                  = 32876,
+    NPC_DARK_RUNE_WARBRINGER                = 32877,
+    NPC_DARK_RUNE_EVOKER                    = 32878,
+    NPC_DARK_RUNE_COMMONER                  = 32904,
+    NPC_DARK_RUNE_ACOLYTE                   = 33110,
+    NPC_THORIM_EVENT_BUNNY                  = 32892,
+    NPC_LIGHTNING_ORB                       = 33138,
+    NPC_GOLEM_RIGHT_HAND_BUNNY              = 33140,
+    NPC_GOLEM_LEFT_HAND_BUNNY               = 33141,
+    NPC_SIF                                 = 33196,
+    NPC_THUNDER_ORB                         = 33378,
+    NPC_THORIM_CONTROLLER                   = 32879,
 
     // Yogg-Saron
     NPC_SARA                                = 33134,
@@ -191,6 +256,8 @@ enum UlduarGameObjects
     GO_KOLOGARN_BRIDGE                      = 194232,
     GO_KOLOGARN_DOOR                        = 194553,
 
+    GO_ANCIENT_GATE_OF_THE_KEEPERS          = 194255,
+
     // Hodir
     GO_HODIR_ENTRANCE                       = 194442,
     GO_HODIR_DOOR                           = 194634,
@@ -201,8 +268,27 @@ enum UlduarGameObjects
     GO_HODIR_CHEST                          = 194307,
 
     // Thorim
-    GO_THORIM_CHEST_HERO                    = 194315,
-    GO_THORIM_CHEST                         = 194314,
+    GO_CACHE_OF_STORMS_10                   = 194312,
+    GO_CACHE_OF_STORMS_HARDMODE_10          = 194313,
+    GO_CACHE_OF_STORMS_25                   = 194315,
+    GO_CACHE_OF_STORMS_HARDMODE_25          = 194314,
+    GO_THORIM_RUNIC_DOOR                    = 194557,
+    GO_THORIM_STONE_DOOR                    = 194558,
+    GO_THORIM_ENCOUNTER_DOOR                = 194559,
+    GO_THORIM_LEVER                         = 194264,
+    GO_THORIM_DARK_IRON_PORTCULLIS          = 194560,
+
+    // Mimiron
+    GO_MIMIRON_TRAM                         = 194675,
+    GO_MIMIRON_ELEVATOR                     = 194749,
+    GO_MIMIRON_BUTTON                       = 194739,
+    GO_MIMIRON_DOOR_1                       = 194774,
+    GO_MIMIRON_DOOR_2                       = 194775,
+    GO_MIMIRON_DOOR_3                       = 194776,
+    GO_CACHE_OF_INNOVATION                  = 194789,
+    GO_CACHE_OF_INNOVATION_FIREFIGHTER      = 194957,
+    GO_CACHE_OF_INNOVATION_HERO             = 194956,
+    GO_CACHE_OF_INNOVATION_FIREFIGHTER_HERO = 194958,
 
     // Vezax
     GO_VEZAX_DOOR                           = 194750,
@@ -227,7 +313,7 @@ enum UlduarGameObjects
     GO_GIFT_OF_THE_OBSERVER_25              = 194822,
 };
 
-enum EventIds
+enum UUEventIds
 {
     EVENT_TOWER_OF_STORM_DESTROYED      = 21031,
     EVENT_TOWER_OF_FROST_DESTROYED      = 21032,
@@ -249,6 +335,7 @@ enum LeviathanActions
 enum UlduarAchievementCriteriaIds
 {
     CRITERIA_CON_SPEED_ATORY                 = 21597,
+    CRITERIA_LUMBERJACKED                    = 21686,
     CRITERIA_DISARMED                        = 21687,
     CRITERIA_WAITS_DREAMING_STORMWIND_25     = 10321,
     CRITERIA_WAITS_DREAMING_CHAMBER_25       = 10322,
@@ -267,6 +354,35 @@ enum UlduarAchievementCriteriaIds
     CRITERIA_ALONE_IN_THE_DARKNESS_10        = 10412,
     CRITERIA_ALONE_IN_THE_DARKNESS_25        = 10417,
     CRITERIA_HERALD_OF_TITANS                = 10678,
+
+    // Champion of Ulduar
+    CRITERIA_C_O_U_LEVIATHAN_10              = 10042,
+    CRITERIA_C_O_U_IGNIS_10                  = 10342,
+    CRITERIA_C_O_U_RAZORSCALE_10             = 10340,
+    CRITERIA_C_O_U_XT002_10                  = 10341,
+    CRITERIA_C_O_U_IRON_COUNCIL_10           = 10598,
+    CRITERIA_C_O_U_KOLOGARN_10               = 10348,
+    CRITERIA_C_O_U_AURIAYA_10                = 10351,
+    CRITERIA_C_O_U_HODIR_10                  = 10439,
+    CRITERIA_C_O_U_THORIM_10                 = 10403,
+    CRITERIA_C_O_U_FREYA_10                  = 10582,
+    CRITERIA_C_O_U_MIMIRON_10                = 10347,
+    CRITERIA_C_O_U_VEZAX_10                  = 10349,
+    CRITERIA_C_O_U_YOGG_SARON_10             = 10350,
+    // Conqueror of Ulduar
+    CRITERIA_C_O_U_LEVIATHAN_25              = 10352,
+    CRITERIA_C_O_U_IGNIS_25                  = 10355,
+    CRITERIA_C_O_U_RAZORSCALE_25             = 10353,
+    CRITERIA_C_O_U_XT002_25                  = 10354,
+    CRITERIA_C_O_U_IRON_COUNCIL_25           = 10599,
+    CRITERIA_C_O_U_KOLOGARN_25               = 10357,
+    CRITERIA_C_O_U_AURIAYA_25                = 10363,
+    CRITERIA_C_O_U_HODIR_25                  = 10719,
+    CRITERIA_C_O_U_THORIM_25                 = 10404,
+    CRITERIA_C_O_U_FREYA_25                  = 10583,
+    CRITERIA_C_O_U_MIMIRON_25                = 10361,
+    CRITERIA_C_O_U_VEZAX_25                  = 10362,
+    CRITERIA_C_O_U_YOGG_SARON_25             = 10364
 };
 
 enum UlduarData
@@ -292,6 +408,16 @@ enum UlduarData
     // Hodir
     DATA_HODIR_RARE_CACHE,
 
+    // Mimiron
+    DATA_LEVIATHAN_MK_II,
+    DATA_VX_001,
+    DATA_AERIAL_COMMAND_UNIT,
+    DATA_COMPUTER,
+    DATA_MIMIRON_WORLD_TRIGGER,
+    DATA_MIMIRON_ELEVATOR,
+    DATA_MIMIRON_TRAM,
+    DATA_MIMIRON_BUTTON,
+
     // Yogg-Saron
     DATA_VOICE_OF_YOGG_SARON,
     DATA_SARA,
@@ -314,6 +440,22 @@ enum UlduarData
     DATA_UNIVERSE_GLOBE,
     DATA_ALGALON_TRAPDOOR,
     DATA_BRANN_BRONZEBEARD_ALG,
+
+    // Thorim
+    DATA_SIF,
+    DATA_THORIM_LEVER,
+    DATA_RUNIC_COLOSSUS,
+    DATA_RUNE_GIANT,
+    DATA_RUNIC_DOOR,
+    DATA_STONE_DOOR,
+    DATA_THORIM_HARDMODE,
+    DATA_THORIM_CONTROLLER,
+
+    // Misc
+    DATA_BRANN_BRONZEBEARD_INTRO,
+    DATA_LORE_KEEPER_OF_NORGANNON,
+    DATA_DELLORAH,
+    DATA_BRONZEBEARD_RADIO
 };
 
 enum UlduarWorldStates
@@ -325,9 +467,15 @@ enum UlduarWorldStates
 enum UlduarAchievementData
 {
     // FL Achievement boolean
-    DATA_UNBROKEN = 29052906, // 2905, 2906 are achievement IDs,
+    DATA_UNBROKEN               = 29052906, // 2905, 2906 are achievement IDs,
     MAX_HERALD_ARMOR_ITEMLEVEL  = 226,
-    MAX_HERALD_WEAPON_ITEMLEVEL = 232,
+    MAX_HERALD_WEAPON_ITEMLEVEL = 232
+};
+
+enum UlduarSharedSpells
+{
+    SPELL_LUMBERJACKED_CREDIT    = 65296,
+    SPELL_TELEPORT_KEEPER_VISUAL = 62940  // used by keepers
 };
 
 enum UlduarEvents
@@ -335,6 +483,8 @@ enum UlduarEvents
     EVENT_DESPAWN_ALGALON       = 1,
     EVENT_UPDATE_ALGALON_TIMER  = 2,
     ACTION_INIT_ALGALON         = 6,
+    EVENT_DESPAWN_LEVIATHAN_VEHICLES = 7,
+    EVENT_LEVIATHAN_BREAK_DOOR   = 8
 };
 
 enum YoggSaronIllusions
@@ -344,23 +494,27 @@ enum YoggSaronIllusions
     STORMWIND_ILLUSION          = 2,
 };
 
-template<class AI, class T>
-AI* GetUlduarAI(T* obj)
+class KeeperDespawnEvent : public BasicEvent
 {
-    return GetInstanceAI<AI, T>(obj, UlduarScriptName);
-}
+public:
+    KeeperDespawnEvent(Creature* owner, uint32 despawnTimerOffset = 500) : _owner(owner), _despawnTimer(despawnTimerOffset) { }
 
-class PlayerOrPetCheck
-{
-    public:
-        bool operator()(WorldObject* object) const
-        {
-            if (object->GetTypeId() != TYPEID_PLAYER)
-                if (!object->ToCreature()->IsPet())
-                    return true;
+    bool Execute(uint64 /*eventTime*/, uint32 /*updateTime*/) override
+    {
+        _owner->CastSpell(_owner, SPELL_TELEPORT_KEEPER_VISUAL);
+        _owner->DespawnOrUnsummon(1000 + _despawnTimer);
+        return true;
+    }
 
-            return false;
-        }
+private:
+    Creature* _owner;
+    uint32 _despawnTimer;
 };
+
+template<typename AI, typename T>
+inline AI* GetUlduarAI(T* obj)
+{
+    return GetInstanceAI<AI>(obj, UlduarScriptName);
+}
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,9 +16,11 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
+#include "MotionMaster.h"
 #include "PassiveAI.h"
 #include "Player.h"
+#include "ScriptedCreature.h"
+#include "TemporarySummon.h"
 
 /*####
 ## npc_valkyr_battle_maiden
@@ -39,37 +41,47 @@ class npc_valkyr_battle_maiden : public CreatureScript
 public:
     npc_valkyr_battle_maiden() : CreatureScript("npc_valkyr_battle_maiden") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
         return new npc_valkyr_battle_maidenAI(creature);
     }
 
     struct npc_valkyr_battle_maidenAI : public PassiveAI
     {
-        npc_valkyr_battle_maidenAI(Creature* creature) : PassiveAI(creature) { }
+        npc_valkyr_battle_maidenAI(Creature* creature) : PassiveAI(creature)
+        {
+            Initialize();
+        }
+
+        void Initialize()
+        {
+            FlyBackTimer = 500;
+            phase = 0;
+            x = 0.f;
+            y = 0.f;
+            z = 0.f;
+        }
 
         uint32 FlyBackTimer;
         float x, y, z;
         uint32 phase;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
             me->setActive(true);
             me->SetVisible(false);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->AddUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             me->SetCanFly(true);
-            FlyBackTimer = 500;
-            phase = 0;
 
             me->GetPosition(x, y, z);
             z += 4.0f;
             x -= 3.5f;
             y -= 5.0f;
             me->GetMotionMaster()->Clear(false);
-            me->SetPosition(x, y, z, 0.0f);
+            me->UpdatePosition(x, y, z, 0.0f);
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (FlyBackTimer <= diff)
             {
@@ -89,7 +101,7 @@ public:
                         FlyBackTimer = 500;
                         break;
                     case 1:
-                        player->GetClosePoint(x, y, z, me->GetObjectSize());
+                        player->GetClosePoint(x, y, z, me->GetCombatReach());
                         z += 2.5f;
                         x -= 2.0f;
                         y -= 1.5f;
@@ -99,7 +111,7 @@ public:
                         FlyBackTimer = 4500;
                         break;
                     case 2:
-                        if (!player->isRessurectRequested())
+                        if (!player->IsResurrectRequested())
                         {
                             me->HandleEmoteCommand(EMOTE_ONESHOT_CUSTOM_SPELL_01);
                             DoCast(player, SPELL_REVIVE, true);

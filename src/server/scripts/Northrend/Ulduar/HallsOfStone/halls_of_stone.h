@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,16 +18,19 @@
 #ifndef HALLS_OF_STONE_H_
 #define HALLS_OF_STONE_H_
 
+#include "CreatureAIImpl.h"
+
 #define HoSScriptName "instance_halls_of_stone"
+#define DataHeader    "HOS"
 
 uint32 const EncounterCount = 4;
 
-enum DataTypes
+enum HOSDataTypes
 {
     // Encounter States/Boss GUIDs
     DATA_KRYSTALLUS             = 0,
     DATA_MAIDEN_OF_GRIEF        = 1,
-    DATA_BRANN_EVENT            = 2,
+    DATA_TRIBUNAL_OF_AGES       = 2,
     DATA_SJONNIR                = 3,
 
     // Additional data
@@ -41,7 +44,7 @@ enum DataTypes
     DATA_GO_SKY_FLOOR           = 11
 };
 
-enum CreatureIds
+enum HOSCreatureIds
 {
     NPC_MAIDEN                  = 27975,
     NPC_KRYSTALLUS              = 27977,
@@ -52,7 +55,7 @@ enum CreatureIds
     NPC_BRANN                   = 28070
 };
 
-enum GameObjectIds
+enum HOSGameObjectIds
 {
     GO_ABEDNEUM                 = 191669,
     GO_MARNAK                   = 191670,
@@ -66,8 +69,8 @@ enum GameObjectIds
     GO_TRIBUNAL_SKY_FLOOR       = 191527
 };
 
-template<class AI>
-AI* GetHallsOfStoneAI(Creature* creature)
+template<typename AI>
+inline AI* GetHallsOfStoneAI(Creature* creature)
 {
     return GetInstanceAI<AI>(creature, HoSScriptName);
 }

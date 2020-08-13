@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -26,13 +26,14 @@ class instance_mana_tombs : public InstanceMapScript
 
         struct instance_mana_tombs_InstanceMapScript : public InstanceScript
         {
-            instance_mana_tombs_InstanceMapScript(Map* map) : InstanceScript(map)
+            instance_mana_tombs_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
             {
+                SetHeaders(DataHeader);
                 SetBossNumber(EncounterCount);
             }
         };
 
-        InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
+        InstanceScript* GetInstanceScript(InstanceMap* map) const override
         {
             return new instance_mana_tombs_InstanceMapScript(map);
         }

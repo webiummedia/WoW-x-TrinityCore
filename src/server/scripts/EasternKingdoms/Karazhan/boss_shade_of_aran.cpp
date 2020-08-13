@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,10 +23,17 @@ SDCategory: Karazhan
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "karazhan.h"
 #include "GameObject.h"
+#include "InstanceScript.h"
+#include "Item.h"
+#include "karazhan.h"
+#include "Map.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "Player.h"
+#include "ScriptedCreature.h"
 #include "SpellInfo.h"
+#include "TemporarySummon.h"
 
 enum ShadeOfAran
 {
@@ -40,7 +46,7 @@ enum ShadeOfAran
     SAY_KILL                    = 6,
     SAY_TIMEOVER                = 7,
     SAY_DEATH                   = 8,
-//  SAY_ATIESH                  = 9, Unused
+    SAY_ATIESH                  = 9,
 
     //Spells
     SPELL_FROSTBOLT             = 29954,
@@ -79,51 +85,41 @@ enum SuperSpell
     SUPER_AE,
 };
 
+enum Items
+{
+    ITEM_ATIESH_MAGE            = 22589,
+    ITEM_ATIESH_WARLOCK         = 22630,
+    ITEM_ATIESH_PRIEST          = 22631,
+    ITEM_ATIESH_DRUID           = 22632,
+};
+
+uint32 const AtieshStaves[4] =
+{
+    ITEM_ATIESH_MAGE,
+    ITEM_ATIESH_WARLOCK,
+    ITEM_ATIESH_PRIEST,
+    ITEM_ATIESH_DRUID,
+};
+
 class boss_shade_of_aran : public CreatureScript
 {
 public:
     boss_shade_of_aran() : CreatureScript("boss_shade_of_aran") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<boss_aranAI>(creature);
+        return GetKarazhanAI<boss_aranAI>(creature);
     }
 
     struct boss_aranAI : public ScriptedAI
     {
-        boss_aranAI(Creature* creature) : ScriptedAI(creature)
+        boss_aranAI(Creature* creature) : ScriptedAI(creature), SeenAtiesh(false)
         {
+            Initialize();
             instance = creature->GetInstanceScript();
         }
 
-        InstanceScript* instance;
-
-        uint32 SecondarySpellTimer;
-        uint32 NormalCastTimer;
-        uint32 SuperCastTimer;
-        uint32 BerserkTimer;
-        uint32 CloseDoorTimer;                                  // Don't close the door right on aggro in case some people are still entering.
-
-        uint8 LastSuperSpell;
-
-        uint32 FlameWreathTimer;
-        uint32 FlameWreathCheckTime;
-        uint64 FlameWreathTarget[3];
-        float FWTargPosX[3];
-        float FWTargPosY[3];
-
-        uint32 CurrentNormalSpell;
-        uint32 ArcaneCooldown;
-        uint32 FireCooldown;
-        uint32 FrostCooldown;
-
-        uint32 DrinkInterruptTimer;
-
-        bool ElementalsSpawned;
-        bool Drinking;
-        bool DrinkInturrupted;
-
-        void Reset() OVERRIDE
+        void Initialize()
         {
             SecondarySpellTimer = 5000;
             NormalCastTimer = 0;
@@ -131,7 +127,7 @@ public:
             BerserkTimer = 720000;
             CloseDoorTimer = 15000;
 
-            LastSuperSpell = rand()%3;
+            LastSuperSpell = rand32() % 3;
 
             FlameWreathTimer = 0;
             FlameWreathCheckTime = 0;
@@ -146,53 +142,80 @@ public:
             ElementalsSpawned = false;
             Drinking = false;
             DrinkInturrupted = false;
-
-            // Not in progress
-            instance->SetData(TYPE_ARAN, NOT_STARTED);
-            instance->HandleGameObject(instance->GetData64(DATA_GO_LIBRARY_DOOR), true);
         }
 
-        void KilledUnit(Unit* /*victim*/) OVERRIDE
+        InstanceScript* instance;
+
+        uint32 SecondarySpellTimer;
+        uint32 NormalCastTimer;
+        uint32 SuperCastTimer;
+        uint32 BerserkTimer;
+        uint32 CloseDoorTimer;                                  // Don't close the door right on aggro in case some people are still entering.
+
+        uint8 LastSuperSpell;
+
+        uint32 FlameWreathTimer;
+        uint32 FlameWreathCheckTime;
+        ObjectGuid FlameWreathTarget[3];
+        float FWTargPosX[3];
+        float FWTargPosY[3];
+
+        uint32 CurrentNormalSpell;
+        uint32 ArcaneCooldown;
+        uint32 FireCooldown;
+        uint32 FrostCooldown;
+
+        uint32 DrinkInterruptTimer;
+
+        bool ElementalsSpawned;
+        bool Drinking;
+        bool DrinkInturrupted;
+        bool SeenAtiesh;
+
+        void Reset() override
+        {
+            Initialize();
+
+            // Not in progress
+            instance->SetBossState(DATA_ARAN, NOT_STARTED);
+            instance->HandleGameObject(instance->GetGuidData(DATA_GO_LIBRARY_DOOR), true);
+        }
+
+        void KilledUnit(Unit* /*victim*/) override
         {
             Talk(SAY_KILL);
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             Talk(SAY_DEATH);
 
-            instance->SetData(TYPE_ARAN, DONE);
-            instance->HandleGameObject(instance->GetData64(DATA_GO_LIBRARY_DOOR), true);
+            instance->SetBossState(DATA_ARAN, DONE);
+            instance->HandleGameObject(instance->GetGuidData(DATA_GO_LIBRARY_DOOR), true);
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
             Talk(SAY_AGGRO);
 
-            instance->SetData(TYPE_ARAN, IN_PROGRESS);
-            instance->HandleGameObject(instance->GetData64(DATA_GO_LIBRARY_DOOR), false);
+            instance->SetBossState(DATA_ARAN, IN_PROGRESS);
+            instance->HandleGameObject(instance->GetGuidData(DATA_GO_LIBRARY_DOOR), false);
         }
 
         void FlameWreathEffect()
         {
             std::vector<Unit*> targets;
-            ThreatContainer::StorageType const &t_list = me->getThreatManager().getThreatList();
-
-            if (t_list.empty())
-                return;
-
             //store the threat list in a different container
-            for (ThreatContainer::StorageType::const_iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
+            for (auto* ref : me->GetThreatManager().GetUnsortedThreatList())
             {
-                Unit* target = Unit::GetUnit(*me, (*itr)->getUnitGuid());
-                //only on alive players
-                if (target && target->IsAlive() && target->GetTypeId() == TYPEID_PLAYER)
-                    targets.push_back(target);
+                Unit* target = ref->GetVictim();
+                if (ref->GetVictim()->GetTypeId() == TYPEID_PLAYER && ref->GetVictim()->IsAlive())
+                        targets.push_back(target);
             }
 
             //cut down to size if we have more than 3 targets
             while (targets.size() > 3)
-                targets.erase(targets.begin()+rand()%targets.size());
+                targets.erase(targets.begin() + rand32() % targets.size());
 
             uint32 i = 0;
             for (std::vector<Unit*>::const_iterator itr = targets.begin(); itr!= targets.end(); ++itr)
@@ -208,7 +231,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -217,7 +240,7 @@ public:
             {
                 if (CloseDoorTimer <= diff)
                 {
-                    instance->HandleGameObject(instance->GetData64(DATA_GO_LIBRARY_DOOR), false);
+                    instance->HandleGameObject(instance->GetGuidData(DATA_GO_LIBRARY_DOOR), false);
                     CloseDoorTimer = 0;
                 } else CloseDoorTimer -= diff;
             }
@@ -244,7 +267,7 @@ public:
             else FrostCooldown = 0;
             }
 
-            if (!Drinking && me->GetMaxPower(POWER_MANA) && (me->GetPower(POWER_MANA)*100 / me->GetMaxPower(POWER_MANA)) < 20)
+            if (!Drinking && me->GetMaxPower(POWER_MANA) && me->GetPowerPct(POWER_MANA) < 20.f)
             {
                 Drinking = true;
                 me->InterruptNonMeleeSpells(false);
@@ -322,7 +345,7 @@ public:
                     //If no available spells wait 1 second and try again
                     if (AvailableSpells)
                     {
-                        CurrentNormalSpell = Spells[rand() % AvailableSpells];
+                        CurrentNormalSpell = Spells[rand32() % AvailableSpells];
                         DoCast(target, CurrentNormalSpell);
                     }
                 }
@@ -362,6 +385,10 @@ public:
                         Available[0] = SUPER_FLAME;
                         Available[1] = SUPER_AE;
                         break;
+                    default:
+                        Available[0] = 0;
+                        Available[1] = 0;
+                        break;
                 }
 
                 LastSuperSpell = Available[urand(0, 1)];
@@ -383,9 +410,9 @@ public:
                         FlameWreathTimer = 20000;
                         FlameWreathCheckTime = 500;
 
-                        FlameWreathTarget[0] = 0;
-                        FlameWreathTarget[1] = 0;
-                        FlameWreathTarget[2] = 0;
+                        FlameWreathTarget[0].Clear();
+                        FlameWreathTarget[1].Clear();
+                        FlameWreathTarget[2].Clear();
 
                         FlameWreathEffect();
                         break;
@@ -395,7 +422,7 @@ public:
 
                         if (Creature* pSpawn = me->SummonCreature(CREATURE_ARAN_BLIZZARD, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 25000))
                         {
-                            pSpawn->setFaction(me->getFaction());
+                            pSpawn->SetFaction(me->GetFaction());
                             pSpawn->CastSpell(pSpawn, SPELL_CIRCULAR_BLIZZARD, false);
                         }
                         break;
@@ -413,7 +440,7 @@ public:
                     if (Creature* unit = me->SummonCreature(CREATURE_WATER_ELEMENTAL, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 90000))
                     {
                         unit->Attack(me->GetVictim(), true);
-                        unit->setFaction(me->getFaction());
+                        unit->SetFaction(me->GetFaction());
                     }
                 }
 
@@ -427,7 +454,7 @@ public:
                     if (Creature* unit = me->SummonCreature(CREATURE_SHADOW_OF_ARAN, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000))
                     {
                         unit->Attack(me->GetVictim(), true);
-                        unit->setFaction(me->getFaction());
+                        unit->SetFaction(me->GetFaction());
                     }
                 }
 
@@ -450,12 +477,12 @@ public:
                         if (!FlameWreathTarget[i])
                             continue;
 
-                        Unit* unit = Unit::GetUnit(*me, FlameWreathTarget[i]);
+                        Unit* unit = ObjectAccessor::GetUnit(*me, FlameWreathTarget[i]);
                         if (unit && !unit->IsWithinDist2d(FWTargPosX[i], FWTargPosY[i], 3))
                         {
                             unit->CastSpell(unit, 20476, true, 0, 0, me->GetGUID());
                             unit->CastSpell(unit, 11027, true);
-                            FlameWreathTarget[i] = 0;
+                            FlameWreathTarget[i].Clear();
                         }
                     }
                     FlameWreathCheckTime = 500;
@@ -466,33 +493,66 @@ public:
                 DoMeleeAttackIfReady();
         }
 
-        void DamageTaken(Unit* /*pAttacker*/, uint32 &damage) OVERRIDE
+        void DamageTaken(Unit* /*pAttacker*/, uint32 &damage) override
         {
             if (!DrinkInturrupted && Drinking && damage)
                 DrinkInturrupted = true;
         }
 
-        void SpellHit(Unit* /*pAttacker*/, const SpellInfo* Spell) OVERRIDE
+        void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
         {
-            //We only care about interrupt effects and only if they are durring a spell currently being cast
-            if ((Spell->Effects[0].Effect != SPELL_EFFECT_INTERRUPT_CAST &&
-                Spell->Effects[1].Effect != SPELL_EFFECT_INTERRUPT_CAST &&
-                Spell->Effects[2].Effect != SPELL_EFFECT_INTERRUPT_CAST) || !me->IsNonMeleeSpellCast(false))
-                return;
-
-            //Interrupt effect
-            me->InterruptNonMeleeSpells(false);
-
-            //Normally we would set the cooldown equal to the spell duration
-            //but we do not have access to the DurationStore
-
-            switch (CurrentNormalSpell)
+            // We only care about interrupt effects and only if they are durring a spell currently being cast
+            if (spellInfo->HasEffect(SPELL_EFFECT_INTERRUPT_CAST) && me->IsNonMeleeSpellCast(false))
             {
-                case SPELL_ARCMISSLE: ArcaneCooldown = 5000; break;
-                case SPELL_FIREBALL: FireCooldown = 5000; break;
-                case SPELL_FROSTBOLT: FrostCooldown = 5000; break;
+                // Interrupt effect
+                me->InterruptNonMeleeSpells(false);
+
+                // Normally we would set the cooldown equal to the spell duration
+                // but we do not have access to the DurationStore
+
+                switch (CurrentNormalSpell)
+                {
+                    case SPELL_ARCMISSLE: ArcaneCooldown = 5000; break;
+                    case SPELL_FIREBALL: FireCooldown = 5000; break;
+                    case SPELL_FROSTBOLT: FrostCooldown = 5000; break;
+                }
             }
         }
+
+        void MoveInLineOfSight(Unit* who) override
+        {
+            ScriptedAI::MoveInLineOfSight(who);
+
+            if (SeenAtiesh || me->IsInCombat() || me->GetDistance2d(who) > me->GetAttackDistance(who) + 10.0f)
+                return;
+
+            Player* player = who->ToPlayer();
+            if (!player)
+                return;
+
+            for (uint32 id : AtieshStaves)
+            {
+                if (!PlayerHasWeaponEquipped(player, id))
+                    continue;
+
+                SeenAtiesh = true;
+                Talk(SAY_ATIESH);
+                me->SetFacingTo(me->GetAngle(player));
+                me->ClearUnitState(UNIT_STATE_MOVING);
+                me->GetMotionMaster()->MoveDistract(7 * IN_MILLISECONDS);
+                break;
+            }
+        }
+
+        private:
+            bool PlayerHasWeaponEquipped(Player* player, uint32 itemEntry)
+            {
+                Item* item = player->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND);
+                if (item && item->GetEntry() == itemEntry)
+                    return true;
+
+                return false;
+            }
     };
 };
 
@@ -501,25 +561,33 @@ class npc_aran_elemental : public CreatureScript
 public:
     npc_aran_elemental() : CreatureScript("npc_aran_elemental") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new water_elementalAI(creature);
+        return GetKarazhanAI<water_elementalAI>(creature);
     }
 
     struct water_elementalAI : public ScriptedAI
     {
-        water_elementalAI(Creature* creature) : ScriptedAI(creature) { }
+        water_elementalAI(Creature* creature) : ScriptedAI(creature)
+        {
+            Initialize();
+        }
+
+        void Initialize()
+        {
+            CastTimer = 2000 + (rand32() % 3000);
+        }
 
         uint32 CastTimer;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            CastTimer = 2000 + (rand()%3000);
+            Initialize();
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE { }
+        void EnterCombat(Unit* /*who*/) override { }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;

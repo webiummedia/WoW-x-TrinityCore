@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,19 +22,18 @@
 #define MAX_BAG_SIZE 36                                     // 2.0.12
 
 #include "Item.h"
-#include "ItemPrototype.h"
 
-class Bag : public Item
+class TC_GAME_API Bag : public Item
 {
     public:
 
         Bag();
         ~Bag();
 
-        void AddToWorld();
-        void RemoveFromWorld();
+        void AddToWorld() override;
+        void RemoveFromWorld() override;
 
-        bool Create(uint32 guidlow, uint32 itemid, Player const* owner);
+        bool Create(ObjectGuid::LowType guidlow, uint32 itemid, ItemContext context, Player const* owner) override;
 
         void Clear();
         void StoreItem(uint8 slot, Item* pItem, bool update);
@@ -45,30 +43,37 @@ class Bag : public Item
         uint32 GetItemCount(uint32 item, Item* eItem = NULL) const;
         uint32 GetItemCountWithLimitCategory(uint32 limitCategory, Item* skipItem = NULL) const;
 
-        uint8 GetSlotByItemGUID(uint64 guid) const;
+        uint8 GetSlotByItemGUID(ObjectGuid guid) const;
         bool IsEmpty() const;
         uint32 GetFreeSlots() const;
-        uint32 GetBagSize() const { return GetUInt32Value(CONTAINER_FIELD_NUM_SLOTS); }
+        uint32 GetBagSize() const { return m_containerData->NumSlots; }
 
         // DB operations
         // overwrite virtual Item::SaveToDB
-        void SaveToDB(SQLTransaction& trans);
+        void SaveToDB(CharacterDatabaseTransaction& trans) override;
         // overwrite virtual Item::LoadFromDB
-        bool LoadFromDB(uint32 guid, uint64 owner_guid, Field* fields, uint32 entry);
+        bool LoadFromDB(ObjectGuid::LowType guid, ObjectGuid owner_guid, Field* fields, uint32 entry) override;
         // overwrite virtual Item::DeleteFromDB
-        void DeleteFromDB(SQLTransaction& trans);
-
-        void BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* target) const;
+        void DeleteFromDB(CharacterDatabaseTransaction& trans) override;
 
     protected:
+        void BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* target) const override;
+        void BuildValuesCreate(ByteBuffer* data, Player const* target) const override;
+        void BuildValuesUpdate(ByteBuffer* data, Player const* target) const override;
+        void ClearUpdateMask(bool remove) override;
+
+    public:
+        void BuildValuesUpdateForPlayerWithMask(UpdateData* data, UF::ObjectData::Mask const& requestedObjectMask, UF::ItemData::Mask const& requestedItemMask,
+            UF::ContainerData::Mask const& requestedContainerMask, Player const* target) const;
+
+        UF::UpdateField<UF::ContainerData, 0, TYPEID_CONTAINER> m_containerData;
+
+    protected:
+        void SetBagSize(uint32 numSlots) { SetUpdateFieldValue(m_values.ModifyValue(&Bag::m_containerData).ModifyValue(&UF::ContainerData::NumSlots), numSlots); }
+        void SetSlot(uint32 slot, ObjectGuid guid) { SetUpdateFieldValue(m_values.ModifyValue(&Bag::m_containerData).ModifyValue(&UF::ContainerData::Slots, slot), guid); }
 
         // Bag Storage space
         Item* m_bagslot[MAX_BAG_SIZE];
 };
 
-inline Item* NewItemOrBag(ItemTemplate const* proto)
-{
-    return (proto->InventoryType == INVTYPE_BAG) ? new Bag : new Item;
-}
 #endif
-

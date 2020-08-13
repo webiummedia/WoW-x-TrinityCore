@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -29,14 +28,9 @@ public:
 
     Vec3D(float x0 = 0.0f, float y0 = 0.0f, float z0 = 0.0f) : x(x0), y(y0), z(z0) {}
 
-    Vec3D(const Vec3D& v) : x(v.x), y(v.y), z(v.z) {}
+    Vec3D(const Vec3D& v) = default;
 
-    Vec3D& operator= (const Vec3D &v) {
-        x = v.x;
-        y = v.y;
-        z = v.z;
-        return *this;
-    }
+    Vec3D& operator= (const Vec3D &v) = default;
 
     Vec3D operator+ (const Vec3D &v) const
     {
@@ -103,7 +97,7 @@ public:
 
     float length() const
     {
-        return sqrt(x*x+y*y+z*z);
+        return std::sqrt(x*x+y*y+z*z);
     }
 
     Vec3D& normalize()
@@ -137,6 +131,19 @@ public:
     }
 };
 
+class AaBox3D
+{
+public:
+    Vec3D min;
+    Vec3D max;
+
+    AaBox3D& operator+=(Vec3D const& offset)
+    {
+        min += offset;
+        max += offset;
+        return *this;
+    }
+};
 
 class Vec2D
 {
@@ -145,13 +152,9 @@ public:
 
     Vec2D(float x0 = 0.0f, float y0 = 0.0f) : x(x0), y(y0) {}
 
-    Vec2D(const Vec2D& v) : x(v.x), y(v.y) {}
+    Vec2D(const Vec2D& v) = default;
 
-    Vec2D& operator= (const Vec2D &v) {
-        x = v.x;
-        y = v.y;
-        return *this;
-    }
+    Vec2D& operator= (const Vec2D &v) = default;
 
     Vec2D operator+ (const Vec2D &v) const
     {
@@ -209,7 +212,7 @@ public:
 
     float length() const
     {
-        return sqrt(x*x+y*y);
+        return std::sqrt(x*x+y*y);
     }
 
     Vec2D& normalize()
@@ -244,5 +247,10 @@ inline void rotate(float x0, float y0, float *x, float *y, float angle)
     *x = xa*cosf(angle) - ya*sinf(angle) + x0;
     *y = xa*sinf(angle) + ya*cosf(angle) + y0;
 }
+
+struct Quaternion
+{
+    float X, Y, Z, W;
+};
 
 #endif

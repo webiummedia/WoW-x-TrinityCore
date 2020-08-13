@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,20 +18,25 @@
 #ifndef OCULUS_H_
 #define OCULUS_H_
 
+#include "CreatureAIImpl.h"
+
 #define OculusScriptName "instance_oculus"
+#define DataHeader "OC"
 
 uint32 const EncounterCount = 4;
 
-enum DataTypes
+enum OCDataTypes
 {
     // Encounter States/Boss GUIDs
     DATA_DRAKOS                 = 0,
     DATA_VAROS                  = 1,
     DATA_UROM                   = 2,
-    DATA_EREGOS                 = 3
+    DATA_EREGOS                 = 3,
+    // GPS System
+    DATA_CONSTRUCTS             = 4
 };
 
-enum CreatureIds
+enum OCCreatureIds
 {
     NPC_DRAKOS                  = 27654,
     NPC_VAROS                   = 27447,
@@ -49,42 +54,61 @@ enum CreatureIds
     NPC_GREATER_WHELP           = 28276
 };
 
-enum GameObjectIds
+enum OCGameObjectIds
 {
     GO_DRAGON_CAGE_DOOR         = 193995,
     GO_EREGOS_CACHE_N           = 191349,
     GO_EREGOS_CACHE_H           = 193603
 };
 
-enum SpellEvents
+enum OCSpellEvents
 {
     EVENT_CALL_DRAGON           = 12229
 };
 
-enum CreatureActions
+enum OCCreatureActions
 {
     ACTION_CALL_DRAGON_EVENT    = 1
 };
 
-enum OculusWorldStates
+enum OCWorldStates
 {
     WORLD_STATE_CENTRIFUGE_CONSTRUCT_SHOW   = 3524,
     WORLD_STATE_CENTRIFUGE_CONSTRUCT_AMOUNT = 3486
 };
 
-enum OculusSpells
+enum OCSpells
 {
     SPELL_CENTRIFUGE_SHIELD     = 50053,
     SPELL_DEATH_SPELL           = 50415
 };
 
-enum Misc
+enum OCInstanceTexts
+{
+    SAY_EREGOS_INTRO_TEXT = 0,
+    SAY_VAROS_INTRO_TEXT  = 4
+};
+
+enum OCInstanceEvents
+{
+    EVENT_VAROS_INTRO = 1,
+    EVENT_EREGOS_INTRO
+};
+
+enum OCConstructKillState
+{
+    KILL_NO_CONSTRUCT           = 0,
+    KILL_ONE_CONSTRUCT          = 1,
+    KILL_MORE_CONSTRUCT         = 2
+};
+
+enum OCMisc
 {
     POINT_MOVE_OUT              = 1
 };
 
-template<class AI>
-AI* GetOculusAI(Creature* creature)
+template<typename AI>
+inline AI* GetOculusAI(Creature* creature)
 {
     return GetInstanceAI<AI>(creature, OculusScriptName);
 }

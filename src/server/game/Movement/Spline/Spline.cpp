@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ SplineBase::EvaluationMethtod SplineBase::evaluators[SplineBase::ModesEnd] =
     &SplineBase::EvaluateLinear,
     &SplineBase::EvaluateCatmullRom,
     &SplineBase::EvaluateBezier3,
-    (EvaluationMethtod)&SplineBase::UninitializedSpline,
+    &SplineBase::UninitializedSplineEvaluationMethod,
 };
 
 SplineBase::EvaluationMethtod SplineBase::derivative_evaluators[SplineBase::ModesEnd] =
@@ -35,7 +35,7 @@ SplineBase::EvaluationMethtod SplineBase::derivative_evaluators[SplineBase::Mode
     &SplineBase::EvaluateDerivativeLinear,
     &SplineBase::EvaluateDerivativeCatmullRom,
     &SplineBase::EvaluateDerivativeBezier3,
-    (EvaluationMethtod)&SplineBase::UninitializedSpline,
+    &SplineBase::UninitializedSplineEvaluationMethod,
 };
 
 SplineBase::SegLenghtMethtod SplineBase::seglengths[SplineBase::ModesEnd] =
@@ -43,7 +43,7 @@ SplineBase::SegLenghtMethtod SplineBase::seglengths[SplineBase::ModesEnd] =
     &SplineBase::SegLengthLinear,
     &SplineBase::SegLengthCatmullRom,
     &SplineBase::SegLengthBezier3,
-    (SegLenghtMethtod)&SplineBase::UninitializedSpline,
+    &SplineBase::UninitializedSplineSegLenghtMethod,
 };
 
 SplineBase::InitMethtod SplineBase::initializers[SplineBase::ModesEnd] =
@@ -52,7 +52,7 @@ SplineBase::InitMethtod SplineBase::initializers[SplineBase::ModesEnd] =
     &SplineBase::InitCatmullRom,    // we should use catmullrom initializer even for linear mode! (client's internal structure limitation)
     &SplineBase::InitCatmullRom,
     &SplineBase::InitBezier3,
-    (InitMethtod)&SplineBase::UninitializedSpline,
+    &SplineBase::UninitializedSplineInitMethod,
 };
 
 ///////////
@@ -165,7 +165,7 @@ float SplineBase::SegLengthCatmullRom(index_type index) const
     curPos = nextPos = p[1];
 
     index_type i = 1;
-    double length = 0;
+    float length = 0;
     while (i <= STEPS_PER_SEGMENT)
     {
         C_Evaluate(p, float(i) / float(STEPS_PER_SEGMENT), s_catmullRomCoeffs, nextPos);
@@ -188,7 +188,7 @@ float SplineBase::SegLengthBezier3(index_type index) const
     curPos = nextPos;
 
     index_type i = 1;
-    double length = 0;
+    float length = 0;
     while (i <= STEPS_PER_SEGMENT)
     {
         C_Evaluate(p, float(i) / float(STEPS_PER_SEGMENT), s_Bezier3Coeffs, nextPos);
@@ -204,7 +204,7 @@ void SplineBase::init_spline(const Vector3 * controls, index_type count, Evaluat
     m_mode = m;
     cyclic = false;
 
-    (this->*initializers[m_mode])(controls, count, cyclic, 0);
+    (this->*initializers[m_mode])(controls, count, 0);
 }
 
 void SplineBase::init_cyclic_spline(const Vector3 * controls, index_type count, EvaluationMode m, index_type cyclic_point)
@@ -212,10 +212,10 @@ void SplineBase::init_cyclic_spline(const Vector3 * controls, index_type count, 
     m_mode = m;
     cyclic = true;
 
-    (this->*initializers[m_mode])(controls, count, cyclic, cyclic_point);
+    (this->*initializers[m_mode])(controls, count, cyclic_point);
 }
 
-void SplineBase::InitLinear(const Vector3* controls, index_type count, bool cyclic, index_type cyclic_point)
+void SplineBase::InitLinear(const Vector3* controls, index_type count, index_type cyclic_point)
 {
     ASSERT(count >= 2);
     const int real_size = count + 1;
@@ -235,7 +235,7 @@ void SplineBase::InitLinear(const Vector3* controls, index_type count, bool cycl
     index_hi = cyclic ? count : (count - 1);
 }
 
-void SplineBase::InitCatmullRom(const Vector3* controls, index_type count, bool cyclic, index_type cyclic_point)
+void SplineBase::InitCatmullRom(const Vector3* controls, index_type count, index_type cyclic_point)
 {
     const int real_size = count + (cyclic ? (1+2) : (1+1));
 
@@ -268,7 +268,7 @@ void SplineBase::InitCatmullRom(const Vector3* controls, index_type count, bool 
     index_hi = high_index + (cyclic ? 1 : 0);
 }
 
-void SplineBase::InitBezier3(const Vector3* controls, index_type count, bool /*cyclic*/, index_type /*cyclic_point*/)
+void SplineBase::InitBezier3(const Vector3* controls, index_type count, index_type /*cyclic_point*/)
 {
     index_type c = count / 3u * 3u;
     index_type t = c / 3u;

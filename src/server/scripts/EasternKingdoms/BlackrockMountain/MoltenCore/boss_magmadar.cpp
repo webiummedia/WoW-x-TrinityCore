@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,10 +22,9 @@ SDComment: Conflag on ground nyi
 SDCategory: Molten Core
 EndScriptData */
 
-#include "ObjectMgr.h"
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "molten_core.h"
+#include "ScriptedCreature.h"
 
 enum Texts
 {
@@ -59,13 +57,13 @@ class boss_magmadar : public CreatureScript
             {
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 BossAI::Reset();
                 DoCast(me, SPELL_MAGMA_SPIT, true);
             }
 
-            void EnterCombat(Unit* victim) OVERRIDE
+            void EnterCombat(Unit* victim) override
             {
                 BossAI::EnterCombat(victim);
                 events.ScheduleEvent(EVENT_FRENZY, 30000);
@@ -73,7 +71,7 @@ class boss_magmadar : public CreatureScript
                 events.ScheduleEvent(EVENT_LAVA_BOMB, 12000);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -97,22 +95,25 @@ class boss_magmadar : public CreatureScript
                             events.ScheduleEvent(EVENT_PANIC, 35000);
                             break;
                         case EVENT_LAVA_BOMB:
-                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true, -SPELL_LAVA_BOMB))
+                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true, true, -SPELL_LAVA_BOMB))
                                 DoCast(target, SPELL_LAVA_BOMB);
                             events.ScheduleEvent(EVENT_LAVA_BOMB, 12000);
                             break;
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_magmadarAI(creature);
+            return GetMoltenCoreAI<boss_magmadarAI>(creature);
         }
 };
 

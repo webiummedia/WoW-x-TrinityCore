@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,7 +23,7 @@ SDCategory: Maraudon
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
+#include "maraudon.h"
 #include "ScriptedCreature.h"
 
 enum Spells
@@ -40,21 +39,19 @@ class boss_princess_theradras : public CreatureScript
 public:
     boss_princess_theradras() : CreatureScript("boss_princess_theradras") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_ptheradrasAI(creature);
+        return GetMaraudonAI<boss_ptheradrasAI>(creature);
     }
 
     struct boss_ptheradrasAI : public ScriptedAI
     {
-        boss_ptheradrasAI(Creature* creature) : ScriptedAI(creature) { }
+        boss_ptheradrasAI(Creature* creature) : ScriptedAI(creature)
+        {
+            Initialize();
+        }
 
-        uint32 DustfieldTimer;
-        uint32 BoulderTimer;
-        uint32 ThrashTimer;
-        uint32 RepulsiveGazeTimer;
-
-        void Reset() OVERRIDE
+        void Initialize()
         {
             DustfieldTimer = 8000;
             BoulderTimer = 2000;
@@ -62,14 +59,24 @@ public:
             RepulsiveGazeTimer = 23000;
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE { }
+        uint32 DustfieldTimer;
+        uint32 BoulderTimer;
+        uint32 ThrashTimer;
+        uint32 RepulsiveGazeTimer;
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void Reset() override
+        {
+            Initialize();
+        }
+
+        void EnterCombat(Unit* /*who*/) override { }
+
+        void JustDied(Unit* /*killer*/) override
         {
             me->SummonCreature(12238, 28.067f, 61.875f, -123.405f, 4.67f, TEMPSUMMON_TIMED_DESPAWN, 600000);
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;

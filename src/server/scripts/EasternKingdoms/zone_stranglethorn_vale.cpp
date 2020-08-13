@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -28,20 +27,26 @@ npc_yenniku
 EndContentData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "Player.h"
+#include "ScriptedCreature.h"
 #include "SpellInfo.h"
 
 /*######
 ## npc_yenniku
 ######*/
 
+enum Yenniku
+{
+    SPELL_YENNIKUS_RELEASE   = 3607,
+    QUEST_SAVING_YENNIKU     = 592,
+};
+
 class npc_yenniku : public CreatureScript
 {
 public:
     npc_yenniku() : CreatureScript("npc_yenniku") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
         return new npc_yennikuAI(creature);
     }
@@ -50,31 +55,37 @@ public:
     {
         npc_yennikuAI(Creature* creature) : ScriptedAI(creature)
         {
+            Initialize();
             bReset = false;
+        }
+
+        void Initialize()
+        {
+            Reset_Timer = 0;
         }
 
         uint32 Reset_Timer;
         bool bReset;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            Reset_Timer = 0;
-            me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
+            Initialize();
+            me->SetEmoteState(EMOTE_STATE_NONE);
         }
 
-        void SpellHit(Unit* caster, const SpellInfo* spell) OVERRIDE
+        void SpellHit(Unit* caster, const SpellInfo* spell) override
         {
-            if (bReset || spell->Id != 3607)
+            if (bReset || spell->Id != SPELL_YENNIKUS_RELEASE)
                 return;
 
             if (Player* player = caster->ToPlayer())
             {
-                if (player->GetQuestStatus(592) == QUEST_STATUS_INCOMPLETE) //Yenniku's Release
+                if (player->GetQuestStatus(QUEST_SAVING_YENNIKU) == QUEST_STATUS_INCOMPLETE) // Yenniku's Release
                 {
-                    me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STUN);
+                    me->SetEmoteState(EMOTE_STATE_STUN);
                     me->CombatStop();                   //stop combat
-                    me->DeleteThreatList();             //unsure of this
-                    me->setFaction(83);                 //horde generic
+                    me->GetThreatManager().ClearAllThreat();             //unsure of this
+                    me->SetFaction(FACTION_HORDE_GENERIC);
 
                     bReset = true;
                     Reset_Timer = 60000;
@@ -82,9 +93,9 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE { }
+        void EnterCombat(Unit* /*who*/) override { }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (bReset)
             {
@@ -92,7 +103,7 @@ public:
                 {
                     EnterEvadeMode();
                     bReset = false;
-                    me->setFaction(28);                     //troll, bloodscalp
+                    me->SetFaction(FACTION_TROLL_BLOODSCALP); // troll, bloodscalp
                     return;
                 }
 
@@ -100,12 +111,12 @@ public:
 
                 if (me->IsInCombat() && me->GetVictim())
                 {
-                    if (Player* player = me->GetVictim()->ToPlayer())
+                    if (Player* player = me->EnsureVictim()->ToPlayer())
                     {
                         if (player->GetTeam() == HORDE)
                         {
                             me->CombatStop();
-                            me->DeleteThreatList();
+                            me->GetThreatManager().ClearAllThreat();
                         }
                     }
                 }
@@ -119,10 +130,6 @@ public:
         }
     };
 };
-
-/*######
-##
-######*/
 
 void AddSC_stranglethorn_vale()
 {

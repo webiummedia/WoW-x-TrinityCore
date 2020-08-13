@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,8 +18,9 @@
 #ifndef __BATTLEGROUNDEY_H
 #define __BATTLEGROUNDEY_H
 
-#include "Language.h"
 #include "Battleground.h"
+#include "BattlegroundScore.h"
+#include "Object.h"
 
 enum BG_EY_Misc
 {
@@ -31,8 +31,9 @@ enum BG_EY_Misc
 
 enum BG_EY_WorldStates
 {
-    EY_ALLIANCE_RESOURCES           = 2749,
-    EY_HORDE_RESOURCES              = 2750,
+    EY_ALLIANCE_RESOURCES           = 1776,
+    EY_HORDE_RESOURCES              = 1777,
+    EY_MAX_RESOURCES                = 1780,
     EY_ALLIANCE_BASE                = 2752,
     EY_HORDE_BASE                   = 2753,
     DRAENEI_RUINS_HORDE_CONTROL     = 2733,
@@ -52,8 +53,17 @@ enum BG_EY_WorldStates
     PROGRESS_BAR_SHOW               = 2718,                 //1 init, 0 druhy send - bez messagu, 1 = controlled aliance
     NETHERSTORM_FLAG                = 2757,
     //set to 2 when flag is picked up, and to 1 if it is dropped
-    NETHERSTORM_FLAG_STATE_ALLIANCE = 2769,
-    NETHERSTORM_FLAG_STATE_HORDE    = 2770
+    NETHERSTORM_FLAG_STATE_ALLIANCE = 9808,
+    NETHERSTORM_FLAG_STATE_HORDE    = 9809,
+
+    DRAENEI_RUINS_HORDE_CONTROL_STATE       = 17362,
+    DRAENEI_RUINS_ALLIANCE_CONTROL_STATE    = 17366,
+    MAGE_TOWER_HORDE_CONTROL_STATE          = 17361,
+    MAGE_TOWER_ALLIANCE_CONTROL_STATE       = 17368,
+    FEL_REAVER_HORDE_CONTROL_STATE          = 17364,
+    FEL_REAVER_ALLIANCE_CONTROL_STATE       = 17367,
+    BLOOD_ELF_HORDE_CONTROL_STATE           = 17363,
+    BLOOD_ELF_ALLIANCE_CONTROL_STATE        = 17365,
 };
 
 enum BG_EY_ProgressBarConsts
@@ -118,7 +128,7 @@ enum EYBattlegroundGaveyards
 {
     EY_GRAVEYARD_MAIN_ALLIANCE     = 1103,
     EY_GRAVEYARD_MAIN_HORDE        = 1104,
-    EY_GRAVEYARD_FEL_REAVER       = 1105,
+    EY_GRAVEYARD_FEL_REAVER        = 1105,
     EY_GRAVEYARD_BLOOD_ELF         = 1106,
     EY_GRAVEYARD_DRAENEI_RUINS     = 1107,
     EY_GRAVEYARD_MAGE_TOWER        = 1108
@@ -137,19 +147,19 @@ enum EYBattlegroundPoints
 
 enum EYBattlegroundCreaturesTypes
 {
-    EY_SPIRIT_FEL_REAVER      = 0,
+    EY_SPIRIT_FEL_REAVER       = 0,
     EY_SPIRIT_BLOOD_ELF        = 1,
     EY_SPIRIT_DRAENEI_RUINS    = 2,
     EY_SPIRIT_MAGE_TOWER       = 3,
     EY_SPIRIT_MAIN_ALLIANCE    = 4,
     EY_SPIRIT_MAIN_HORDE       = 5,
 
-    EY_TRIGGER_FEL_REAVER      = 6,
+    EY_TRIGGER_FEL_REAVER       = 6,
     EY_TRIGGER_BLOOD_ELF        = 7,
     EY_TRIGGER_DRAENEI_RUINS    = 8,
     EY_TRIGGER_MAGE_TOWER       = 9,
 
-    BG_EY_CREATURES_MAX        = 10
+    BG_EY_CREATURES_MAX         = 10
 };
 
 enum EYBattlegroundObjectTypes
@@ -246,17 +256,55 @@ enum BG_EY_Objectives
     EY_OBJECTIVE_CAPTURE_FLAG   = 183
 };
 
+enum BG_EY_ExploitTeleportLocations
+{
+    EY_EXPLOIT_TELEPORT_LOCATION_ALLIANCE = 3773,
+    EY_EXPLOIT_TELEPORT_LOCATION_HORDE = 3772
+};
+
+enum BG_EY_BroadcastTexts
+{
+    BG_EY_TEXT_ALLIANCE_TAKEN_FEL_REAVER_RUINS  = 17828,
+    BG_EY_TEXT_HORDE_TAKEN_FEL_REAVER_RUINS     = 17829,
+    BG_EY_TEXT_ALLIANCE_LOST_FEL_REAVER_RUINS   = 17835,
+    BG_EY_TEXT_HORDE_LOST_FEL_REAVER_RUINS      = 17836,
+
+    BG_EY_TEXT_ALLIANCE_TAKEN_BLOOD_ELF_TOWER   = 17819,
+    BG_EY_TEXT_HORDE_TAKEN_BLOOD_ELF_TOWER      = 17823,
+    BG_EY_TEXT_ALLIANCE_LOST_BLOOD_ELF_TOWER    = 17831,
+    BG_EY_TEXT_HORDE_LOST_BLOOD_ELF_TOWER       = 17832,
+
+    BG_EY_TEXT_ALLIANCE_TAKEN_DRAENEI_RUINS     = 17826,
+    BG_EY_TEXT_HORDE_TAKEN_DRAENEI_RUINS        = 17827,
+    BG_EY_TEXT_ALLIANCE_LOST_DRAENEI_RUINS      = 17833,
+    BG_EY_TEXT_HORDE_LOST_DRAENEI_RUINS         = 17834,
+
+    BG_EY_TEXT_ALLIANCE_TAKEN_MAGE_TOWER        = 17824,
+    BG_EY_TEXT_HORDE_TAKEN_MAGE_TOWER           = 17825,
+    BG_EY_TEXT_ALLIANCE_LOST_MAGE_TOWER         = 17837,
+    BG_EY_TEXT_HORDE_LOST_MAGE_TOWER            = 17838,
+
+    BG_EY_TEXT_TAKEN_FLAG                       = 18359,
+    BG_EY_TEXT_FLAG_DROPPED                     = 18361,
+    BG_EY_TEXT_FLAG_RESET                       = 18364,
+    BG_EY_TEXT_ALLIANCE_CAPTURED_FLAG           = 18375,
+    BG_EY_TEXT_HORDE_CAPTURED_FLAG              = 18384,
+};
+
 struct BattlegroundEYPointIconsStruct
 {
-    BattlegroundEYPointIconsStruct(uint32 _WorldStateControlIndex, uint32 _WorldStateAllianceControlledIndex, uint32 _WorldStateHordeControlledIndex)
-        : WorldStateControlIndex(_WorldStateControlIndex), WorldStateAllianceControlledIndex(_WorldStateAllianceControlledIndex), WorldStateHordeControlledIndex(_WorldStateHordeControlledIndex) { }
+    BattlegroundEYPointIconsStruct(uint32 _WorldStateControlIndex, uint32 _WorldStateAllianceControlledIndex, uint32 _WorldStateHordeControlledIndex,
+        uint32 worldStateAllianceStatusBarIcon, uint32 worldStateHordeStatusBarIcon)
+        : WorldStateControlIndex(_WorldStateControlIndex), WorldStateAllianceControlledIndex(_WorldStateAllianceControlledIndex), WorldStateHordeControlledIndex(_WorldStateHordeControlledIndex),
+        WorldStateAllianceStatusBarIcon(worldStateAllianceStatusBarIcon), WorldStateHordeStatusBarIcon(worldStateHordeStatusBarIcon) { }
     uint32 WorldStateControlIndex;
     uint32 WorldStateAllianceControlledIndex;
     uint32 WorldStateHordeControlledIndex;
+    uint32 WorldStateAllianceStatusBarIcon;
+    uint32 WorldStateHordeStatusBarIcon;
 };
 
-// x, y, z, o
-const float BG_EY_TriggerPositions[EY_POINTS_MAX][4] =
+Position const BG_EY_TriggerPositions[EY_POINTS_MAX] =
 {
     {2044.28f, 1729.68f, 1189.96f, 0.017453f},  // FEL_REAVER center
     {2048.83f, 1393.65f, 1194.49f, 0.20944f},   // BLOOD_ELF center
@@ -302,76 +350,102 @@ const uint32 BG_EY_FlagPoints[EY_POINTS_MAX] = {75, 85, 100, 500};
 //constant arrays:
 const BattlegroundEYPointIconsStruct m_PointsIconStruct[EY_POINTS_MAX] =
 {
-    BattlegroundEYPointIconsStruct(FEL_REAVER_UNCONTROL, FEL_REAVER_ALLIANCE_CONTROL, FEL_REAVER_HORDE_CONTROL),
-    BattlegroundEYPointIconsStruct(BLOOD_ELF_UNCONTROL, BLOOD_ELF_ALLIANCE_CONTROL, BLOOD_ELF_HORDE_CONTROL),
-    BattlegroundEYPointIconsStruct(DRAENEI_RUINS_UNCONTROL, DRAENEI_RUINS_ALLIANCE_CONTROL, DRAENEI_RUINS_HORDE_CONTROL),
-    BattlegroundEYPointIconsStruct(MAGE_TOWER_UNCONTROL, MAGE_TOWER_ALLIANCE_CONTROL, MAGE_TOWER_HORDE_CONTROL)
+    BattlegroundEYPointIconsStruct(FEL_REAVER_UNCONTROL, FEL_REAVER_ALLIANCE_CONTROL, FEL_REAVER_HORDE_CONTROL, FEL_REAVER_ALLIANCE_CONTROL_STATE, FEL_REAVER_HORDE_CONTROL_STATE),
+    BattlegroundEYPointIconsStruct(BLOOD_ELF_UNCONTROL, BLOOD_ELF_ALLIANCE_CONTROL, BLOOD_ELF_HORDE_CONTROL, BLOOD_ELF_ALLIANCE_CONTROL_STATE, BLOOD_ELF_HORDE_CONTROL_STATE),
+    BattlegroundEYPointIconsStruct(DRAENEI_RUINS_UNCONTROL, DRAENEI_RUINS_ALLIANCE_CONTROL, DRAENEI_RUINS_HORDE_CONTROL, DRAENEI_RUINS_ALLIANCE_CONTROL_STATE, DRAENEI_RUINS_HORDE_CONTROL_STATE),
+    BattlegroundEYPointIconsStruct(MAGE_TOWER_UNCONTROL, MAGE_TOWER_ALLIANCE_CONTROL, MAGE_TOWER_HORDE_CONTROL, MAGE_TOWER_ALLIANCE_CONTROL_STATE, MAGE_TOWER_HORDE_CONTROL_STATE)
 };
 const BattlegroundEYLosingPointStruct m_LosingPointTypes[EY_POINTS_MAX] =
 {
-    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_FEL_REAVER_CENTER, BG_EY_OBJECT_A_BANNER_FEL_REAVER_CENTER, LANG_BG_EY_HAS_LOST_A_F_RUINS, BG_EY_OBJECT_H_BANNER_FEL_REAVER_CENTER, LANG_BG_EY_HAS_LOST_H_F_RUINS),
-    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_BLOOD_ELF_CENTER, BG_EY_OBJECT_A_BANNER_BLOOD_ELF_CENTER, LANG_BG_EY_HAS_LOST_A_B_TOWER, BG_EY_OBJECT_H_BANNER_BLOOD_ELF_CENTER, LANG_BG_EY_HAS_LOST_H_B_TOWER),
-    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_DRAENEI_RUINS_CENTER, BG_EY_OBJECT_A_BANNER_DRAENEI_RUINS_CENTER, LANG_BG_EY_HAS_LOST_A_D_RUINS, BG_EY_OBJECT_H_BANNER_DRAENEI_RUINS_CENTER, LANG_BG_EY_HAS_LOST_H_D_RUINS),
-    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_MAGE_TOWER_CENTER, BG_EY_OBJECT_A_BANNER_MAGE_TOWER_CENTER, LANG_BG_EY_HAS_LOST_A_M_TOWER, BG_EY_OBJECT_H_BANNER_MAGE_TOWER_CENTER, LANG_BG_EY_HAS_LOST_H_M_TOWER)
+    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_FEL_REAVER_CENTER, BG_EY_OBJECT_A_BANNER_FEL_REAVER_CENTER, BG_EY_TEXT_ALLIANCE_LOST_FEL_REAVER_RUINS, BG_EY_OBJECT_H_BANNER_FEL_REAVER_CENTER, BG_EY_TEXT_HORDE_LOST_FEL_REAVER_RUINS),
+    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_BLOOD_ELF_CENTER, BG_EY_OBJECT_A_BANNER_BLOOD_ELF_CENTER, BG_EY_TEXT_ALLIANCE_LOST_BLOOD_ELF_TOWER, BG_EY_OBJECT_H_BANNER_BLOOD_ELF_CENTER, BG_EY_TEXT_HORDE_LOST_BLOOD_ELF_TOWER),
+    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_DRAENEI_RUINS_CENTER, BG_EY_OBJECT_A_BANNER_DRAENEI_RUINS_CENTER, BG_EY_TEXT_ALLIANCE_LOST_DRAENEI_RUINS, BG_EY_OBJECT_H_BANNER_DRAENEI_RUINS_CENTER, BG_EY_TEXT_HORDE_LOST_DRAENEI_RUINS),
+    BattlegroundEYLosingPointStruct(BG_EY_OBJECT_N_BANNER_MAGE_TOWER_CENTER, BG_EY_OBJECT_A_BANNER_MAGE_TOWER_CENTER, BG_EY_TEXT_ALLIANCE_LOST_MAGE_TOWER, BG_EY_OBJECT_H_BANNER_MAGE_TOWER_CENTER, BG_EY_TEXT_HORDE_LOST_MAGE_TOWER)
 };
 const BattlegroundEYCapturingPointStruct m_CapturingPointTypes[EY_POINTS_MAX] =
 {
-    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_FEL_REAVER_CENTER, BG_EY_OBJECT_A_BANNER_FEL_REAVER_CENTER, LANG_BG_EY_HAS_TAKEN_A_F_RUINS, BG_EY_OBJECT_H_BANNER_FEL_REAVER_CENTER, LANG_BG_EY_HAS_TAKEN_H_F_RUINS, EY_GRAVEYARD_FEL_REAVER),
-    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_BLOOD_ELF_CENTER, BG_EY_OBJECT_A_BANNER_BLOOD_ELF_CENTER, LANG_BG_EY_HAS_TAKEN_A_B_TOWER, BG_EY_OBJECT_H_BANNER_BLOOD_ELF_CENTER, LANG_BG_EY_HAS_TAKEN_H_B_TOWER, EY_GRAVEYARD_BLOOD_ELF),
-    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_DRAENEI_RUINS_CENTER, BG_EY_OBJECT_A_BANNER_DRAENEI_RUINS_CENTER, LANG_BG_EY_HAS_TAKEN_A_D_RUINS, BG_EY_OBJECT_H_BANNER_DRAENEI_RUINS_CENTER, LANG_BG_EY_HAS_TAKEN_H_D_RUINS, EY_GRAVEYARD_DRAENEI_RUINS),
-    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_MAGE_TOWER_CENTER, BG_EY_OBJECT_A_BANNER_MAGE_TOWER_CENTER, LANG_BG_EY_HAS_TAKEN_A_M_TOWER, BG_EY_OBJECT_H_BANNER_MAGE_TOWER_CENTER, LANG_BG_EY_HAS_TAKEN_H_M_TOWER, EY_GRAVEYARD_MAGE_TOWER)
+    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_FEL_REAVER_CENTER, BG_EY_OBJECT_A_BANNER_FEL_REAVER_CENTER, BG_EY_TEXT_ALLIANCE_TAKEN_FEL_REAVER_RUINS, BG_EY_OBJECT_H_BANNER_FEL_REAVER_CENTER, BG_EY_TEXT_HORDE_TAKEN_FEL_REAVER_RUINS, EY_GRAVEYARD_FEL_REAVER),
+    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_BLOOD_ELF_CENTER, BG_EY_OBJECT_A_BANNER_BLOOD_ELF_CENTER, BG_EY_TEXT_ALLIANCE_TAKEN_BLOOD_ELF_TOWER, BG_EY_OBJECT_H_BANNER_BLOOD_ELF_CENTER, BG_EY_TEXT_HORDE_TAKEN_BLOOD_ELF_TOWER, EY_GRAVEYARD_BLOOD_ELF),
+    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_DRAENEI_RUINS_CENTER, BG_EY_OBJECT_A_BANNER_DRAENEI_RUINS_CENTER, BG_EY_TEXT_ALLIANCE_TAKEN_DRAENEI_RUINS, BG_EY_OBJECT_H_BANNER_DRAENEI_RUINS_CENTER, BG_EY_TEXT_HORDE_TAKEN_DRAENEI_RUINS, EY_GRAVEYARD_DRAENEI_RUINS),
+    BattlegroundEYCapturingPointStruct(BG_EY_OBJECT_N_BANNER_MAGE_TOWER_CENTER, BG_EY_OBJECT_A_BANNER_MAGE_TOWER_CENTER, BG_EY_TEXT_ALLIANCE_TAKEN_MAGE_TOWER, BG_EY_OBJECT_H_BANNER_MAGE_TOWER_CENTER, BG_EY_TEXT_HORDE_TAKEN_MAGE_TOWER, EY_GRAVEYARD_MAGE_TOWER)
 };
 
-struct BattlegroundEYScore : public BattlegroundScore
+struct BattlegroundEYScore final : public BattlegroundScore
 {
-    BattlegroundEYScore() : FlagCaptures(0) { }
-    ~BattlegroundEYScore() { }
-    uint32 FlagCaptures;
+    friend class BattlegroundEY;
+
+    protected:
+        BattlegroundEYScore(ObjectGuid playerGuid, uint32 team) : BattlegroundScore(playerGuid, team), FlagCaptures(0) { }
+
+        void UpdateScore(uint32 type, uint32 value) override
+        {
+            switch (type)
+            {
+                case SCORE_FLAG_CAPTURES:   // Flags captured
+                    FlagCaptures += value;
+                    break;
+                default:
+                    BattlegroundScore::UpdateScore(type, value);
+                    break;
+            }
+        }
+
+        void BuildPvPLogPlayerDataPacket(WorldPackets::Battleground::PVPLogData::PVPMatchPlayerStatistics& playerData) const override
+        {
+            BattlegroundScore::BuildPvPLogPlayerDataPacket(playerData);
+
+            playerData.Stats.emplace_back(EY_OBJECTIVE_CAPTURE_FLAG, FlagCaptures);
+        }
+
+        uint32 GetAttr1() const final override { return FlagCaptures; }
+
+        uint32 FlagCaptures;
 };
 
 class BattlegroundEY : public Battleground
 {
     public:
-        BattlegroundEY();
+        BattlegroundEY(BattlegroundTemplate const* battlegroundTemplate);
         ~BattlegroundEY();
 
         /* inherited from BattlegroundClass */
-        void AddPlayer(Player* player);
-        void StartingEventCloseDoors();
-        void StartingEventOpenDoors();
+        void AddPlayer(Player* player) override;
+        void StartingEventCloseDoors() override;
+        void StartingEventOpenDoors() override;
 
         /* BG Flags */
-        uint64 GetFlagPickerGUID(int32 /*team*/ = -1) const    { return m_FlagKeeper; }
-        void SetFlagPicker(uint64 guid)     { m_FlagKeeper = guid; }
-        bool IsFlagPickedup() const         { return m_FlagKeeper != 0; }
+        ObjectGuid GetFlagPickerGUID(int32 /*team*/ = -1) const override { return m_FlagKeeper; }
+        void SetFlagPicker(ObjectGuid guid) { m_FlagKeeper = guid; }
+        bool IsFlagPickedup() const         { return !m_FlagKeeper.IsEmpty(); }
         uint8 GetFlagState() const          { return m_FlagState; }
         void RespawnFlag(bool send_message);
         void RespawnFlagAfterDrop();
 
-        void RemovePlayer(Player* player, uint64 guid, uint32 team);
-        void HandleBuffUse(uint64 buff_guid);
-        void HandleAreaTrigger(Player* Source, uint32 Trigger);
-        void HandleKillPlayer(Player* player, Player* killer);
-        WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
-        bool SetupBattleground();
-        void Reset();
+        void RemovePlayer(Player* player, ObjectGuid guid, uint32 team) override;
+        void HandleAreaTrigger(Player* source, uint32 trigger, bool entered) override;
+        void HandleKillPlayer(Player* player, Player* killer) override;
+        WorldSafeLocsEntry const* GetClosestGraveYard(Player* player) override;
+        WorldSafeLocsEntry const* GetExploitTeleportLocation(Team team) override;
+        bool SetupBattleground() override;
+        void Reset() override;
         void UpdateTeamScore(uint32 Team);
-        void EndBattleground(uint32 winner);
-        void UpdatePlayerScore(Player* Source, uint32 type, uint32 value, bool doAddHonor = true);
-        void FillInitialWorldStates(WorldPacket& data);
-        void SetDroppedFlagGUID(uint64 guid, int32 /*TeamID*/ = -1)  { m_DroppedFlagGUID = guid;}
-        uint64 GetDroppedFlagGUID() const          { return m_DroppedFlagGUID;}
+        void EndBattleground(uint32 winner) override;
+        bool UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true) override;
+        void FillInitialWorldStates(WorldPackets::WorldState::InitWorldStates& packet) override;
+        void SetDroppedFlagGUID(ObjectGuid guid, int32 /*TeamID*/ = -1) override  { m_DroppedFlagGUID = guid; }
+        ObjectGuid GetDroppedFlagGUID() const { return m_DroppedFlagGUID; }
 
         /* Battleground Events */
-        void EventPlayerClickedOnFlag(Player* Source, GameObject* target_obj);
-        void EventPlayerDroppedFlag(Player* Source);
+        void EventPlayerClickedOnFlag(Player* Source, GameObject* target_obj) override;
+        void EventPlayerDroppedFlag(Player* Source) override;
 
         /* achievement req. */
-        bool IsAllNodesControlledByTeam(uint32 team) const;
+        bool IsAllNodesControlledByTeam(uint32 team) const override;
 
-        uint32 GetPrematureWinner();
-    private:
-        void PostUpdateImpl(uint32 diff);
+        uint32 GetPrematureWinner() override;
+protected:
+        void PostUpdateImpl(uint32 diff) override;
+        void GetPlayerPositionData(std::vector<WorldPackets::Battleground::BattlegroundPlayerPosition>* positions) const override;
 
         void EventPlayerCapturedFlag(Player* Source, uint32 BgObjectType);
         void EventTeamCapturedPoint(Player* Source, uint32 Point);
@@ -379,6 +453,7 @@ class BattlegroundEY : public Battleground
         void UpdatePointsCount(uint32 Team);
         void UpdatePointsIcons(uint32 Team, uint32 Point);
 
+    private:
         /* Point status updating procedures */
         void CheckSomeoneLeftPoint();
         void CheckSomeoneJoinedPoint();
@@ -389,14 +464,15 @@ class BattlegroundEY : public Battleground
 
         void RemovePoint(uint32 TeamID, uint32 Points = 1) { m_TeamScores[GetTeamIndexByTeamId(TeamID)] -= Points; }
         void SetTeamPoint(uint32 TeamID, uint32 Points = 0) { m_TeamScores[GetTeamIndexByTeamId(TeamID)] = Points; }
+        BattlegroundPointCaptureStatus GetPointCaptureStatus(uint32 point) const;
 
         uint32 m_HonorScoreTics[2];
         uint32 m_TeamPointsCount[2];
 
         uint32 m_Points_Trigger[EY_POINTS_MAX];
 
-        uint64 m_FlagKeeper;                                // keepers guid
-        uint64 m_DroppedFlagGUID;
+        ObjectGuid m_FlagKeeper;                                // keepers guid
+        ObjectGuid m_DroppedFlagGUID;
         uint32 m_FlagCapturedBgObjectType;                  // type that should be despawned when flag is captured
         uint8 m_FlagState;                                  // for checking flag state
         int32 m_FlagsTimer;
@@ -405,12 +481,11 @@ class BattlegroundEY : public Battleground
         uint32 m_PointOwnedByTeam[EY_POINTS_MAX];
         uint8 m_PointState[EY_POINTS_MAX];
         int32 m_PointBarStatus[EY_POINTS_MAX];
-        typedef std::vector<uint64> PlayersNearPointType;
-        PlayersNearPointType m_PlayersNearPoint[EY_POINTS_MAX + 1];
+        BattlegroundPointCaptureStatus m_LastPointCaptureStatus[EY_POINTS_MAX];
+        GuidVector m_PlayersNearPoint[EY_POINTS_MAX + 1];
         uint8 m_CurrentPointPlayersCount[2*EY_POINTS_MAX];
 
         int32 m_PointAddingTimer;
         uint32 m_HonorTics;
 };
 #endif
-

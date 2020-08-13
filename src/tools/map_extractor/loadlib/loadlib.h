@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,33 +18,14 @@
 #ifndef LOAD_LIB_H
 #define LOAD_LIB_H
 
-#ifdef _WIN32
-typedef __int64            int64;
-typedef __int32            int32;
-typedef __int16            int16;
-typedef __int8             int8;
-typedef unsigned __int64   uint64;
-typedef unsigned __int32   uint32;
-typedef unsigned __int16   uint16;
-typedef unsigned __int8    uint8;
-#else
-#include <stdint.h>
-#ifndef uint64_t
-#ifdef __linux__
-#include <linux/types.h>
-#endif
-#endif
-typedef int64_t            int64;
-typedef int32_t            int32;
-typedef int16_t            int16;
-typedef int8_t             int8;
-typedef uint64_t           uint64;
-typedef uint32_t           uint32;
-typedef uint16_t           uint16;
-typedef uint8_t            uint8;
-#endif
+#include "Define.h"
+#include "CascHandles.h"
+#include <map>
+#include <string>
 
 #define FILE_FORMAT_VERSION    18
+
+#pragma pack(push, 1)
 
 union u_map_fcc
 {
@@ -66,18 +46,50 @@ struct file_MVER
     uint32 ver;
 };
 
-class FileLoader{
+struct file_MWMO
+{
+    u_map_fcc fcc;
+    uint32 size;
+    char FileList[1];
+};
+
+class FileChunk
+{
+public:
+    FileChunk(uint8* data_, uint32 size_) : data(data_), size(size_) { }
+    ~FileChunk();
+
+    uint8* data;
+    uint32 size;
+
+    template<class T>
+    T* As() { return (T*)data; }
+    void parseSubChunks();
+    std::multimap<std::string, FileChunk*> subchunks;
+    FileChunk* GetSubChunk(std::string const& name);
+};
+
+class ChunkedFile
+{
+public:
     uint8  *data;
     uint32  data_size;
-public:
-    virtual bool prepareLoadedData();
-    uint8 *GetData()     {return data;}
-    uint32 GetDataSize() {return data_size;}
 
-    file_MVER *version;
-    FileLoader();
-    ~FileLoader();
-    bool loadFile(char *filename, bool log = true);
-    virtual void free();
+    uint8 *GetData()     { return data; }
+    uint32 GetDataSize() { return data_size; }
+
+    ChunkedFile();
+    virtual ~ChunkedFile();
+    bool prepareLoadedData();
+    bool loadFile(std::shared_ptr<CASC::Storage const> mpq, std::string const& fileName, bool log = true);
+    bool loadFile(std::shared_ptr<CASC::Storage const> mpq, uint32 fileDataId, std::string const& description, bool log = true);
+    void free();
+
+    void parseChunks();
+    std::multimap<std::string, FileChunk*> chunks;
+    FileChunk* GetChunk(std::string const& name);
 };
+
+#pragma pack(pop)
+
 #endif

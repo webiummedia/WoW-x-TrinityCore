@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -50,19 +50,27 @@ class boss_instructor_malicia : public CreatureScript
 
         struct boss_instructormaliciaAI : public BossAI
         {
-            boss_instructormaliciaAI(Creature* creature) : BossAI(creature, DATA_INSTRUCTORMALICIA) { }
-
-            uint32 FlashCounter;
-            uint32 TouchCounter;
-
-            void Reset() OVERRIDE
+            boss_instructormaliciaAI(Creature* creature) : BossAI(creature, DATA_INSTRUCTORMALICIA)
             {
-                _Reset();
+                Initialize();
+            }
+
+            void Initialize()
+            {
                 FlashCounter = 0;
                 TouchCounter = 0;
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            uint32 FlashCounter;
+            uint32 TouchCounter;
+
+            void Reset() override
+            {
+                _Reset();
+                Initialize();
+            }
+
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_CALLOFGRAVES, 4000);
@@ -72,7 +80,7 @@ class boss_instructor_malicia : public CreatureScript
                 events.ScheduleEvent(EVENT_HEALINGTOUCH, 45000);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -129,17 +137,19 @@ class boss_instructor_malicia : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_instructormaliciaAI(creature);
+            return GetScholomanceAI<boss_instructormaliciaAI>(creature);
         }
-
 };
 
 void AddSC_boss_instructormalicia()

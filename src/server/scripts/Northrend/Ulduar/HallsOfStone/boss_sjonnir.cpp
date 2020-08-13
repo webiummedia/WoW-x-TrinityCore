@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,11 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "halls_of_stone.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
 
 enum Spells
 {
@@ -76,15 +79,23 @@ class boss_sjonnir : public CreatureScript
 
         struct boss_sjonnirAI : public BossAI
         {
-            boss_sjonnirAI(Creature* creature) : BossAI(creature, DATA_SJONNIR) { }
-
-            void Reset() OVERRIDE
+            boss_sjonnirAI(Creature* creature) : BossAI(creature, DATA_SJONNIR)
             {
-                _Reset();
+                Initialize();
+            }
+
+            void Initialize()
+            {
                 abuseTheOoze = 0;
             }
 
-            void EnterCombat(Unit* who) OVERRIDE
+            void Reset() override
+            {
+                _Reset();
+                Initialize();
+            }
+
+            void EnterCombat(Unit* who) override
             {
                 if (!instance->CheckRequiredBosses(DATA_SJONNIR, who->ToPlayer()))
                 {
@@ -103,7 +114,7 @@ class boss_sjonnir : public CreatureScript
                 events.ScheduleEvent(EVENT_FRENZY, 300000);
             }
 
-            void JustSummoned(Creature* summon) OVERRIDE
+            void JustSummoned(Creature* summon) override
             {
                 summon->GetMotionMaster()->MovePoint(0, CenterPoint);
                 /*if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
@@ -111,25 +122,25 @@ class boss_sjonnir : public CreatureScript
                 summons.Summon(summon);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
             }
 
-            void KilledUnit(Unit* who) OVERRIDE
+            void KilledUnit(Unit* who) override
             {
                 if (who->GetTypeId() == TYPEID_PLAYER)
                     Talk(SAY_SLAY);
             }
 
-            void DoAction(int32 action) OVERRIDE
+            void DoAction(int32 action) override
             {
                 if (action == ACTION_OOZE_DEAD)
                     ++abuseTheOoze;
             }
 
-            uint32 GetData(uint32 type) const OVERRIDE
+            uint32 GetData(uint32 type) const override
             {
                 if (type == DATA_ABUSE_THE_OOZE)
                     return abuseTheOoze;
@@ -137,7 +148,7 @@ class boss_sjonnir : public CreatureScript
                 return 0;
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -189,6 +200,9 @@ class boss_sjonnir : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
@@ -198,7 +212,7 @@ class boss_sjonnir : public CreatureScript
                 uint8 abuseTheOoze;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetHallsOfStoneAI<boss_sjonnirAI>(creature);
         }
@@ -211,14 +225,22 @@ class npc_malformed_ooze : public CreatureScript
 
         struct npc_malformed_oozeAI : public ScriptedAI
         {
-            npc_malformed_oozeAI(Creature* creature) : ScriptedAI(creature) { }
+            npc_malformed_oozeAI(Creature* creature) : ScriptedAI(creature)
+            {
+                Initialize();
+            }
 
-            void Reset() OVERRIDE
+            void Initialize()
             {
                 _mergeTimer = 10000;
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void Reset() override
+            {
+                Initialize();
+            }
+
+            void UpdateAI(uint32 diff) override
             {
                 if (_mergeTimer <= diff)
                 {
@@ -243,7 +265,7 @@ class npc_malformed_ooze : public CreatureScript
             uint32 _mergeTimer;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetHallsOfStoneAI<npc_malformed_oozeAI>(creature);
         }
@@ -263,14 +285,14 @@ class npc_iron_sludge : public CreatureScript
 
             InstanceScript* instance;
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* sjonnir = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_SJONNIR)))
+                if (Creature* sjonnir = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_SJONNIR)))
                     sjonnir->AI()->DoAction(ACTION_OOZE_DEAD);
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetHallsOfStoneAI<npc_iron_sludgeAI>(creature);
         }
@@ -283,7 +305,7 @@ class achievement_abuse_the_ooze : public AchievementCriteriaScript
         {
         }
 
-        bool OnCheck(Player* /*player*/, Unit* target) OVERRIDE
+        bool OnCheck(Player* /*player*/, Unit* target) override
         {
             if (!target)
                 return false;

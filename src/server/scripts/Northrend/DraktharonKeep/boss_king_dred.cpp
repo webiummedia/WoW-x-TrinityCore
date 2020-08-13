@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,8 +20,10 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "drak_tharon_keep.h"
+#include "InstanceScript.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
 
 enum Spells
 {
@@ -58,14 +60,23 @@ class boss_king_dred : public CreatureScript
 
         struct boss_king_dredAI : public BossAI
         {
-            boss_king_dredAI(Creature* creature) : BossAI(creature, DATA_KING_DRED) { }
-
-            void Reset() OVERRIDE
+            boss_king_dredAI(Creature* creature) : BossAI(creature, DATA_KING_DRED)
             {
+                Initialize();
+            }
+
+            void Initialize()
+            {
+                raptorsKilled = 0;
+            }
+
+            void Reset() override
+            {
+                Initialize();
                 _Reset();
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
 
@@ -77,13 +88,13 @@ class boss_king_dred : public CreatureScript
                 events.ScheduleEvent(EVENT_RAPTOR_CALL, urand(20000, 25000));
             }
 
-            void DoAction(int32 action) OVERRIDE
+            void DoAction(int32 action) override
             {
                 if (action == ACTION_RAPTOR_KILLED)
                     ++raptorsKilled;
             }
 
-            uint32 GetData(uint32 type) const OVERRIDE
+            uint32 GetData(uint32 type) const override
             {
                 if (type == DATA_RAPTORS_KILLED)
                     return raptorsKilled;
@@ -91,12 +102,12 @@ class boss_king_dred : public CreatureScript
                 return 0;
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -135,13 +146,16 @@ class boss_king_dred : public CreatureScript
 
                             float x, y, z;
 
-                            me->GetClosePoint(x, y, z, me->GetObjectSize() / 3, 10.0f);
+                            me->GetClosePoint(x, y, z, me->GetCombatReach() / 3, 10.0f);
                             me->SummonCreature(RAND(NPC_DRAKKARI_GUTRIPPER, NPC_DRAKKARI_SCYTHECLAW), x, y, z, 0, TEMPSUMMON_DEAD_DESPAWN, 1000);
                             events.ScheduleEvent(EVENT_RAPTOR_CALL, urand(20000, 25000));
                             break;
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
@@ -151,7 +165,7 @@ class boss_king_dred : public CreatureScript
             uint8 raptorsKilled;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetDrakTharonKeepAI<boss_king_dredAI>(creature);
         }
@@ -166,19 +180,25 @@ class npc_drakkari_gutripper : public CreatureScript
         {
             npc_drakkari_gutripperAI(Creature* creature) : ScriptedAI(creature)
             {
+                Initialize();
                 instance = me->GetInstanceScript();
+            }
+
+            void Initialize()
+            {
+                GutRipTimer = urand(10000, 15000);
             }
 
             InstanceScript* instance;
 
             uint32 GutRipTimer;
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
-                GutRipTimer = urand(10000, 15000);
+                Initialize();
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -194,14 +214,14 @@ class npc_drakkari_gutripper : public CreatureScript
                 DoMeleeAttackIfReady();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* Dred = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_KING_DRED)))
+                if (Creature* Dred = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_KING_DRED)))
                     Dred->AI()->DoAction(ACTION_RAPTOR_KILLED);
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetDrakTharonKeepAI<npc_drakkari_gutripperAI>(creature);
         }
@@ -216,19 +236,25 @@ class npc_drakkari_scytheclaw : public CreatureScript
         {
             npc_drakkari_scytheclawAI(Creature* creature) : ScriptedAI(creature)
             {
+                Initialize();
                 instance = me->GetInstanceScript();
+            }
+
+            void Initialize()
+            {
+                uiRendTimer = urand(10000, 15000);
             }
 
             InstanceScript* instance;
 
             uint32 uiRendTimer;
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
-                uiRendTimer = urand(10000, 15000);
+                Initialize();
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -244,14 +270,14 @@ class npc_drakkari_scytheclaw : public CreatureScript
                 DoMeleeAttackIfReady();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* Dred = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_KING_DRED)))
+                if (Creature* Dred = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_KING_DRED)))
                     Dred->AI()->DoAction(ACTION_RAPTOR_KILLED);
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetDrakTharonKeepAI<npc_drakkari_scytheclawAI>(creature);
         }
@@ -264,7 +290,7 @@ class achievement_king_dred : public AchievementCriteriaScript
         {
         }
 
-        bool OnCheck(Player* /*player*/, Unit* target) OVERRIDE
+        bool OnCheck(Player* /*player*/, Unit* target) override
         {
             if (!target)
                 return false;

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,7 +23,7 @@ SDCategory: Auchindoun, Shadow Labyrinth
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
+#include "InstanceScript.h"
 #include "ScriptedEscortAI.h"
 #include "shadow_labyrinth.h"
 
@@ -65,7 +64,7 @@ class boss_ambassador_hellmaw : public CreatureScript
                 _intro = false;
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 if (!me->IsAlive())
                     return;
@@ -81,7 +80,7 @@ class boss_ambassador_hellmaw : public CreatureScript
                 DoAction(ACTION_AMBASSADOR_HELLMAW_BANISH);
             }
 
-            void MoveInLineOfSight(Unit* who) OVERRIDE
+            void MoveInLineOfSight(Unit* who) override
             {
                 if (me->HasAura(SPELL_BANISH))
                     return;
@@ -89,11 +88,11 @@ class boss_ambassador_hellmaw : public CreatureScript
                 npc_escortAI::MoveInLineOfSight(who);
             }
 
-            void WaypointReached(uint32 /*waypointId*/) OVERRIDE
+            void WaypointReached(uint32 /*waypointId*/) override
             {
             }
 
-            void DoAction(int32 actionId)
+            void DoAction(int32 actionId) override
             {
                 if (actionId == ACTION_AMBASSADOR_HELLMAW_INTRO)
                     DoIntro();
@@ -115,35 +114,35 @@ class boss_ambassador_hellmaw : public CreatureScript
                     me->RemoveAurasDueToSpell(SPELL_BANISH);
 
                 Talk(SAY_INTRO);
-                Start(true, false, 0, NULL, false, true);
+                Start(true, false, ObjectGuid::Empty, NULL, false, true);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _instance->SetBossState(DATA_AMBASSADOR_HELLMAW, IN_PROGRESS);
                 Talk(SAY_AGGRO);
             }
 
-            void KilledUnit(Unit* who) OVERRIDE
+            void KilledUnit(Unit* who) override
             {
                 if (who->GetTypeId() == TYPEID_PLAYER)
                     Talk(SAY_SLAY);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _instance->SetBossState(DATA_AMBASSADOR_HELLMAW, DONE);
                 Talk(SAY_DEATH);
             }
 
-            void UpdateEscortAI(uint32 const diff) OVERRIDE
+            void UpdateEscortAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
 
                 if (me->HasAura(SPELL_BANISH))
                 {
-                    EnterEvadeMode();
+                    EnterEvadeMode(EVADE_REASON_OTHER);
                     return;
                 }
 
@@ -181,7 +180,7 @@ class boss_ambassador_hellmaw : public CreatureScript
             bool _intro;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetShadowLabyrinthAI<boss_ambassador_hellmawAI>(creature);
         }

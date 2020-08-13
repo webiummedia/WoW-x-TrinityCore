@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,6 +16,8 @@
  */
 
 #include "ScriptMgr.h"
+#include "InstanceScript.h"
+#include "ObjectAccessor.h"
 #include "ScriptedCreature.h"
 #include "SpellScript.h"
 #include "ulduar.h"
@@ -107,18 +109,24 @@ class boss_auriaya : public CreatureScript
         {
             boss_auriayaAI(Creature* creature) : BossAI(creature, BOSS_AURIAYA)
             {
+                Initialize();
             }
 
-            void Reset() OVERRIDE
+            void Initialize()
             {
-                _Reset();
-                DefenderGUID = 0;
+                DefenderGUID.Clear();
                 defenderLives = 8;
                 crazyCatLady = true;
                 nineLives = false;
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void Reset() override
+            {
+                _Reset();
+                Initialize();
+            }
+
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 Talk(SAY_AGGRO);
@@ -131,20 +139,20 @@ class boss_auriaya : public CreatureScript
                 events.ScheduleEvent(EVENT_BERSERK, 600000);
             }
 
-            void KilledUnit(Unit* who) OVERRIDE
+            void KilledUnit(Unit* who) override
             {
                 if (who->GetTypeId() == TYPEID_PLAYER)
                     Talk(SAY_SLAY);
             }
 
-            void JustSummoned(Creature* summoned) OVERRIDE
+            void JustSummoned(Creature* summoned) override
             {
                 summons.Summon(summoned);
 
                 if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
                 {
                     summoned->AI()->AttackStart(target);
-                    summoned->AddThreat(target, 250.0f);
+                    AddThreat(target, 250.0f, summoned);
                     DoZoneInCombat(summoned);
                 }
 
@@ -158,7 +166,7 @@ class boss_auriaya : public CreatureScript
                 }
             }
 
-            void DoAction(int32 action) OVERRIDE
+            void DoAction(int32 action) override
             {
                 switch (action)
                 {
@@ -179,7 +187,7 @@ class boss_auriaya : public CreatureScript
                 }
             }
 
-            uint32 GetData(uint32 type) const OVERRIDE
+            uint32 GetData(uint32 type) const override
             {
                 switch (type)
                 {
@@ -192,7 +200,7 @@ class boss_auriaya : public CreatureScript
                 return 0;
             }
 
-            void SetData(uint32 id, uint32 data) OVERRIDE
+            void SetData(uint32 id, uint32 data) override
             {
                switch (id)
                {
@@ -205,13 +213,13 @@ class boss_auriaya : public CreatureScript
                }
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -267,19 +275,22 @@ class boss_auriaya : public CreatureScript
                             events.CancelEvent(EVENT_BERSERK);
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
 
         private:
-            uint64 DefenderGUID;
+            ObjectGuid DefenderGUID;
             uint8 defenderLives;
             bool crazyCatLady;
             bool nineLives;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetUlduarAI<boss_auriayaAI>(creature);
         }
@@ -297,13 +308,13 @@ class npc_auriaya_seeping_trigger : public CreatureScript
                 instance = me->GetInstanceScript();
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 me->DespawnOrUnsummon(600000);
                 DoCast(me, SPELL_SEEPING_ESSENCE);
             }
 
-            void UpdateAI(uint32 /*diff*/) OVERRIDE
+            void UpdateAI(uint32 /*diff*/) override
             {
                 if (instance->GetBossState(BOSS_AURIAYA) != IN_PROGRESS)
                     me->DespawnOrUnsummon();
@@ -313,9 +324,9 @@ class npc_auriaya_seeping_trigger : public CreatureScript
             InstanceScript* instance;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<npc_auriaya_seeping_triggerAI>(creature);
+            return GetUlduarAI<npc_auriaya_seeping_triggerAI>(creature);
         }
 };
 
@@ -331,18 +342,18 @@ class npc_sanctum_sentry : public CreatureScript
                 instance = me->GetInstanceScript();
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 events.ScheduleEvent(EVENT_RIP, urand(4000, 8000));
                 events.ScheduleEvent(EVENT_POUNCE, urand(12000, 15000));
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 DoCast(me, SPELL_STRENGHT_PACK, true);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -363,8 +374,8 @@ class npc_sanctum_sentry : public CreatureScript
                         case EVENT_POUNCE:
                             if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
                             {
-                                me->AddThreat(target, 100.0f);
-                                me->AI()->AttackStart(target);
+                                AddThreat(target, 100.0f);
+                                AttackStart(target);
                                 DoCast(target, SPELL_SAVAGE_POUNCE);
                             }
                             events.ScheduleEvent(EVENT_POUNCE, urand(12000, 17000));
@@ -372,15 +383,18 @@ class npc_sanctum_sentry : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
-                if (Creature* Auriaya = ObjectAccessor::GetCreature(*me, instance->GetData64(BOSS_AURIAYA)))
-                    Auriaya->AI()->DoAction(ACTION_CRAZY_CAT_LADY);
+                if (Creature* auriaya = instance->GetCreature(BOSS_AURIAYA))
+                    auriaya->AI()->DoAction(ACTION_CRAZY_CAT_LADY);
             }
 
         private:
@@ -388,9 +402,9 @@ class npc_sanctum_sentry : public CreatureScript
             EventMap events;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<npc_sanctum_sentryAI>(creature);
+            return GetUlduarAI<npc_sanctum_sentryAI>(creature);
         }
 };
 
@@ -406,13 +420,13 @@ class npc_feral_defender : public CreatureScript
                 instance = me->GetInstanceScript();
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 events.ScheduleEvent(EVENT_FERAL_POUNCE, 5000);
                 events.ScheduleEvent(EVENT_RUSH, 10000);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -429,8 +443,8 @@ class npc_feral_defender : public CreatureScript
                         case EVENT_FERAL_POUNCE:
                             if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
                             {
-                                me->AddThreat(target, 100.0f);
-                                me->AI()->AttackStart(target);
+                                AddThreat(target, 100.0f);
+                                AttackStart(target);
                                 DoCast(target, SPELL_FERAL_POUNCE);
                             }
                             events.ScheduleEvent(EVENT_FERAL_POUNCE, urand(10000, 12000));
@@ -438,8 +452,8 @@ class npc_feral_defender : public CreatureScript
                         case EVENT_RUSH:
                             if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 0.0f, true))
                             {
-                                me->AddThreat(target, 100.0f);
-                                me->AI()->AttackStart(target);
+                                AddThreat(target, 100.0f);
+                                AttackStart(target);
                                 DoCast(target, SPELL_FERAL_RUSH);
                             }
                             events.ScheduleEvent(EVENT_RUSH, urand(10000, 12000));
@@ -447,16 +461,19 @@ class npc_feral_defender : public CreatureScript
                     default:
                         break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 DoCast(me, SPELL_SUMMON_ESSENCE);
-                if (Creature* Auriaya = ObjectAccessor::GetCreature(*me, instance->GetData64(BOSS_AURIAYA)))
-                    Auriaya->AI()->DoAction(ACTION_RESPAWN_DEFENDER);
+                if (Creature* auriaya = instance->GetCreature(BOSS_AURIAYA))
+                    auriaya->AI()->DoAction(ACTION_RESPAWN_DEFENDER);
             }
 
         private:
@@ -464,9 +481,9 @@ class npc_feral_defender : public CreatureScript
             EventMap events;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<npc_feral_defenderAI>(creature);
+            return GetUlduarAI<npc_feral_defenderAI>(creature);
         }
 };
 
@@ -496,13 +513,13 @@ class spell_auriaya_strenght_of_the_pack : public SpellScriptLoader
                 unitList.remove_if(SanctumSentryCheck());
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_auriaya_strenght_of_the_pack_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ALLY);
             }
         };
 
-        SpellScript* GetSpellScript() const OVERRIDE
+        SpellScript* GetSpellScript() const override
         {
             return new spell_auriaya_strenght_of_the_pack_SpellScript();
         }
@@ -519,22 +536,24 @@ class spell_auriaya_sentinel_blast : public SpellScriptLoader
 
             void FilterTargets(std::list<WorldObject*>& unitList)
             {
-                unitList.remove_if(PlayerOrPetCheck());
+                unitList.remove_if([](WorldObject* target)
+                {
+                    return target->GetTypeId() != TYPEID_PLAYER && (target->GetTypeId() != TYPEID_UNIT || !target->ToUnit()->IsPet());
+                });
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_auriaya_sentinel_blast_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_SRC_AREA_ENEMY);
                 OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_auriaya_sentinel_blast_SpellScript::FilterTargets, EFFECT_1, TARGET_UNIT_SRC_AREA_ENEMY);
             }
         };
 
-        SpellScript* GetSpellScript() const OVERRIDE
+        SpellScript* GetSpellScript() const override
         {
             return new spell_auriaya_sentinel_blast_SpellScript();
         }
 };
-
 
 class achievement_nine_lives : public AchievementCriteriaScript
 {
@@ -543,7 +562,7 @@ class achievement_nine_lives : public AchievementCriteriaScript
         {
         }
 
-        bool OnCheck(Player* /*player*/, Unit* target) OVERRIDE
+        bool OnCheck(Player* /*player*/, Unit* target) override
         {
             if (!target)
                 return false;
@@ -563,7 +582,7 @@ class achievement_crazy_cat_lady : public AchievementCriteriaScript
         {
         }
 
-        bool OnCheck(Player* /*player*/, Unit* target) OVERRIDE
+        bool OnCheck(Player* /*player*/, Unit* target) override
         {
             if (!target)
                 return false;

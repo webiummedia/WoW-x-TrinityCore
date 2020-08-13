@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,45 +20,43 @@
 
 #include "Object.h"
 #include "Map.h"
+#include "MapInstanced.h"
 #include "GridStates.h"
 #include "MapUpdater.h"
+#include <boost/dynamic_bitset.hpp>
 
-#include <ace/Singleton.h>
-#include <ace/Thread_Mutex.h>
-
-
+class PhaseShift;
 class Transport;
 struct TransportCreatureProto;
 
-class MapManager
+class TC_GAME_API MapManager
 {
-    friend class ACE_Singleton<MapManager, ACE_Thread_Mutex>;
-
     public:
+        static MapManager* instance();
+
         Map* CreateBaseMap(uint32 mapId);
         Map* FindBaseNonInstanceMap(uint32 mapId) const;
-        Map* CreateMap(uint32 mapId, Player* player);
+        Map* CreateMap(uint32 mapId, Player* player, uint32 loginInstanceId=0);
         Map* FindMap(uint32 mapId, uint32 instanceId) const;
 
-        uint16 GetAreaFlag(uint32 mapid, float x, float y, float z) const
+        uint32 GetAreaId(PhaseShift const& phaseShift, uint32 mapid, float x, float y, float z)
         {
-            Map const* m = const_cast<MapManager*>(this)->CreateBaseMap(mapid);
-            return m->GetAreaFlag(x, y, z);
+            Map* m = CreateBaseMap(mapid);
+            return m->GetAreaId(phaseShift, x, y, z);
         }
-        uint32 GetAreaId(uint32 mapid, float x, float y, float z) const
+        uint32 GetZoneId(PhaseShift const& phaseShift, uint32 mapid, float x, float y, float z)
         {
-            return Map::GetAreaIdByAreaFlag(GetAreaFlag(mapid, x, y, z), mapid);
+            Map* m = CreateBaseMap(mapid);
+            return m->GetZoneId(phaseShift, x, y, z);
         }
-        uint32 GetZoneId(uint32 mapid, float x, float y, float z) const
+        void GetZoneAndAreaId(PhaseShift const& phaseShift, uint32& zoneid, uint32& areaid, uint32 mapid, float x, float y, float z)
         {
-            return Map::GetZoneIdByAreaFlag(GetAreaFlag(mapid, x, y, z), mapid);
-        }
-        void GetZoneAndAreaId(uint32& zoneid, uint32& areaid, uint32 mapid, float x, float y, float z)
-        {
-            Map::GetZoneAndAreaIdByAreaFlag(zoneid, areaid, GetAreaFlag(mapid, x, y, z), mapid);
+            Map* m = CreateBaseMap(mapid);
+            m->GetZoneAndAreaId(phaseShift, zoneid, areaid, x, y, z);
         }
 
-        void Initialize(void);
+        void Initialize();
+        void InitializeParentMapData(std::unordered_map<uint32, std::vector<uint32>> const& mapData);
         void Update(uint32);
 
         void SetGridCleanUpDelay(uint32 t)
@@ -107,7 +104,7 @@ class MapManager
 
         void DoDelayedMovesAndRemoves();
 
-        bool CanPlayerEnter(uint32 mapid, Player* player, bool loginCheck = false);
+        Map::EnterState PlayerCannotEnter(uint32 mapid, Player* player, bool loginCheck = false);
         void InitializeVisibilityDistanceInfo();
 
         /* statistics */
@@ -120,14 +117,22 @@ class MapManager
         void RegisterInstanceId(uint32 instanceId);
         void FreeInstanceId(uint32 instanceId);
 
-        uint32 GetNextInstanceId() const { return _nextInstanceId; };
-        void SetNextInstanceId(uint32 nextInstanceId) { _nextInstanceId = nextInstanceId; };
-
         MapUpdater * GetMapUpdater() { return &m_updater; }
 
+        template<typename Worker>
+        void DoForAllMaps(Worker&& worker);
+
+        template<typename Worker>
+        void DoForAllMapsWithMapId(uint32 mapId, Worker&& worker);
+
+        void IncreaseScheduledScriptsCount() { ++_scheduledScripts; }
+        void DecreaseScheduledScriptCount() { --_scheduledScripts; }
+        void DecreaseScheduledScriptCount(std::size_t count) { _scheduledScripts -= count; }
+        bool IsScriptScheduled() const { return _scheduledScripts > 0; }
+
     private:
-        typedef UNORDERED_MAP<uint32, Map*> MapMapType;
-        typedef std::vector<bool> InstanceIds;
+        typedef std::unordered_map<uint32, Map*> MapMapType;
+        typedef boost::dynamic_bitset<size_t> InstanceIds;
 
         MapManager();
         ~MapManager();
@@ -138,17 +143,65 @@ class MapManager
             return (iter == i_maps.end() ? NULL : iter->second);
         }
 
-        MapManager(const MapManager &);
-        MapManager& operator=(const MapManager &);
+        Map* CreateBaseMap_i(MapEntry const* mapEntry);
 
-        ACE_Thread_Mutex Lock;
+        MapManager(MapManager const&) = delete;
+        MapManager& operator=(MapManager const&) = delete;
+
+        std::mutex _mapsLock;
         uint32 i_gridCleanUpDelay;
         MapMapType i_maps;
         IntervalTimer i_timer;
 
-        InstanceIds _instanceIds;
+        InstanceIds _freeInstanceIds;
         uint32 _nextInstanceId;
         MapUpdater m_updater;
+
+        // atomic op counter for active scripts amount
+        std::atomic<std::size_t> _scheduledScripts;
+
+        // parent map links
+        std::unordered_map<uint32, std::vector<uint32>> _parentMapData;
 };
-#define sMapMgr ACE_Singleton<MapManager, ACE_Thread_Mutex>::instance()
+
+template<typename Worker>
+void MapManager::DoForAllMaps(Worker&& worker)
+{
+    std::lock_guard<std::mutex> lock(_mapsLock);
+
+    for (auto& mapPair : i_maps)
+    {
+        Map* map = mapPair.second;
+        if (MapInstanced* mapInstanced = map->ToMapInstanced())
+        {
+            MapInstanced::InstancedMaps& instances = mapInstanced->GetInstancedMaps();
+            for (auto& instancePair : instances)
+                worker(instancePair.second);
+        }
+        else
+            worker(map);
+    }
+}
+
+template<typename Worker>
+inline void MapManager::DoForAllMapsWithMapId(uint32 mapId, Worker&& worker)
+{
+    std::lock_guard<std::mutex> lock(_mapsLock);
+
+    auto itr = i_maps.find(mapId);
+    if (itr != i_maps.end())
+    {
+        Map* map = itr->second;
+        if (MapInstanced* mapInstanced = map->ToMapInstanced())
+        {
+            MapInstanced::InstancedMaps& instances = mapInstanced->GetInstancedMaps();
+            for (auto& p : instances)
+                worker(p.second);
+        }
+        else
+            worker(map);
+    }
+}
+
+#define sMapMgr MapManager::instance()
 #endif

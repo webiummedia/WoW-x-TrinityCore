@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,10 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "ahnkahet.h"
+#include "InstanceScript.h"
+#include "ScriptedCreature.h"
+#include "TemporarySummon.h"
 
 enum Spells
 {
@@ -57,14 +59,14 @@ class boss_amanitar : public CreatureScript
         {
             boss_amanitarAI(Creature* creature) : BossAI(creature, DATA_AMANITAR) { }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 _Reset();
                 me->SetMeleeDamageSchool(SPELL_SCHOOL_NATURE);
                 me->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_NATURE, true);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
 
@@ -75,7 +77,7 @@ class boss_amanitar : public CreatureScript
                 events.ScheduleEvent(EVENT_SPAWN, 5  * IN_MILLISECONDS);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 instance->DoRemoveAurasDueToSpellOnPlayers(SPELL_MINI);
@@ -87,30 +89,24 @@ class boss_amanitar : public CreatureScript
 
                 for (uint8 i = 0; i < 30; ++i)
                 {
-                    Position pos;
-                    me->GetPosition(&pos);
-                    me->GetRandomNearPosition(pos, 30.0f);
-                    pos.m_positionZ = me->GetMap()->GetHeight(pos.GetPositionX(), pos.GetPositionY(), MAX_HEIGHT) + 2.0f;
+                    Position pos = me->GetRandomNearPosition(30.0f);
+                    me->UpdateGroundPositionZ(pos.GetPositionX(), pos.GetPositionY(), pos.m_positionZ);
 
                     if (Creature* trigger = me->SummonCreature(NPC_TRIGGER, pos))
                     {
                         Creature* temp1 = trigger->FindNearestCreature(NPC_HEALTHY_MUSHROOM, 4.0f, true);
                         Creature* temp2 = trigger->FindNearestCreature(NPC_POISONOUS_MUSHROOM, 4.0f, true);
-                        if (temp1 || temp2)
-                        {
-                            trigger->DisappearAndDie();
-                        }
-                        else
+                        if (!temp1 && !temp2)
                         {
                             u = 1 - u;
-                            trigger->DisappearAndDie();
                             me->SummonCreature(u > 0 ? NPC_POISONOUS_MUSHROOM : NPC_HEALTHY_MUSHROOM, pos, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60 * IN_MILLISECONDS);
                         }
+                        trigger->DespawnOrUnsummon();
                     }
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -147,12 +143,15 @@ class boss_amanitar : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
                 DoMeleeAttackIfReady();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetAhnKahetAI<boss_amanitarAI>(creature);
         }
@@ -169,12 +168,12 @@ public:
 
         EventMap events;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
             events.Reset();
             events.ScheduleEvent(EVENT_AURA, 1 * IN_MILLISECONDS);
 
-            me->SetDisplayId(me->GetCreatureTemplate()->Modelid2);
+            me->SetDisplayFromModel(1);
             DoCast(SPELL_PUTRID_MUSHROOM);
 
             if (me->GetEntry() == NPC_POISONOUS_MUSHROOM)
@@ -183,16 +182,16 @@ public:
                 DoCast(SPELL_POWER_MUSHROOM_VISUAL_AURA);
         }
 
-        void DamageTaken(Unit* /*attacker*/, uint32 &damage) OVERRIDE
+        void DamageTaken(Unit* /*attacker*/, uint32 &damage) override
         {
             if (damage >= me->GetHealth() && me->GetEntry() == NPC_HEALTHY_MUSHROOM)
                 DoCast(me, SPELL_HEALTHY_MUSHROOM_POTENT_FUNGUS, true);
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE { }
-        void AttackStart(Unit* /*victim*/) OVERRIDE { }
+        void EnterCombat(Unit* /*who*/) override { }
+        void AttackStart(Unit* /*victim*/) override { }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -217,13 +216,16 @@ public:
                     default:
                         break;
                 }
+
+                if (me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
             }
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new npc_amanitar_mushroomsAI(creature);
+        return GetAhnKahetAI<npc_amanitar_mushroomsAI>(creature);
     }
 };
 

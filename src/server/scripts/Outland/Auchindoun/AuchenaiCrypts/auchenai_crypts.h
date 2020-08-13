@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,27 +18,22 @@
 #ifndef AUCHENAI_CRYPTS_H_
 #define AUCHENAI_CRYPTS_H_
 
+#include "CreatureAIImpl.h"
+
 #define ACScriptName "instance_auchenai_crypts"
+#define DataHeader   "AC"
 
 uint32 const EncounterCount = 2;
 
-enum DataTypes
+enum ACDataTypes
 {
     // Encounter States/Boss GUIDs
     DATA_SHIRRAK_THE_DEAD_WATCHER   = 0,
     DATA_EXARCH_MALADAAR            = 1
 };
 
-enum CreatureIds
-{
-};
-
-enum GameObjectIds
-{
-};
-
-template<class AI>
-AI* GetAuchenaiCryptsAI(Creature* creature)
+template<typename AI>
+inline AI* GetAuchenaiCryptsAI(Creature* creature)
 {
     return GetInstanceAI<AI>(creature, ACScriptName);
 }

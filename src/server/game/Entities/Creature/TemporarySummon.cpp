@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,30 +15,33 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Log.h"
-#include "ObjectAccessor.h"
-#include "CreatureAI.h"
-#include "ObjectMgr.h"
 #include "TemporarySummon.h"
+#include "CreatureAI.h"
+#include "DB2Structure.h"
+#include "Log.h"
+#include "Map.h"
+#include "ObjectAccessor.h"
 #include "Pet.h"
 #include "Player.h"
 
 TempSummon::TempSummon(SummonPropertiesEntry const* properties, Unit* owner, bool isWorldObject) :
 Creature(isWorldObject), m_Properties(properties), m_type(TEMPSUMMON_MANUAL_DESPAWN),
-m_timer(0), m_lifetime(0)
+m_timer(0), m_lifetime(0), m_visibleBySummonerOnly(false)
 {
-    m_summonerGUID = owner ? owner->GetGUID() : 0;
+    if (owner)
+        m_summonerGUID = owner->GetGUID();
+
     m_unitTypeMask |= UNIT_MASK_SUMMON;
 }
 
 Unit* TempSummon::GetSummoner() const
 {
-    return m_summonerGUID ? ObjectAccessor::GetUnit(*this, m_summonerGUID) : NULL;
+    return !m_summonerGUID.IsEmpty() ? ObjectAccessor::GetUnit(*this, m_summonerGUID) : NULL;
 }
 
 Creature* TempSummon::GetSummonerCreatureBase() const
 {
-    return m_summonerGUID ? ObjectAccessor::GetCreature(*this, m_summonerGUID) : NULL;
+    return !m_summonerGUID.IsEmpty() ? ObjectAccessor::GetCreature(*this, m_summonerGUID) : NULL;
 }
 
 void TempSummon::Update(uint32 diff)
@@ -185,7 +187,7 @@ void TempSummon::InitStats(uint32 duration)
 
     if (owner && IsTrigger() && m_spells[0])
     {
-        setFaction(owner->getFaction());
+        SetFaction(owner->GetFaction());
         SetLevel(owner->getLevel());
         if (owner->GetTypeId() == TYPEID_PLAYER)
             m_ControlledByPlayer = true;
@@ -196,9 +198,10 @@ void TempSummon::InitStats(uint32 duration)
 
     if (owner)
     {
-        if (uint32 slot = m_Properties->Slot)
+        int32 slot = m_Properties->Slot;
+        if (slot > 0)
         {
-            if (owner->m_SummonSlot[slot] && owner->m_SummonSlot[slot] != GetGUID())
+            if (!owner->m_SummonSlot[slot].IsEmpty() && owner->m_SummonSlot[slot] != GetGUID())
             {
                 Creature* oldSummon = GetMap()->GetCreature(owner->m_SummonSlot[slot]);
                 if (oldSummon && oldSummon->IsSummon())
@@ -209,9 +212,9 @@ void TempSummon::InitStats(uint32 duration)
     }
 
     if (m_Properties->Faction)
-        setFaction(m_Properties->Faction);
+        SetFaction(m_Properties->Faction);
     else if (IsVehicle() && owner) // properties should be vehicle
-        setFaction(owner->getFaction());
+        SetFaction(owner->GetFaction());
 }
 
 void TempSummon::InitSummon()
@@ -224,6 +227,11 @@ void TempSummon::InitSummon()
         if (IsAIEnabled)
             AI()->IsSummonedBy(owner);
     }
+}
+
+void TempSummon::UpdateObjectVisibilityOnCreate()
+{
+    WorldObject::UpdateObjectVisibility(true);
 }
 
 void TempSummon::SetTempSummonType(TempSummonType type)
@@ -244,7 +252,7 @@ void TempSummon::UnSummon(uint32 msTime)
     //ASSERT(!IsPet());
     if (IsPet())
     {
-        ((Pet*)this)->Remove(PET_SAVE_NOT_IN_SLOT);
+        ToPet()->Remove(PET_SAVE_NOT_IN_SLOT);
         ASSERT(!IsInWorld());
         return;
     }
@@ -268,10 +276,13 @@ void TempSummon::RemoveFromWorld()
         return;
 
     if (m_Properties)
-        if (uint32 slot = m_Properties->Slot)
+    {
+        int32 slot = m_Properties->Slot;
+        if (slot > 0)
             if (Unit* owner = GetSummoner())
                 if (owner->m_SummonSlot[slot] == GetGUID())
-                    owner->m_SummonSlot[slot] = 0;
+                    owner->m_SummonSlot[slot].Clear();
+    }
 
     //if (GetOwnerGUID())
     //    TC_LOG_ERROR("entities.unit", "Unit %u has owner guid when removed from world", GetEntry());
@@ -285,6 +296,8 @@ Minion::Minion(SummonPropertiesEntry const* properties, Unit* owner, bool isWorl
     ASSERT(m_owner);
     m_unitTypeMask |= UNIT_MASK_MINION;
     m_followAngle = PET_FOLLOW_ANGLE;
+    /// @todo: Find correct way
+    InitCharmInfo();
 }
 
 void Minion::InitStats(uint32 duration)
@@ -294,7 +307,7 @@ void Minion::InitStats(uint32 duration)
     SetReactState(REACT_PASSIVE);
 
     SetCreatorGUID(GetOwner()->GetGUID());
-    setFaction(GetOwner()->getFaction());
+    SetFaction(GetOwner()->GetFaction());
 
     GetOwner()->SetMinion(this, true);
 }
@@ -310,7 +323,7 @@ void Minion::RemoveFromWorld()
 
 bool Minion::IsGuardianPet() const
 {
-    return IsPet() || (m_Properties && m_Properties->Category == SUMMON_CATEGORY_PET);
+    return IsPet() || (m_Properties && m_Properties->Control == SUMMON_CATEGORY_PET);
 }
 
 Guardian::Guardian(SummonPropertiesEntry const* properties, Unit* owner, bool isWorldObject) : Minion(properties, owner, isWorldObject)
@@ -318,7 +331,7 @@ Guardian::Guardian(SummonPropertiesEntry const* properties, Unit* owner, bool is
 {
     memset(m_statFromOwner, 0, sizeof(float)*MAX_STATS);
     m_unitTypeMask |= UNIT_MASK_GUARDIAN;
-    if (properties && properties->Type == SUMMON_TYPE_PET)
+    if (properties && (SummonTitle(properties->Title) == SummonTitle::Pet || properties->Control == SUMMON_CATEGORY_PET))
     {
         m_unitTypeMask |= UNIT_MASK_CONTROLABLE_GUARDIAN;
         InitCharmInfo();
@@ -367,7 +380,7 @@ void Puppet::InitSummon()
 {
     Minion::InitSummon();
     if (!SetCharmedBy(GetOwner(), CHARM_TYPE_POSSESS))
-        ASSERT(false);
+        ABORT();
 }
 
 void Puppet::Update(uint32 time)

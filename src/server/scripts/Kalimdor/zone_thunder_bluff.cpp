@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -48,46 +47,14 @@ class npc_cairne_bloodhoof : public CreatureScript
 public:
     npc_cairne_bloodhoof() : CreatureScript("npc_cairne_bloodhoof") { }
 
-    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) OVERRIDE
-    {
-        player->PlayerTalkClass->ClearMenus();
-        if (action == GOSSIP_SENDER_INFO)
-        {
-            player->CastSpell(player, 23123, false);
-            player->SEND_GOSSIP_MENU(7014, creature->GetGUID());
-        }
-        return true;
-    }
-
-    bool OnGossipHello(Player* player, Creature* creature) OVERRIDE
-    {
-        if (creature->IsQuestGiver())
-            player->PrepareQuestMenu(creature->GetGUID());
-
-        if (player->GetQuestStatus(925) == QUEST_STATUS_INCOMPLETE)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_HCB, GOSSIP_SENDER_MAIN, GOSSIP_SENDER_INFO);
-
-        player->SEND_GOSSIP_MENU(7013, creature->GetGUID());
-
-        return true;
-    }
-
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
-    {
-        return new npc_cairne_bloodhoofAI(creature);
-    }
-
     struct npc_cairne_bloodhoofAI : public ScriptedAI
     {
-        npc_cairne_bloodhoofAI(Creature* creature) : ScriptedAI(creature) { }
+        npc_cairne_bloodhoofAI(Creature* creature) : ScriptedAI(creature)
+        {
+            Initialize();
+        }
 
-        uint32 BerserkerChargeTimer;
-        uint32 CleaveTimer;
-        uint32 MortalStrikeTimer;
-        uint32 ThunderclapTimer;
-        uint32 UppercutTimer;
-
-        void Reset() OVERRIDE
+        void Initialize()
         {
             BerserkerChargeTimer = 30000;
             CleaveTimer = 5000;
@@ -96,9 +63,20 @@ public:
             UppercutTimer = 10000;
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE { }
+        uint32 BerserkerChargeTimer;
+        uint32 CleaveTimer;
+        uint32 MortalStrikeTimer;
+        uint32 ThunderclapTimer;
+        uint32 UppercutTimer;
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void Reset() override
+        {
+            Initialize();
+        }
+
+        void EnterCombat(Unit* /*who*/) override { }
+
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -136,8 +114,37 @@ public:
 
             DoMeleeAttackIfReady();
         }
+
+        bool GossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId) override
+        {
+            uint32 const action = player->PlayerTalkClass->GetGossipOptionAction(gossipListId);
+            ClearGossipMenuFor(player);
+            if (action == GOSSIP_SENDER_INFO)
+            {
+                player->CastSpell(player, 23123, false);
+                SendGossipMenuFor(player, 7014, me->GetGUID());
+            }
+            return true;
+        }
+
+        bool GossipHello(Player* player) override
+        {
+            if (me->IsQuestGiver())
+                player->PrepareQuestMenu(me->GetGUID());
+
+            if (player->GetQuestStatus(925) == QUEST_STATUS_INCOMPLETE)
+                AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_HCB, GOSSIP_SENDER_MAIN, GOSSIP_SENDER_INFO);
+
+            SendGossipMenuFor(player, 7013, me->GetGUID());
+
+            return true;
+        }
     };
 
+    CreatureAI* GetAI(Creature* creature) const override
+    {
+        return new npc_cairne_bloodhoofAI(creature);
+    }
 };
 
 void AddSC_thunder_bluff()

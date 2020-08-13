@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,19 +19,15 @@
 #define BATTLEFIELD_MGR_H_
 
 #include "Battlefield.h"
-#include <ace/Singleton.h>
 
 class Player;
 class ZoneScript;
 
 // class to handle player enter / leave / areatrigger / GO use events
-class BattlefieldMgr
+class TC_GAME_API BattlefieldMgr
 {
     public:
-        // ctor
-        BattlefieldMgr();
-        // dtor
-        ~BattlefieldMgr();
+        static BattlefieldMgr* instance();
 
         // create battlefield events
         void InitBattlefield();
@@ -44,6 +40,7 @@ class BattlefieldMgr
         // return assigned battlefield
         Battlefield* GetBattlefieldToZoneId(uint32 zoneId);
         Battlefield* GetBattlefieldByBattleId(uint32 battleId);
+        Battlefield* GetBattlefieldByQueueId(uint64 queueId);
 
         ZoneScript* GetZoneScript(uint32 zoneId);
 
@@ -52,6 +49,9 @@ class BattlefieldMgr
         void Update(uint32 diff);
 
     private:
+        BattlefieldMgr();
+        ~BattlefieldMgr();
+
         typedef std::vector<Battlefield*> BattlefieldSet;
         typedef std::map<uint32 /*zoneId*/, Battlefield*> BattlefieldMap;
         // contains all initiated battlefield events
@@ -64,6 +64,6 @@ class BattlefieldMgr
         uint32 _updateTimer;
 };
 
-#define sBattlefieldMgr ACE_Singleton<BattlefieldMgr, ACE_Null_Mutex>::instance()
+#define sBattlefieldMgr BattlefieldMgr::instance()
 
 #endif // BATTLEFIELD_MGR_H_

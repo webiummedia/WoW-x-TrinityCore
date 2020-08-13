@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +19,10 @@
 #define TRINITYSERVER_SPLINE_H
 
 #include "MovementTypedefs.h"
+#include "Errors.h"
 #include <G3D/Vector3.h>
 #include <limits>
+#include <vector>
 
 namespace Movement {
 
@@ -56,7 +57,7 @@ protected:
         // client's value is 20, blizzs use 2-3 steps to compute length
         STEPS_PER_SEGMENT = 3
     };
-    static_assert(STEPS_PER_SEGMENT > 0, "shouldn't be lesser than 1");
+    static_assert(STEPS_PER_SEGMENT > 0, "STEPS_PER_SEGMENT shouldn't be lesser than 1");
 
 protected:
     void EvaluateLinear(index_type, float, Vector3&) const;
@@ -76,13 +77,15 @@ protected:
     typedef float (SplineBase::*SegLenghtMethtod)(index_type) const;
     static SegLenghtMethtod seglengths[ModesEnd];
 
-    void InitLinear(const Vector3*, index_type, bool, index_type);
-    void InitCatmullRom(const Vector3*, index_type, bool, index_type);
-    void InitBezier3(const Vector3*, index_type, bool, index_type);
-    typedef void (SplineBase::*InitMethtod)(const Vector3*, index_type, bool, index_type);
+    void InitLinear(const Vector3*, index_type, index_type);
+    void InitCatmullRom(const Vector3*, index_type, index_type);
+    void InitBezier3(const Vector3*, index_type, index_type);
+    typedef void (SplineBase::*InitMethtod)(const Vector3*, index_type, index_type);
     static InitMethtod initializers[ModesEnd];
 
-    void UninitializedSpline() const { ASSERT(false);}
+    void UninitializedSplineEvaluationMethod(index_type, float, Vector3&) const { ABORT(); }
+    float UninitializedSplineSegLenghtMethod(index_type) const { ABORT(); return 0.0f; }
+    void UninitializedSplineInitMethod(Vector3 const*, index_type, index_type) { ABORT(); }
 
 public:
 
@@ -108,9 +111,9 @@ public:
     EvaluationMode mode() const { return (EvaluationMode)m_mode;}
     bool isCyclic() const { return cyclic;}
 
-    const ControlArray& getPoints() const { return points;}
-    index_type getPointCount() const { return points.size();}
-    const Vector3& getPoint(index_type i) const { return points[i];}
+    const ControlArray& getPoints() const { return points; }
+    index_type getPointCount() const { return index_type(points.size()); }
+    const Vector3& getPoint(index_type i) const { return points[i]; }
 
     /** Initializes spline. Don't call other methods while spline not initialized. */
     void init_spline(const Vector3 * controls, index_type count, EvaluationMode m);

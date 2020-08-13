@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,36 +22,39 @@ Comment: All gm related commands
 Category: commandscripts
 EndScriptData */
 
-#include "ScriptMgr.h"
-#include "ObjectMgr.h"
-#include "Chat.h"
 #include "AccountMgr.h"
+#include "Chat.h"
+#include "DatabaseEnv.h"
 #include "Language.h"
-#include "World.h"
-#include "Player.h"
+#include "ObjectAccessor.h"
 #include "Opcodes.h"
+#include "Player.h"
+#include "Realm.h"
+#include "ScriptMgr.h"
+#include "World.h"
+#include "WorldSession.h"
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 class gm_commandscript : public CommandScript
 {
 public:
     gm_commandscript() : CommandScript("gm_commandscript") { }
 
-    ChatCommand* GetCommands() const OVERRIDE
+    std::vector<ChatCommand> GetCommands() const override
     {
-        static ChatCommand gmCommandTable[] =
+        static std::vector<ChatCommand> gmCommandTable =
         {
-            { "chat",    rbac::RBAC_PERM_COMMAND_GM_CHAT,    false, &HandleGMChatCommand,       "", NULL },
-            { "fly",     rbac::RBAC_PERM_COMMAND_GM_FLY,     false, &HandleGMFlyCommand,        "", NULL },
-            { "ingame",  rbac::RBAC_PERM_COMMAND_GM_INGAME,   true, &HandleGMListIngameCommand, "", NULL },
-            { "list",    rbac::RBAC_PERM_COMMAND_GM_LIST,     true, &HandleGMListFullCommand,   "", NULL },
-            { "visible", rbac::RBAC_PERM_COMMAND_GM_VISIBLE, false, &HandleGMVisibleCommand,    "", NULL },
-            { "",        rbac::RBAC_PERM_COMMAND_GM,         false, &HandleGMCommand,           "", NULL },
-            { NULL,      0,                            false, NULL,                       "", NULL }
+            { "chat",    rbac::RBAC_PERM_COMMAND_GM_CHAT,    false, &HandleGMChatCommand,       "" },
+            { "fly",     rbac::RBAC_PERM_COMMAND_GM_FLY,     false, &HandleGMFlyCommand,        "" },
+            { "ingame",  rbac::RBAC_PERM_COMMAND_GM_INGAME,   true, &HandleGMListIngameCommand, "" },
+            { "list",    rbac::RBAC_PERM_COMMAND_GM_LIST,     true, &HandleGMListFullCommand,   "" },
+            { "visible", rbac::RBAC_PERM_COMMAND_GM_VISIBLE, false, &HandleGMVisibleCommand,    "" },
+            { "",        rbac::RBAC_PERM_COMMAND_GM,         false, &HandleGMCommand,           "" },
         };
-        static ChatCommand commandTable[] =
+        static std::vector<ChatCommand> commandTable =
         {
             { "gm", rbac::RBAC_PERM_COMMAND_GM, false, NULL, "", gmCommandTable },
-            { NULL, 0,                    false, NULL, "", NULL }
         };
         return commandTable;
     }
@@ -101,19 +104,22 @@ public:
         if (!target)
             target = handler->GetSession()->GetPlayer();
 
-        WorldPacket data(12);
+        WorldPacket data;
         if (strncmp(args, "on", 3) == 0)
-            data.SetOpcode(SMSG_MOVE_SET_CAN_FLY);
+        {
+            target->SetCanFly(true);
+            target->SetCanTransitionBetweenSwimAndFly(true);
+        }
         else if (strncmp(args, "off", 4) == 0)
-            data.SetOpcode(SMSG_MOVE_UNSET_CAN_FLY);
+        {
+            target->SetCanFly(false);
+            target->SetCanTransitionBetweenSwimAndFly(false);
+        }
         else
         {
             handler->SendSysMessage(LANG_USE_BOL);
             return false;
         }
-        data.append(target->GetPackGUID());
-        data << uint32(0);                                      // unknown
-        target->SendMessageToSet(&data, true);
         handler->PSendSysMessage(LANG_COMMAND_FLYMODE_STATUS, handler->GetNameLink(target).c_str(), args);
         return true;
     }
@@ -123,8 +129,8 @@ public:
         bool first = true;
         bool footer = false;
 
-        TRINITY_READ_GUARD(HashMapHolder<Player>::LockType, *HashMapHolder<Player>::GetLock());
-        HashMapHolder<Player>::MapType const& m = sObjectAccessor->GetPlayers();
+        boost::shared_lock<boost::shared_mutex> lock(*HashMapHolder<Player>::GetLock());
+        HashMapHolder<Player>::MapType const& m = ObjectAccessor::GetPlayers();
         for (HashMapHolder<Player>::MapType::const_iterator itr = m.begin(); itr != m.end(); ++itr)
         {
             AccountTypes itrSec = itr->second->GetSession()->GetSecurity();
@@ -164,9 +170,9 @@ public:
     static bool HandleGMListFullCommand(ChatHandler* handler, char const* /*args*/)
     {
         ///- Get the accounts with GM Level >0
-        PreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_GM_ACCOUNTS);
+        LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_GM_ACCOUNTS);
         stmt->setUInt8(0, uint8(SEC_MODERATOR));
-        stmt->setInt32(1, int32(realmID));
+        stmt->setInt32(1, int32(realm.Id.Realm));
         PreparedQueryResult result = LoginDatabase.Query(stmt);
 
         if (result)
@@ -211,7 +217,7 @@ public:
 
         if (param == "on")
         {
-            if (_player->HasAura(VISUAL_AURA, 0))
+            if (_player->HasAura(VISUAL_AURA))
                 _player->RemoveAurasDueToSpell(VISUAL_AURA);
 
             _player->SetGMVisible(true);

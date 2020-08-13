@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,21 +18,12 @@
 #include "GridStates.h"
 #include "GridNotifiers.h"
 #include "Log.h"
-
-#ifdef TRINITY_DEBUG
-bool GridState::checkMagic()
-{
-    if (i_Magic != MAGIC_TESTVAL)
-    {
-        TC_LOG_ERROR("misc", "!!! GridState: Magic value gone !!!");
-        return false;
-    }
-    return true;
-}
-#endif
+#include "Map.h"
+#include "ObjectGridLoader.h"
 
 void InvalidState::Update(Map&, NGridType&, GridInfo&, uint32) const
-{ }
+{
+}
 
 void ActiveState::Update(Map& map, NGridType& grid, GridInfo&  info, uint32 diff) const
 {
@@ -73,4 +63,3 @@ void RemovalState::Update(Map& map, NGridType& grid, GridInfo& info, uint32 diff
         }
     }
 }
-

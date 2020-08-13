@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +19,8 @@
 #define TRINITYSERVER_MOVESPLINEINIT_ARGS_H
 
 #include "MoveSplineFlag.h"
-#include <G3D/Vector3.h>
+#include "ObjectGuid.h"
+#include "Optional.h"
 
 class Unit;
 
@@ -28,27 +28,32 @@ namespace Movement
 {
     typedef std::vector<Vector3> PointsArray;
 
-    union FacingInfo
+    struct FacingInfo
     {
-        struct {
+        struct
+        {
             float x, y, z;
         } f;
-        uint64  target;
-        float   angle;
+        ObjectGuid target;
+        float angle;
 
-        FacingInfo(float o) : angle(o) { }
-        FacingInfo(uint64 t) : target(t) { }
-        FacingInfo() { }
+        MonsterMoveType type;
+
+        FacingInfo() : angle(0.0f), type(MONSTER_MOVE_NORMAL) { f.x = f.y = f.z = 0.0f; }
+    };
+
+    struct SpellEffectExtraData
+    {
+        ObjectGuid Target;
+        uint32 SpellVisualId = 0;
+        uint32 ProgressCurveId = 0;
+        uint32 ParabolicCurveId = 0;
     };
 
     struct MoveSplineInitArgs
     {
-        MoveSplineInitArgs(size_t path_capacity = 16) : path_Idx_offset(0), velocity(0.f),
-            parabolic_amplitude(0.f), time_perc(0.f), splineId(0), initialOrientation(0.f),
-            HasVelocity(false), TransformForTransport(true)
-        {
-            path.reserve(path_capacity);
-        }
+        explicit MoveSplineInitArgs(size_t path_capacity = 16);
+        ~MoveSplineInitArgs();
 
         PointsArray path;
         FacingInfo facing;
@@ -59,6 +64,8 @@ namespace Movement
         float time_perc;
         uint32 splineId;
         float initialOrientation;
+        Optional<SpellEffectExtraData> spellEffectExtra;
+        bool walk;
         bool HasVelocity;
         bool TransformForTransport;
 
@@ -66,7 +73,7 @@ namespace Movement
         bool Validate(Unit* unit) const;
 
     private:
-        bool _checkPathBounds() const;
+        bool _checkPathLengths() const;
     };
 }
 

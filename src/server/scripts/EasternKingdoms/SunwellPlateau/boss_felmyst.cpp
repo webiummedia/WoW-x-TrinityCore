@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,12 +22,14 @@ SDComment:
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "GridNotifiers.h"
-#include "GridNotifiersImpl.h"
-#include "Cell.h"
 #include "CellImpl.h"
+#include "GridNotifiersImpl.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
 #include "sunwell_plateau.h"
+#include "TemporarySummon.h"
 
 enum Yells
 {
@@ -116,7 +118,17 @@ public:
     {
         boss_felmystAI(Creature* creature) : ScriptedAI(creature)
         {
+            Initialize();
             instance = creature->GetInstanceScript();
+            uiBreathCount = 0;
+            breathX = 0.f;
+            breathY = 0.f;
+        }
+
+        void Initialize()
+        {
+            phase = PHASE_NONE;
+            uiFlightCount = 0;
         }
 
         InstanceScript* instance;
@@ -128,17 +140,15 @@ public:
 
         float breathX, breathY;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            phase = PHASE_NONE;
+            Initialize();
 
             events.Reset();
 
-            uiFlightCount = 0;
-
             me->SetDisableGravity(true);
-            me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
-            me->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
+            me->SetBoundingRadius(10);
+            me->SetCombatReach(10);
 
             DespawnSummons(NPC_VAPOR_TRAIL);
             me->setActive(false);
@@ -146,7 +156,7 @@ public:
             instance->SetBossState(DATA_FELMYST, NOT_STARTED);
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
             events.ScheduleEvent(EVENT_BERSERK, 600000);
 
@@ -159,36 +169,36 @@ public:
             instance->SetBossState(DATA_FELMYST, IN_PROGRESS);
         }
 
-        void AttackStart(Unit* who) OVERRIDE
+        void AttackStart(Unit* who) override
         {
             if (phase != PHASE_FLIGHT)
                 ScriptedAI::AttackStart(who);
         }
 
-        void MoveInLineOfSight(Unit* who) OVERRIDE
+        void MoveInLineOfSight(Unit* who) override
         {
             if (phase != PHASE_FLIGHT)
                 ScriptedAI::MoveInLineOfSight(who);
         }
 
-        void KilledUnit(Unit* /*victim*/) OVERRIDE
+        void KilledUnit(Unit* /*victim*/) override
         {
             Talk(YELL_KILL);
         }
 
-        void JustRespawned() OVERRIDE
+        void JustRespawned() override
         {
             Talk(YELL_BIRTH);
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             Talk(YELL_DEATH);
 
             instance->SetBossState(DATA_FELMYST, DONE);
         }
 
-        void SpellHit(Unit* caster, const SpellInfo* spell) OVERRIDE
+        void SpellHit(Unit* caster, const SpellInfo* spell) override
         {
             // workaround for linked aura
             /*if (spell->Id == SPELL_VAPOR_FORCE)
@@ -211,7 +221,7 @@ public:
             }
         }
 
-        void JustSummoned(Creature* summon) OVERRIDE
+        void JustSummoned(Creature* summon) override
         {
             if (summon->GetEntry() == NPC_DEAD)
             {
@@ -221,13 +231,13 @@ public:
             }
         }
 
-        void MovementInform(uint32, uint32) OVERRIDE
+        void MovementInform(uint32, uint32) override
         {
             if (phase == PHASE_FLIGHT)
                 events.ScheduleEvent(EVENT_FLIGHT_SEQUENCE, 1);
         }
 
-        void DamageTaken(Unit*, uint32 &damage) OVERRIDE
+        void DamageTaken(Unit*, uint32 &damage) override
         {
             if (phase != PHASE_GROUND && damage >= me->GetHealth())
                 damage = 0;
@@ -241,7 +251,7 @@ public:
                     me->CastStop(SPELL_FOG_BREATH);
                     me->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
                     me->StopMoving();
-                    me->SetSpeed(MOVE_RUN, 2.0f);
+                    me->SetSpeedRate(MOVE_RUN, 2.0f);
 
                     events.ScheduleEvent(EVENT_CLEAVE, urand(5000, 10000));
                     events.ScheduleEvent(EVENT_CORROSION, urand(10000, 20000));
@@ -280,7 +290,7 @@ public:
                 {
                     Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 150, true);
                     if (!target)
-                        target = Unit::GetUnit(*me, instance->GetData64(DATA_PLAYER_GUID));
+                        target = ObjectAccessor::GetUnit(*me, instance->GetGuidData(DATA_PLAYER_GUID));
 
                     if (!target)
                     {
@@ -288,7 +298,7 @@ public:
                         return;
                     }
 
-                    if (Creature* Vapor = me->SummonCreature(NPC_VAPOR, target->GetPositionX()-5+rand()%10, target->GetPositionY()-5+rand()%10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000))
+                    if (Creature* Vapor = me->SummonCreature(NPC_VAPOR, target->GetPositionX() - 5 + rand32() % 10, target->GetPositionY() - 5 + rand32() % 10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000))
                     {
                         Vapor->AI()->AttackStart(target);
                         me->InterruptNonMeleeSpells(false);
@@ -306,7 +316,7 @@ public:
 
                     Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 150, true);
                     if (!target)
-                        target = Unit::GetUnit(*me, instance->GetData64(DATA_PLAYER_GUID));
+                        target = ObjectAccessor::GetUnit(*me, instance->GetGuidData(DATA_PLAYER_GUID));
 
                     if (!target)
                     {
@@ -315,7 +325,7 @@ public:
                     }
 
                     //target->CastSpell(target, SPELL_VAPOR_SUMMON, true); need core support
-                    if (Creature* pVapor = me->SummonCreature(NPC_VAPOR, target->GetPositionX()-5+rand()%10, target->GetPositionY()-5+rand()%10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000))
+                    if (Creature* pVapor = me->SummonCreature(NPC_VAPOR, target->GetPositionX() - 5 + rand32() % 10, target->GetPositionY() - 5 + rand32() % 10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000))
                     {
                         if (pVapor->AI())
                             pVapor->AI()->AttackStart(target);
@@ -335,7 +345,7 @@ public:
                 {
                     Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 150, true);
                     if (!target)
-                        target = Unit::GetUnit(*me, instance->GetData64(DATA_PLAYER_GUID));
+                        target = ObjectAccessor::GetUnit(*me, instance->GetGuidData(DATA_PLAYER_GUID));
 
                     if (!target)
                     {
@@ -375,7 +385,7 @@ public:
                         uiFlightCount = 4;
                     break;
                 case 9:
-                    if (Unit* target = SelectTarget(SELECT_TARGET_TOPAGGRO))
+                    if (Unit* target = SelectTarget(SELECT_TARGET_MAXTHREAT))
                         DoStartMovement(target);
                     else
                     {
@@ -387,13 +397,13 @@ public:
                     me->SetDisableGravity(false);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
                     EnterPhase(PHASE_GROUND);
-                    AttackStart(SelectTarget(SELECT_TARGET_TOPAGGRO));
+                    AttackStart(SelectTarget(SELECT_TARGET_MAXTHREAT));
                     break;
             }
             ++uiFlightCount;
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
             {
@@ -477,14 +487,9 @@ public:
             float x, y, z;
             me->GetPosition(x, y, z);
 
-            CellCoord pair(Trinity::ComputeCellCoord(x, y));
-            Cell cell(pair);
-            cell.SetNoCreate();
-
             Trinity::AllCreaturesOfEntryInRange check(me, entry, 100);
             Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(me, templist, check);
-            TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> cSearcher(searcher);
-            cell.Visit(pair, cSearcher, *(me->GetMap()), *me, me->GetGridActivationRange());
+            Cell::VisitGridObjects(me, searcher, me->GetGridActivationRange());
 
             for (std::list<Creature*>::const_iterator i = templist.begin(); i != templist.end(); ++i)
             {
@@ -494,14 +499,12 @@ public:
                     me->SummonCreature(NPC_DEAD, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
                 }
                 (*i)->SetVisible(false);
-                (*i)->setDeathState(JUST_DIED);
-                if ((*i)->getDeathState() == CORPSE)
-                    (*i)->RemoveCorpse();
+                (*i)->DespawnOrUnsummon();
             }
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
         return GetSunwellPlateauAI<boss_felmystAI>(creature);
     }
@@ -512,27 +515,27 @@ class npc_felmyst_vapor : public CreatureScript
 public:
     npc_felmyst_vapor() : CreatureScript("npc_felmyst_vapor") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new npc_felmyst_vaporAI(creature);
+        return GetSunwellPlateauAI<npc_felmyst_vaporAI>(creature);
     }
 
     struct npc_felmyst_vaporAI : public ScriptedAI
     {
         npc_felmyst_vaporAI(Creature* creature) : ScriptedAI(creature)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SetSpeed(MOVE_RUN, 0.8f);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+            me->SetSpeedRate(MOVE_RUN, 0.8f);
         }
 
-        void Reset() OVERRIDE { }
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void Reset() override { }
+        void EnterCombat(Unit* /*who*/) override
         {
             DoZoneInCombat();
             //DoCast(me, SPELL_VAPOR_FORCE, true); core bug
         }
 
-        void UpdateAI(uint32 /*diff*/) OVERRIDE
+        void UpdateAI(uint32 /*diff*/) override
         {
             if (!me->GetVictim())
                 if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true))
@@ -546,27 +549,27 @@ class npc_felmyst_trail : public CreatureScript
 public:
     npc_felmyst_trail() : CreatureScript("npc_felmyst_trail") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new npc_felmyst_trailAI(creature);
+        return GetSunwellPlateauAI<npc_felmyst_trailAI>(creature);
     }
 
     struct npc_felmyst_trailAI : public ScriptedAI
     {
         npc_felmyst_trailAI(Creature* creature) : ScriptedAI(creature)
         {
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
             DoCast(me, SPELL_TRAIL_TRIGGER, true);
             me->SetTarget(me->GetGUID());
-            me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01f); // core bug
+            me->SetBoundingRadius(0.01f); // core bug
         }
 
-        void Reset() OVERRIDE { }
-        void EnterCombat(Unit* /*who*/) OVERRIDE { }
-        void AttackStart(Unit* /*who*/) OVERRIDE { }
-        void MoveInLineOfSight(Unit* /*who*/) OVERRIDE { }
+        void Reset() override { }
+        void EnterCombat(Unit* /*who*/) override { }
+        void AttackStart(Unit* /*who*/) override { }
+        void MoveInLineOfSight(Unit* /*who*/) override { }
 
-        void UpdateAI(uint32 /*diff*/) OVERRIDE { }
+        void UpdateAI(uint32 /*diff*/) override { }
     };
 };
 

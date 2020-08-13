@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,7 +18,12 @@
 #ifndef DEF_WAILING_CAVERNS_H
 #define DEF_WAILING_CAVERNS_H
 
-enum DataTypes
+#include "CreatureAIImpl.h"
+
+#define WCScriptName "instance_wailing_caverns"
+#define DataHeader "WC"
+
+enum WCDataTypes
 {
     TYPE_LORD_COBRAHN         = 1,
     TYPE_LORD_PYTHAS          = 2,
@@ -34,5 +38,11 @@ enum DataTypes
 
     DATA_NARALEX              = 3679,
 };
+
+template<typename AI>
+inline AI* GetWailingCavernsAI(Creature* creature)
+{
+    return GetInstanceAI<AI>(creature, WCScriptName);
+}
 
 #endif

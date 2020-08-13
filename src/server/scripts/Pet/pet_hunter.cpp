@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,7 +21,9 @@
  */
 
 #include "ScriptMgr.h"
+#include "CreatureAIImpl.h"
 #include "ScriptedCreature.h"
+#include "TemporarySummon.h"
 
 enum HunterSpells
 {
@@ -42,13 +44,22 @@ class npc_pet_hunter_snake_trap : public CreatureScript
 
         struct npc_pet_hunter_snake_trapAI : public ScriptedAI
         {
-            npc_pet_hunter_snake_trapAI(Creature* creature) : ScriptedAI(creature) { }
+            npc_pet_hunter_snake_trapAI(Creature* creature) : ScriptedAI(creature)
+            {
+                Initialize();
+            }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE { }
-
-            void Reset() OVERRIDE
+            void Initialize()
             {
                 _spellTimer = 0;
+                _isViper = false;
+            }
+
+            void EnterCombat(Unit* /*who*/) override { }
+
+            void Reset() override
+            {
+                Initialize();
 
                 CreatureTemplate const* Info = me->GetCreatureTemplate();
 
@@ -56,8 +67,8 @@ class npc_pet_hunter_snake_trap : public CreatureScript
 
                 me->SetMaxHealth(uint32(107 * (me->getLevel() - 40) * 0.025f));
                 // Add delta to make them not all hit the same time
-                uint32 delta = (rand() % 7) * 100;
-                me->SetAttackTime(BASE_ATTACK, Info->baseattacktime + delta);
+                uint32 delta = (rand32() % 7) * 100;
+                me->SetBaseAttackTime(BASE_ATTACK, Info->BaseAttackTime + delta);
                 //me->SetStatFloatValue(UNIT_FIELD_RANGED_ATTACK_POWER, float(Info->attackpower));
 
                 // Start attacking attacker of owner on first ai update after spawn - move in line of sight may choose better target
@@ -71,7 +82,7 @@ class npc_pet_hunter_snake_trap : public CreatureScript
             }
 
             // Redefined for random target selection:
-            void MoveInLineOfSight(Unit* who) OVERRIDE
+            void MoveInLineOfSight(Unit* who) override
             {
                 if (!me->GetVictim() && me->CanCreatureAttack(who))
                 {
@@ -81,22 +92,22 @@ class npc_pet_hunter_snake_trap : public CreatureScript
                     float attackRadius = me->GetAttackDistance(who);
                     if (me->IsWithinDistInMap(who, attackRadius) && me->IsWithinLOSInMap(who))
                     {
-                        if (!(rand() % 5))
+                        if (!(rand32() % 5))
                         {
-                            me->setAttackTimer(BASE_ATTACK, (rand() % 10) * 100);
-                            _spellTimer = (rand() % 10) * 100;
+                            me->setAttackTimer(BASE_ATTACK, (rand32() % 10) * 100);
+                            _spellTimer = (rand32() % 10) * 100;
                             AttackStart(who);
                         }
                     }
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
-                if (!UpdateVictim())
+                if (!UpdateVictim() || !me->GetVictim())
                     return;
 
-                if (me->GetVictim()->HasBreakableByDamageCrowdControlAura(me))
+                if (me->EnsureVictim()->HasBreakableByDamageCrowdControlAura(me))
                 {
                     me->InterruptNonMeleeSpells(false);
                     return;
@@ -124,7 +135,7 @@ class npc_pet_hunter_snake_trap : public CreatureScript
             uint32 _spellTimer;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return new npc_pet_hunter_snake_trapAI(creature);
         }

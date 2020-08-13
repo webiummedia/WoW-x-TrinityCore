@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,11 +18,11 @@
 #ifndef _WARDEN_BASE_H
 #define _WARDEN_BASE_H
 
-#include <map>
-#include "Cryptography/ARC4.h"
-#include "Cryptography/BigNumber.h"
+#include "ARC4.h"
+#include "AuthDefines.h"
 #include "ByteBuffer.h"
 #include "WardenCheckMgr.h"
+#include <array>
 
 enum WardenOpcodes
 {
@@ -57,11 +56,7 @@ enum WardenCheckType
     MODULE_CHECK            = 0xD9  // 217: uint Seed + byte[20] SHA1 (check to ensure module isn't injected)
 };
 
-#if defined(__GNUC__)
-#pragma pack(1)
-#else
 #pragma pack(push, 1)
-#endif
 
 struct WardenModuleUse
 {
@@ -84,11 +79,7 @@ struct WardenHashRequest
     uint8 Seed[16];
 };
 
-#if defined(__GNUC__)
-#pragma pack()
-#else
 #pragma pack(pop)
-#endif
 
 struct ClientWardenModule
 {
@@ -100,7 +91,7 @@ struct ClientWardenModule
 
 class WorldSession;
 
-class Warden
+class TC_GAME_API Warden
 {
     friend class WardenWin;
     friend class WardenMac;
@@ -109,7 +100,7 @@ class Warden
         Warden();
         virtual ~Warden();
 
-        virtual void Init(WorldSession* session, BigNumber* k) = 0;
+        virtual void Init(WorldSession* session, SessionKey const& K) = 0;
         virtual ClientWardenModule* GetModuleForClient() = 0;
         virtual void InitializeModule() = 0;
         virtual void RequestHash() = 0;
@@ -134,8 +125,8 @@ class Warden
         uint8 _inputKey[16];
         uint8 _outputKey[16];
         uint8 _seed[16];
-        ARC4 _inputCrypto;
-        ARC4 _outputCrypto;
+        Trinity::Crypto::ARC4 _inputCrypto;
+        Trinity::Crypto::ARC4 _outputCrypto;
         uint32 _checkTimer;                          // Timer for sending check requests
         uint32 _clientResponseTimer;                 // Timer for client response delay
         bool _dataSent;

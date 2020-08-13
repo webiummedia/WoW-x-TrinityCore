@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,14 +18,16 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "loadlib/loadlib.h"
 #include "vec3d.h"
 #include "modelheaders.h"
 #include <vector>
 
-class MPQFile;
+class CASCFile;
+struct ADTOutputCache;
+struct WMODoodadData;
+namespace ADT { struct MDDF; struct MODF; }
 
-Vec3D fixCoordSystem(Vec3D v);
+Vec3D fixCoordSystem(Vec3D const& v);
 
 class Model
 {
@@ -43,6 +44,7 @@ public:
     ModelHeader header;
     Vec3D* vertices;
     uint16* indices;
+    AaBox3D bounds;
 
     bool open();
     bool ConvertToVMAPModel(char const* outfilename);
@@ -51,17 +53,13 @@ public:
     ~Model() { _unload(); }
 };
 
-class ModelInstance
+namespace Doodad
 {
-public:
-    uint32 id;
-    Vec3D pos, rot;
-    uint16 scale, flags;
-    float sc;
+    void Extract(ADT::MDDF const& doodadDef, char const* ModelInstName, uint32 mapID, uint32 originalMapId,
+        FILE* pDirfile, std::vector<ADTOutputCache>* dirfileCache);
 
-    ModelInstance() : id(0), scale(0), flags(0), sc(0.0f) {}
-    ModelInstance(MPQFile& f, char const* ModelInstName, uint32 mapID, uint32 tileX, uint32 tileY, FILE* pDirfile);
-
-};
+    void ExtractSet(WMODoodadData const& doodadData, ADT::MODF const& wmo, bool isGlobalWmo, uint32 mapID, uint32 originalMapId,
+        FILE* pDirfile, std::vector<ADTOutputCache>* dirfileCache);
+}
 
 #endif

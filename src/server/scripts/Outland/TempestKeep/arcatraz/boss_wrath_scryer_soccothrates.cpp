@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,8 +23,11 @@ SDCategory: Tempest Keep, The Arcatraz
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "arcatraz.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
 
 enum Say
 {
@@ -82,9 +85,14 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
 
         struct boss_wrath_scryer_soccothratesAI : public BossAI
         {
-            boss_wrath_scryer_soccothratesAI(Creature* creature) : BossAI(creature, DATA_SOCCOTHRATES) { }
+            boss_wrath_scryer_soccothratesAI(Creature* creature) : BossAI(creature, DATA_SOCCOTHRATES)
+            {
+                preFight = false;
+                dalliahTaunt = false;
+                dalliahDeath = false;
+            }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 _Reset();
                 preFight = false;
@@ -93,17 +101,17 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                 DoCast(me, SPELL_FEL_IMMOLATION);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
 
-                if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                     if (dalliah->IsAlive() && !dalliah->IsInCombat())
                         dalliah->AI()->SetData(1, 1);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_FELFIRE_SHOCK, urand(12000, 14000));
@@ -113,12 +121,12 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                 preFight = false;
             }
 
-            void KilledUnit(Unit* /*victim*/) OVERRIDE
+            void KilledUnit(Unit* /*victim*/) override
             {
                 Talk(SAY_SLAY);
             }
 
-            void MoveInLineOfSight(Unit* who) OVERRIDE
+            void MoveInLineOfSight(Unit* who) override
             {
                 if (instance->GetData(DATA_CONVERSATION) == NOT_STARTED && who->GetTypeId() == TYPEID_PLAYER && me->IsWithinDistInMap(who, 70.0f))
                 {
@@ -130,7 +138,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                 }
             }
 
-            void SetData(uint32 /*type*/, uint32 data) OVERRIDE
+            void SetData(uint32 /*type*/, uint32 data) override
             {
                 switch (data)
                 {
@@ -143,7 +151,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                 {
@@ -156,7 +164,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                             switch (eventId)
                             {
                                 case EVENT_PREFIGHT_1:
-                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                                         dalliah->AI()->Talk(SAY_DALLIAH_CONVO_1);
                                     events.ScheduleEvent(EVENT_PREFIGHT_2, 3000);
                                     break;
@@ -165,7 +173,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                                     events.ScheduleEvent(EVENT_PREFIGHT_3, 3000);
                                     break;
                                 case EVENT_PREFIGHT_3:
-                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                                         dalliah->AI()->Talk(SAY_DALLIAH_CONVO_2);
                                     events.ScheduleEvent(EVENT_PREFIGHT_4, 6000);
                                     break;
@@ -174,7 +182,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                                     events.ScheduleEvent(EVENT_PREFIGHT_5, 2000);
                                     break;
                                 case EVENT_PREFIGHT_5:
-                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                                         dalliah->AI()->Talk(SAY_DALLIAH_CONVO_3);
                                     events.ScheduleEvent(EVENT_PREFIGHT_6, 3000);
                                     break;
@@ -183,7 +191,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                                     events.ScheduleEvent(EVENT_PREFIGHT_7, 2000);
                                     break;
                                 case EVENT_PREFIGHT_7:
-                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                                         dalliah->GetMotionMaster()->MovePoint(0, 118.6048f, 96.84852f, 22.44115f);
                                     events.ScheduleEvent(EVENT_PREFIGHT_8, 4000);
                                     break;
@@ -192,7 +200,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                                     events.ScheduleEvent(EVENT_PREFIGHT_9, 4000);
                                     break;
                                 case EVENT_PREFIGHT_9:
-                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                                     {
                                         dalliah->SetFacingToObject(me);
                                         me->SetFacingToObject(dalliah);
@@ -246,18 +254,21 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
                             events.ScheduleEvent(EVENT_KNOCK_AWAY, urand(11000, 12000));
                             break;
                         case EVENT_ME_FIRST:
-                            if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                            if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                                 if (dalliah->IsAlive() && !dalliah->IsInCombat())
                                     dalliah->AI()->Talk(SAY_AGGRO_SOCCOTHRATES_FIRST);
                             break;
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 if (HealthBelowPct(25) && !dalliahTaunt)
                 {
-                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_DALLIAH)))
+                    if (Creature* dalliah = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_DALLIAH)))
                         dalliah->AI()->Talk(SAY_SOCCOTHRATES_25_PERCENT);
                     dalliahTaunt = true;
                 }
@@ -271,7 +282,7 @@ class boss_wrath_scryer_soccothrates : public CreatureScript
             bool dalliahDeath;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetArcatrazAI<boss_wrath_scryer_soccothratesAI>(creature);
         }

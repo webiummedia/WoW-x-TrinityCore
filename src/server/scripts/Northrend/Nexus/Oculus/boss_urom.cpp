@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,8 +23,9 @@ SDCategory: Instance Script
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
+#include "MotionMaster.h"
 #include "oculus.h"
+#include "ScriptedCreature.h"
 #include "SpellInfo.h"
 
 enum Spells
@@ -95,6 +96,7 @@ class boss_urom : public CreatureScript
         {
             boss_uromAI(Creature* creature) : BossAI(creature, DATA_UROM)
             {
+                Initialize();
                 platform = 0;
 
                 for (uint8 i = 0; i < 3; ++i)
@@ -103,18 +105,12 @@ class boss_urom : public CreatureScript
                 std::random_shuffle(group, group + 3);
             }
 
-            void Reset() OVERRIDE
+            void Initialize()
             {
-                me->CastSpell(me, SPELL_EVOCATE);
-
-                _Reset();
-
                 x = 0.0f;
                 y = 0.0f;
                 canCast = false;
                 canGoBack = false;
-
-                me->GetMotionMaster()->MoveIdle();
 
                 teleportTimer = urand(30000, 35000);
                 arcaneExplosionTimer = 9000;
@@ -123,14 +119,23 @@ class boss_urom : public CreatureScript
                 timeBombTimer = urand(20000, 25000);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void Reset() override
+            {
+                me->CastSpell(me, SPELL_EVOCATE);
+
+                _Reset();
+
+                me->GetMotionMaster()->MoveIdle();
+            }
+
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
 
                 StartAttack();
             }
 
-            void AttackStart(Unit* who) OVERRIDE
+            void AttackStart(Unit* who) override
             {
                 if (!who)
                     return;
@@ -187,13 +192,13 @@ class boss_urom : public CreatureScript
                 ++platform;
             }
 
-            void KilledUnit(Unit* who) OVERRIDE
+            void KilledUnit(Unit* who) override
             {
                 if (who->GetTypeId() == TYPEID_PLAYER)
                     Talk(SAY_PLAYER_KILL);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -230,11 +235,13 @@ class boss_urom : public CreatureScript
                 {
                     if (arcaneExplosionTimer <= diff)
                     {
-                        Position pos;
-                        me->GetVictim()->GetPosition(&pos);
+                        if (me->GetVictim())
+                        {
+                            Position pos = me->EnsureVictim()->GetPosition();
 
-                        me->NearTeleportTo(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation());
-                        me->GetMotionMaster()->MoveChase(me->GetVictim());
+                            me->NearTeleportTo(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation());
+                            me->GetMotionMaster()->MoveChase(me->GetVictim());
+                        }
                         me->SetWalk(true);
 
                         Talk(EMOTE_ARCANE_EXPLOSION);
@@ -272,7 +279,7 @@ class boss_urom : public CreatureScript
                 DoMeleeAttackIfReady();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
@@ -283,10 +290,10 @@ class boss_urom : public CreatureScript
             {
                 me->RemoveAllAuras();
                 me->CombatStop(false);
-                me->DeleteThreatList();
+                me->GetThreatManager().ClearAllThreat();
             }
 
-            void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) OVERRIDE
+            void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
             {
                 switch (spellInfo->Id)
                 {
@@ -333,7 +340,7 @@ class boss_urom : public CreatureScript
             uint32 timeBombTimer;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetOculusAI<boss_uromAI>(creature);
         }

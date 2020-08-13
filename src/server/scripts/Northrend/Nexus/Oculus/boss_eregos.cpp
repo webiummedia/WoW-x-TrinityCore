@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,10 +16,10 @@
  */
 
 #include "ScriptMgr.h"
+#include "MotionMaster.h"
+#include "oculus.h"
 #include "ScriptedCreature.h"
 #include "SpellScript.h"
-#include "SpellAuraEffects.h"
-#include "oculus.h"
 
 // Types of drake mounts: Ruby (Tank), Amber (DPS), Emerald (Healer)
 // Two Repeating phases
@@ -85,27 +85,35 @@ class boss_eregos : public CreatureScript
 
         struct boss_eregosAI : public BossAI
         {
-            boss_eregosAI(Creature* creature) : BossAI(creature, DATA_EREGOS) { }
-
-            void Reset() OVERRIDE
+            boss_eregosAI(Creature* creature) : BossAI(creature, DATA_EREGOS)
             {
-                _Reset();
+                Initialize();
+            }
+
+            void Initialize()
+            {
                 _phase = PHASE_NORMAL;
 
                 _rubyVoid = true;
                 _emeraldVoid = true;
                 _amberVoid = true;
+            }
+
+            void Reset() override
+            {
+                _Reset();
+                Initialize();
 
                 DoAction(ACTION_SET_NORMAL_EVENTS);
             }
 
-            void KilledUnit(Unit* who) OVERRIDE
+            void KilledUnit(Unit* who) override
             {
                 if (who->GetTypeId() == TYPEID_PLAYER)
                     Talk(SAY_KILL);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
 
@@ -121,7 +129,7 @@ class boss_eregos : public CreatureScript
                     _amberVoid = false;
             }
 
-            uint32 GetData(uint32 type) const OVERRIDE
+            uint32 GetData(uint32 type) const override
             {
                switch (type)
                {
@@ -137,7 +145,7 @@ class boss_eregos : public CreatureScript
                 return 0;
             }
 
-            void DoAction(int32 action) OVERRIDE
+            void DoAction(int32 action) override
             {
                 if (action != ACTION_SET_NORMAL_EVENTS)
                     return;
@@ -149,7 +157,7 @@ class boss_eregos : public CreatureScript
                 events.ScheduleEvent(EVENT_SUMMON_LEY_WHELP, urand(15, 30) * IN_MILLISECONDS, 0, PHASE_NORMAL);
             }
 
-            void JustSummoned(Creature* summon) OVERRIDE
+            void JustSummoned(Creature* summon) override
             {
                 BossAI::JustSummoned(summon);
 
@@ -161,7 +169,7 @@ class boss_eregos : public CreatureScript
                 summon->GetMotionMaster()->MoveRandom(100.0f);
             }
 
-            void SummonedCreatureDespawn(Creature* summon) OVERRIDE
+            void SummonedCreatureDespawn(Creature* summon) override
             {
                 if (summon->GetEntry() != NPC_PLANAR_ANOMALY)
                     return;
@@ -170,7 +178,7 @@ class boss_eregos : public CreatureScript
                 summon->CastSpell(summon, SPELL_PLANAR_BLAST, true);
             }
 
-            void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/) OVERRIDE
+            void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/) override
             {
                 if (!IsHeroic())
                     return;
@@ -191,7 +199,7 @@ class boss_eregos : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -226,12 +234,15 @@ class boss_eregos : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 Talk(SAY_DEATH);
 
@@ -245,9 +256,9 @@ class boss_eregos : public CreatureScript
              bool _amberVoid;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_eregosAI(creature);
+            return GetOculusAI<boss_eregosAI>(creature);
         }
 };
 
@@ -262,17 +273,16 @@ class spell_eregos_planar_shift : public SpellScriptLoader
 
             void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
-                if (Creature* creature = GetTarget()->ToCreature())
-                    creature->AI()->DoAction(ACTION_SET_NORMAL_EVENTS);
+                GetTarget()->GetAI()->DoAction(ACTION_SET_NORMAL_EVENTS);
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 AfterEffectRemove += AuraEffectRemoveFn(spell_eregos_planar_shift_AuraScript::OnRemove, EFFECT_0, SPELL_AURA_SCHOOL_IMMUNITY, AURA_EFFECT_HANDLE_REAL);
             }
         };
 
-        AuraScript* GetAuraScript() const OVERRIDE
+        AuraScript* GetAuraScript() const override
         {
             return new spell_eregos_planar_shift_AuraScript();
         }
@@ -283,7 +293,7 @@ class achievement_gen_eregos_void : public AchievementCriteriaScript
     public:
         achievement_gen_eregos_void(char const* name, uint32 data) : AchievementCriteriaScript(name), _data(data) { }
 
-        bool OnCheck(Player* /*player*/, Unit* target) OVERRIDE
+        bool OnCheck(Player* /*player*/, Unit* target) override
         {
             return target && target->GetAI()->GetData(_data);
         }

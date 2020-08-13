@@ -1,13 +1,16 @@
 //add here most rarely modified headers to speed up debug build compilation
 
-#include "WorldSocket.h"        // must be first to make ACE happy with ACE includes in it
-
-#include "Common.h"
-
-#include "MapManager.h"
+#include "Creature.h"
+#include "DB2Stores.h"
+#include "DatabaseEnv.h"
+#include "Errors.h"
+#include "GameObject.h"
 #include "Log.h"
+#include "Map.h"
 #include "ObjectAccessor.h"
-#include "ObjectDefines.h"
-#include "Opcodes.h"
-#include "SharedDefines.h"
 #include "ObjectMgr.h"
+#include "Packet.h"
+#include "PacketUtilities.h"
+#include "Player.h"
+#include "World.h"
+#include "WorldSession.h"

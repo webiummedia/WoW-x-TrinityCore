@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,17 +23,11 @@ SDCategory: Temple of Ahn'Qiraj
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "WorldPacket.h"
-
-#include "Item.h"
-#include "Player.h"
-#include "Spell.h"
-
-#include "Cell.h"
 #include "CellImpl.h"
-#include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
+#include "temple_of_ahnqiraj.h"
 
 enum Spells
 {
@@ -64,9 +57,9 @@ class npc_anubisath_sentinel : public CreatureScript
 public:
     npc_anubisath_sentinel() : CreatureScript("npc_anubisath_sentinel") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new aqsentinelAI(creature);
+        return GetAQ40AI<aqsentinelAI>(creature);
     }
 
     struct aqsentinelAI : public ScriptedAI
@@ -92,18 +85,27 @@ public:
 
         aqsentinelAI(Creature* creature) : ScriptedAI(creature)
         {
-            ClearBuddyList();
+            Initialize();
             abselected = 0;                                     // just initialization of variable
+            ability = 0;
         }
 
-        uint64 NearbyGUID[3];
+        void Initialize()
+        {
+            ClearBuddyList();
+            gatherOthersWhenAggro = true;
+        }
+
+        ObjectGuid NearbyGUID[3];
 
         void ClearBuddyList()
         {
-            NearbyGUID[0] = NearbyGUID[1] = NearbyGUID[2] = 0;
+            NearbyGUID[0].Clear();
+            NearbyGUID[1].Clear();
+            NearbyGUID[2].Clear();
         }
 
-        void AddBuddyToList(uint64 CreatureGUID)
+        void AddBuddyToList(ObjectGuid CreatureGUID)
         {
             if (CreatureGUID == me->GetGUID())
                 return;
@@ -122,25 +124,25 @@ public:
 
         void GiveBuddyMyList(Creature* c)
         {
-            aqsentinelAI* cai = CAST_AI(aqsentinelAI, (c)->AI());
-            for (int i=0; i<3; ++i)
-                if (NearbyGUID[i] && NearbyGUID[i] != c->GetGUID())
+            aqsentinelAI* cai = ENSURE_AI(aqsentinelAI, (c)->AI());
+            for (int32 i = 0; i < 3; ++i)
+                if (!NearbyGUID[i].IsEmpty() && NearbyGUID[i] != c->GetGUID())
                     cai->AddBuddyToList(NearbyGUID[i]);
             cai->AddBuddyToList(me->GetGUID());
         }
 
         void SendMyListToBuddies()
         {
-            for (int i=0; i<3; ++i)
-                if (Creature* pNearby = Unit::GetCreature(*me, NearbyGUID[i]))
+            for (int32 i = 0; i < 3; ++i)
+                if (Creature* pNearby = ObjectAccessor::GetCreature(*me, NearbyGUID[i]))
                     GiveBuddyMyList(pNearby);
         }
 
         void CallBuddiesToAttack(Unit* who)
         {
-            for (int i=0; i<3; ++i)
+            for (int32 i = 0; i < 3; ++i)
             {
-                Creature* c = Unit::GetCreature(*me, NearbyGUID[i]);
+                Creature* c = ObjectAccessor::GetCreature(*me, NearbyGUID[i]);
                 if (c)
                 {
                     if (!c->IsInCombat())
@@ -169,7 +171,7 @@ public:
         {
             for (int t = 0; t < 2; ++t)
             {
-                for (int i = !t ? (rand()%9) : 0; i < 9; ++i)
+                for (int i = !t ? (rand32()%9) : 0; i < 9; ++i)
                 {
                     if (!chosenAbilities[i])
                     {
@@ -183,8 +185,8 @@ public:
 
         void GetOtherSentinels(Unit* who)
         {
-            bool *chosenAbilities = new bool[9];
-            memset(chosenAbilities, 0, 9*sizeof(bool));
+            bool chosenAbilities[9];
+            memset(chosenAbilities, 0, sizeof(chosenAbilities));
             selectAbility(pickAbilityRandom(chosenAbilities));
 
             ClearBuddyList();
@@ -195,41 +197,38 @@ public:
                 if (!NearbyGUID[bli])
                     break;
 
-                Creature* pNearby = Unit::GetCreature(*me, NearbyGUID[bli]);
+                Creature* pNearby = ObjectAccessor::GetCreature(*me, NearbyGUID[bli]);
                 if (!pNearby)
                     break;
 
                 AddSentinelsNear(pNearby);
-                CAST_AI(aqsentinelAI, pNearby->AI())->gatherOthersWhenAggro = false;
-                CAST_AI(aqsentinelAI, pNearby->AI())->selectAbility(pickAbilityRandom(chosenAbilities));
+                ENSURE_AI(aqsentinelAI, pNearby->AI())->gatherOthersWhenAggro = false;
+                ENSURE_AI(aqsentinelAI, pNearby->AI())->selectAbility(pickAbilityRandom(chosenAbilities));
             }
             /*if (bli < 3)
                 DoYell("I dont have enough buddies.", LANG_NEUTRAL, 0);*/
             SendMyListToBuddies();
             CallBuddiesToAttack(who);
-
-            delete[] chosenAbilities;
         }
 
         bool gatherOthersWhenAggro;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
             if (!me->isDead())
             {
-                for (int i=0; i<3; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
                     if (!NearbyGUID[i])
                         continue;
-                    if (Creature* pNearby = Unit::GetCreature(*me, NearbyGUID[i]))
+                    if (Creature* pNearby = ObjectAccessor::GetCreature(*me, NearbyGUID[i]))
                     {
                         if (pNearby->isDead())
                             pNearby->Respawn();
                     }
                 }
             }
-            ClearBuddyList();
-            gatherOthersWhenAggro = true;
+            Initialize();
         }
 
         void GainSentinelAbility(uint32 id)
@@ -237,7 +236,7 @@ public:
             me->AddAura(id, me);
         }
 
-        void EnterCombat(Unit* who) OVERRIDE
+        void EnterCombat(Unit* who) override
         {
             if (gatherOthersWhenAggro)
                 GetOtherSentinels(who);
@@ -246,17 +245,17 @@ public:
             DoZoneInCombat();
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
-            for (int ni=0; ni<3; ++ni)
+            for (int ni = 0; ni < 3; ++ni)
             {
-                Creature* sent = Unit::GetCreature(*me, NearbyGUID[ni]);
+                Creature* sent = ObjectAccessor::GetCreature(*me, NearbyGUID[ni]);
                 if (!sent)
                     continue;
                 if (sent->isDead())
                     continue;
                 sent->ModifyHealth(int32(sent->CountPctFromMaxHealth(50)));
-                CAST_AI(aqsentinelAI, sent->AI())->GainSentinelAbility(ability);
+                ENSURE_AI(aqsentinelAI, sent->AI())->GainSentinelAbility(ability);
             }
         }
     };

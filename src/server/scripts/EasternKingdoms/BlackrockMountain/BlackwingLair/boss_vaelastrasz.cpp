@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -17,10 +16,13 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "blackwing_lair.h"
-#include "ScriptedGossip.h"
+#include "ObjectAccessor.h"
 #include "Player.h"
+#include "ScriptedCreature.h"
+#include "ScriptedGossip.h"
+#include "SpellAuraEffects.h"
+#include "SpellScript.h"
 
 enum Says
 {
@@ -42,8 +44,9 @@ enum Spells
    SPELL_FLAMEBREATH                 = 23461,
    SPELL_FIRENOVA                    = 23462,
    SPELL_TAILSWIPE                   = 15847,
-   SPELL_BURNINGADRENALINE           = 23620,
-   SPELL_CLEAVE                      = 20684   //Chain cleave is most likely named something different and contains a dummy effect
+   SPELL_BURNINGADRENALINE           = 18173,  //Cast this one. It's what 3.3.5 DBM expects.
+   SPELL_BURNINGADRENALINE_EXPLOSION = 23478,
+   SPELL_CLEAVE                      = 19983   //Chain cleave is most likely named something different and contains a dummy effect
 };
 
 enum Events
@@ -68,24 +71,29 @@ public:
 
     struct boss_vaelAI : public BossAI
     {
-        boss_vaelAI(Creature* creature) : BossAI(creature, BOSS_VAELASTRAZ)
+        boss_vaelAI(Creature* creature) : BossAI(creature, DATA_VAELASTRAZ_THE_CORRUPT)
         {
-            creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            creature->setFaction(35);
-            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            Initialize();
+            creature->AddNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+            creature->SetFaction(FACTION_FRIENDLY);
+            creature->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
         }
 
-        void Reset() OVERRIDE
+        void Initialize()
+        {
+            PlayerGUID.Clear();
+            HasYelled = false;
+        }
+
+        void Reset() override
         {
             _Reset();
 
             me->SetStandState(UNIT_STAND_STATE_DEAD);
-            PlayerGUID = 0;
-
-            HasYelled = false;
+            Initialize();
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
             _EnterCombat();
 
@@ -105,19 +113,19 @@ public:
         void BeginSpeech(Unit* target)
         {
             PlayerGUID = target->GetGUID();
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             events.ScheduleEvent(EVENT_SPEECH_1, 1000);
         }
 
-        void KilledUnit(Unit* victim) OVERRIDE
+        void KilledUnit(Unit* victim) override
         {
-            if (rand()%5)
+            if (rand32() % 5)
                 return;
 
             Talk(SAY_KILLTARGET, victim);
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             events.Update(diff);
 
@@ -145,9 +153,9 @@ public:
                             events.ScheduleEvent(EVENT_SPEECH_4, 16000);
                             break;
                         case EVENT_SPEECH_4:
-                            me->setFaction(103);
-                            if (PlayerGUID && Unit::GetUnit(*me, PlayerGUID))
-                                AttackStart(Unit::GetUnit(*me, PlayerGUID));;
+                            me->SetFaction(FACTION_DRAGONFLIGHT_BLACK);
+                            if (Player* player = ObjectAccessor::GetPlayer(*me, PlayerGUID))
+                                AttackStart(player);
                             break;
                     }
                 }
@@ -183,27 +191,25 @@ public:
                         break;
                     case EVENT_BURNINGADRENALINE_CASTER:
                         {
-                            Unit* target = NULL;
-
-                            uint8 i = 0;
-                            while (i < 3)   // max 3 tries to get a random target with power_mana
+                            //selects a random target that isn't the current victim and is a mana user (selects mana users) but not pets
+                            //it also ignores targets who have the aura. We don't want to place the debuff on the same target twice.
+                            if (Unit *target = SelectTarget(SELECT_TARGET_RANDOM, 1, [&](Unit* u) { return u && !u->IsPet() && u->GetPowerType() == POWER_MANA && !u->HasAura(SPELL_BURNINGADRENALINE); }))
                             {
-                                ++i;
-                                target = SelectTarget(SELECT_TARGET_RANDOM, 1, 100, true); // not aggro leader
-                                if (target && target->getPowerType() == POWER_MANA)
-                                    i = 3;
+                                me->CastSpell(target, SPELL_BURNINGADRENALINE, true);
                             }
-                            if (target)                                     // cast on self (see below)
-                                target->CastSpell(target, SPELL_BURNINGADRENALINE, true);
                         }
+                        //reschedule the event
                         events.ScheduleEvent(EVENT_BURNINGADRENALINE_CASTER, 15000);
                         break;
                     case EVENT_BURNINGADRENALINE_TANK:
-                        // have the victim cast the spell on himself otherwise the third effect aura will be applied to Vael instead of the player
-                        me->GetVictim()->CastSpell(me->GetVictim(), SPELL_BURNINGADRENALINE, true);
+                        //Vael has to cast it himself; contrary to the previous commit's comment. Nothing happens otherwise.
+                        me->CastSpell(me->GetVictim(), SPELL_BURNINGADRENALINE, true);
                         events.ScheduleEvent(EVENT_BURNINGADRENALINE_TANK, 45000);
                         break;
                 }
+
+                if (me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
             }
 
             // Yell if hp lower than 15%
@@ -216,27 +222,60 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void sGossipSelect(Player* player, uint32 sender, uint32 action) OVERRIDE
+        bool GossipSelect(Player* player, uint32 menuId, uint32 gossipListId) override
         {
-            if (sender == GOSSIP_ID && action == 0)
+            if (menuId == GOSSIP_ID && gossipListId == 0)
             {
-                player->CLOSE_GOSSIP_MENU();
+                CloseGossipMenuFor(player);
                 BeginSpeech(player);
             }
+            return false;
         }
 
         private:
-            uint64 PlayerGUID;
+            ObjectGuid PlayerGUID;
             bool HasYelled;
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_vaelAI(creature);
+        return GetBlackwingLairAI<boss_vaelAI>(creature);
+    }
+};
+
+//Need to define an aurascript for EVENT_BURNINGADRENALINE's death effect.
+// 18173 - Burning Adrenaline
+class spell_vael_burning_adrenaline : public SpellScriptLoader
+{
+public:
+    spell_vael_burning_adrenaline() : SpellScriptLoader("spell_vael_burning_adrenaline") { }
+
+    class spell_vael_burning_adrenaline_AuraScript : public AuraScript
+    {
+        PrepareAuraScript(spell_vael_burning_adrenaline_AuraScript);
+
+        void OnAuraRemoveHandler(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+        {
+            //The tooltip says the on death the AoE occurs. According to information: http://qaliaresponse.stage.lithium.com/t5/WoW-Mayhem/Surviving-Burning-Adrenaline-For-tanks/td-p/48609
+            //Burning Adrenaline can be survived therefore Blizzard's implementation was an AoE bomb that went off if you were still alive and dealt
+            //damage to the target. You don't have to die for it to go off. It can go off whether you live or die.
+            GetTarget()->CastSpell(GetTarget(), SPELL_BURNINGADRENALINE_EXPLOSION, true);
+        }
+
+        void Register() override
+        {
+            AfterEffectRemove += AuraEffectRemoveFn(spell_vael_burning_adrenaline_AuraScript::OnAuraRemoveHandler, EFFECT_2, SPELL_AURA_PERIODIC_TRIGGER_SPELL, AURA_EFFECT_HANDLE_REAL);
+        }
+    };
+
+    AuraScript* GetAuraScript() const override
+    {
+        return new spell_vael_burning_adrenaline_AuraScript();
     }
 };
 
 void AddSC_boss_vaelastrasz()
 {
     new boss_vaelastrasz();
+    new spell_vael_burning_adrenaline();
 }

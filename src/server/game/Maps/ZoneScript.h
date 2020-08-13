@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,19 +18,23 @@
 #ifndef ZONE_SCRIPT_H_
 #define ZONE_SCRIPT_H_
 
-#include "Common.h"
-#include "Creature.h"
+#include "Define.h"
+#include "ObjectGuid.h"
 
+class Creature;
 class GameObject;
+class Unit;
+class WorldObject;
+struct CreatureData;
 
-class ZoneScript
+class TC_GAME_API ZoneScript
 {
     public:
         ZoneScript() { }
         virtual ~ZoneScript() { }
 
-        virtual uint32 GetCreatureEntry(uint32 /*guidlow*/, CreatureData const* data) { return data->id; }
-        virtual uint32 GetGameObjectEntry(uint32 /*guidlow*/, uint32 entry) { return entry; }
+        virtual uint32 GetCreatureEntry(ObjectGuid::LowType /*spawnId*/, CreatureData const* data);
+        virtual uint32 GetGameObjectEntry(ObjectGuid::LowType /*spawnId*/, uint32 entry) { return entry; }
 
         virtual void OnCreatureCreate(Creature* ) { }
         virtual void OnCreatureRemove(Creature* ) { }
@@ -39,6 +43,10 @@ class ZoneScript
         virtual void OnGameObjectRemove(GameObject* ) { }
 
         virtual void OnUnitDeath(Unit*) { }
+
+        //All-purpose data storage ObjectGuid
+        virtual ObjectGuid GetGuidData(uint32 /*DataId*/) const { return ObjectGuid::Empty; }
+        virtual void SetGuidData(uint32 /*DataId*/, ObjectGuid /*Value*/) { }
 
         //All-purpose data storage 64 bit
         virtual uint64 GetData64(uint32 /*DataId*/) const { return 0; }

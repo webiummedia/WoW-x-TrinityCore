@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,14 +21,14 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "PassiveAI.h"
 #include "PetAI.h"
+#include "ScriptedCreature.h"
 
 enum PriestSpells
 {
     SPELL_PRIEST_GLYPH_OF_SHADOWFIEND       = 58228,
-    SPELL_PRIEST_GLYPH_OF_SHADOWFIEND_MANA  = 58227,
+    SPELL_PRIEST_SHADOWFIEND_DEATH          = 57989,
     SPELL_PRIEST_LIGHTWELL_CHARGES          = 59907
 };
 
@@ -44,18 +44,18 @@ class npc_pet_pri_lightwell : public CreatureScript
                 DoCast(me, SPELL_PRIEST_LIGHTWELL_CHARGES, false);
             }
 
-            void EnterEvadeMode() OVERRIDE
+            void EnterEvadeMode(EvadeReason /*why*/) override
             {
                 if (!me->IsAlive())
                     return;
 
-                me->DeleteThreatList();
+                me->GetThreatManager().ClearAllThreat();
                 me->CombatStop(true);
                 me->ResetPlayerDamageReq();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return new npc_pet_pri_lightwellAI(creature);
         }
@@ -70,16 +70,14 @@ class npc_pet_pri_shadowfiend : public CreatureScript
         {
             npc_pet_pri_shadowfiendAI(Creature* creature) : PetAI(creature) { }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void IsSummonedBy(Unit* summoner) override
             {
-                if (me->IsSummon())
-                    if (Unit* owner = me->ToTempSummon()->GetSummoner())
-                        if (owner->HasAura(SPELL_PRIEST_GLYPH_OF_SHADOWFIEND))
-                            owner->CastSpell(owner, SPELL_PRIEST_GLYPH_OF_SHADOWFIEND_MANA, true);
+                if (summoner->HasAura(SPELL_PRIEST_GLYPH_OF_SHADOWFIEND))
+                    DoCastAOE(SPELL_PRIEST_SHADOWFIEND_DEATH);
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return new npc_pet_pri_shadowfiendAI(creature);
         }

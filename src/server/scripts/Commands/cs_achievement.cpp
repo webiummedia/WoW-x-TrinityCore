@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,28 +22,28 @@ Comment: All achievement related commands
 Category: commandscripts
 EndScriptData */
 
+#include "ScriptMgr.h"
 #include "AchievementMgr.h"
 #include "Chat.h"
+#include "DB2Stores.h"
 #include "Language.h"
 #include "Player.h"
-#include "ScriptMgr.h"
+#include "RBAC.h"
 
 class achievement_commandscript : public CommandScript
 {
 public:
     achievement_commandscript() : CommandScript("achievement_commandscript") { }
 
-    ChatCommand* GetCommands() const OVERRIDE
+    std::vector<ChatCommand> GetCommands() const override
     {
-        static ChatCommand achievementCommandTable[] =
+        static std::vector<ChatCommand> achievementCommandTable =
         {
-            { "add", rbac::RBAC_PERM_COMMAND_ACHIEVEMENT_ADD, false, &HandleAchievementAddCommand, "", NULL },
-            { NULL, 0, false, NULL, "", NULL }
+            { "add", rbac::RBAC_PERM_COMMAND_ACHIEVEMENT_ADD, false, &HandleAchievementAddCommand, "" },
         };
-        static ChatCommand commandTable[] =
+        static std::vector<ChatCommand> commandTable =
         {
             { "achievement", rbac::RBAC_PERM_COMMAND_ACHIEVEMENT,  false, NULL, "", achievementCommandTable },
-            { NULL, 0, false, NULL, "", NULL }
         };
         return commandTable;
     }
@@ -57,7 +57,7 @@ public:
         if (!achievementId)
         {
             if (char* id = handler->extractKeyFromLink((char*)args, "Hachievement"))
-                achievementId = atoi(id);
+                achievementId = atoul(id);
             if (!achievementId)
                 return false;
         }
@@ -70,7 +70,7 @@ public:
             return false;
         }
 
-        if (AchievementEntry const* achievementEntry = sAchievementMgr->GetAchievement(achievementId))
+        if (AchievementEntry const* achievementEntry = sAchievementStore.LookupEntry(achievementId))
             target->CompletedAchievement(achievementEntry);
 
         return true;

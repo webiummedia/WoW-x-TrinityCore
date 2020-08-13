@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,10 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
 #include "oculus.h"
+#include "ScriptedCreature.h"
 
 enum Spells
 {
@@ -57,9 +59,17 @@ class boss_drakos : public CreatureScript
 
         struct boss_drakosAI : public BossAI
         {
-            boss_drakosAI(Creature* creature) : BossAI(creature, DATA_DRAKOS) { }
+            boss_drakosAI(Creature* creature) : BossAI(creature, DATA_DRAKOS)
+            {
+                Initialize();
+            }
 
-            void Reset() OVERRIDE
+            void Initialize()
+            {
+                postPull = false;
+            }
+
+            void Reset() override
             {
                 _Reset();
 
@@ -67,16 +77,16 @@ class boss_drakos : public CreatureScript
                 events.ScheduleEvent(EVENT_STOMP, 17000);
                 events.ScheduleEvent(EVENT_BOMB_SUMMON, 2000);
 
-                postPull = false;
+                Initialize();
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 Talk(SAY_AGGRO);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -92,12 +102,9 @@ class boss_drakos : public CreatureScript
                     {
                         case EVENT_BOMB_SUMMON:
                             {
-                                Position position;
-                                me->GetPosition(&position);
-
                                 for (uint8 i = 0; i <= (postPull ? 3 : 0); i++)
                                 {
-                                    me->GetRandomNearPosition(position, frand(0.0f, 10.0f));
+                                    Position position = me->GetRandomNearPosition(frand(0.0f, 10.0f));
                                     me->SummonCreature(NPC_UNSTABLE_SPHERE, position);
                                 }
                             }
@@ -116,22 +123,25 @@ class boss_drakos : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
 
                 Talk(SAY_DEATH);
 
                 // start achievement timer (kill Eregos within 20 min)
-                instance->DoStartTimedAchievement(ACHIEVEMENT_TIMED_TYPE_EVENT, ACHIEV_TIMED_START_EVENT);
+                instance->DoStartCriteriaTimer(CRITERIA_TIMED_TYPE_EVENT, ACHIEV_TIMED_START_EVENT);
             }
 
-            void KilledUnit(Unit* /*victim*/) OVERRIDE
+            void KilledUnit(Unit* /*victim*/) override
             {
                 Talk(SAY_KILL);
             }
@@ -140,7 +150,7 @@ class boss_drakos : public CreatureScript
             bool postPull;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetOculusAI<boss_drakosAI>(creature);
         }
@@ -153,9 +163,17 @@ class npc_unstable_sphere : public CreatureScript
 
         struct npc_unstable_sphereAI : public ScriptedAI
         {
-            npc_unstable_sphereAI(Creature* creature) : ScriptedAI(creature) { }
+            npc_unstable_sphereAI(Creature* creature) : ScriptedAI(creature)
+            {
+                Initialize();
+            }
 
-            void Reset() OVERRIDE
+            void Initialize()
+            {
+                pulseTimer = 3000;
+            }
+
+            void Reset() override
             {
                 me->SetReactState(REACT_PASSIVE);
                 me->GetMotionMaster()->MoveRandom(40.0f);
@@ -163,12 +181,12 @@ class npc_unstable_sphere : public CreatureScript
                 me->AddAura(SPELL_UNSTABLE_SPHERE_PASSIVE, me);
                 me->AddAura(SPELL_UNSTABLE_SPHERE_TIMER, me);
 
-                pulseTimer = 3000;
+                Initialize();
 
                 me->DespawnOrUnsummon(19000);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (pulseTimer <= diff)
                 {
@@ -183,9 +201,9 @@ class npc_unstable_sphere : public CreatureScript
             uint32 pulseTimer;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new npc_unstable_sphereAI(creature);
+            return GetOculusAI<npc_unstable_sphereAI>(creature);
         }
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,11 +18,14 @@
 #ifndef ARCATRAZ_H
 #define ARCATRAZ_H
 
+#include "CreatureAIImpl.h"
+
 #define ArcatrazScriptName "instance_arcatraz"
+#define DataHeader         "AZ"
 
 uint32 const EncounterCount = 4;
 
-enum DataTypes
+enum AZDataTypes
 {
     // Encounter States/Boss GUIDs
     DATA_ZEREKETH                               = 0,
@@ -41,7 +44,7 @@ enum DataTypes
     DATA_WARDENS_SHIELD                         = 11
 };
 
-enum CreatureIds
+enum AZCreatureIds
 {
     NPC_DALLIAH                                 = 20885,
     NPC_SOCCOTHRATES                            = 20886,
@@ -49,7 +52,7 @@ enum CreatureIds
     NPC_ALPHA_POD_TARGET                        = 21436
 };
 
-enum GameObjectIds
+enum AZGameObjectIds
 {
     GO_CONTAINMENT_CORE_SECURITY_FIELD_ALPHA    = 184318, // door opened when Wrath-Scryer Soccothrates dies
     GO_CONTAINMENT_CORE_SECURITY_FIELD_BETA     = 184319, // door opened when Dalliah the Doomsayer dies
@@ -61,8 +64,8 @@ enum GameObjectIds
     GO_WARDENS_SHIELD                           = 184802  // shield 'protecting' mellichar
 };
 
-template<class AI>
-AI* GetArcatrazAI(Creature* creature)
+template<typename AI>
+inline AI* GetArcatrazAI(Creature* creature)
 {
     return GetInstanceAI<AI>(creature, ArcatrazScriptName);
 }

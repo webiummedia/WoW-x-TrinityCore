@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -41,15 +40,10 @@ public:
 
     struct boss_ebonrocAI : public BossAI
     {
-        boss_ebonrocAI(Creature* creature) : BossAI(creature, BOSS_EBONROC) { }
+        boss_ebonrocAI(Creature* creature) : BossAI(creature, DATA_EBONROC) { }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
-            if (instance && instance->GetBossState(BOSS_BROODLORD) != DONE)
-            {
-                EnterEvadeMode();
-                return;
-            }
             _EnterCombat();
 
             events.ScheduleEvent(EVENT_SHADOWFLAME, urand(10000, 20000));
@@ -57,7 +51,7 @@ public:
             events.ScheduleEvent(EVENT_SHADOWOFEBONROC, urand(8000, 10000));
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -84,15 +78,18 @@ public:
                         events.ScheduleEvent(EVENT_SHADOWOFEBONROC, urand(8000, 10000));
                         break;
                 }
+
+                if (me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
             }
 
             DoMeleeAttackIfReady();
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<boss_ebonrocAI>(creature);
+        return GetBlackwingLairAI<boss_ebonrocAI>(creature);
     }
 };
 

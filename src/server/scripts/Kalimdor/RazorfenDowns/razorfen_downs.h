@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -18,11 +18,14 @@
 #ifndef DEF_RAZORFEN_DOWNS_H
 #define DEF_RAZORFEN_DOWNS_H
 
+#include "CreatureAIImpl.h"
+
 #define RFDScriptName "instance_razorfen_downs"
+#define DataHeader "RFD"
 
 uint32 const EncounterCount = 5;
 
-enum DataTypes
+enum RFDDataTypes
 {
     // Main Bosses
     DATA_TUTEN_KASH                        = 0,
@@ -35,7 +38,7 @@ enum DataTypes
     DATA_EXTINGUISHING_THE_IDOL            = 6
 };
 
-enum CreatureIds
+enum RFDCreatureIds
 {
     // Used in Tuten Kash summon event
     NPC_TOMB_FIEND                         = 7349,
@@ -49,7 +52,7 @@ enum CreatureIds
     NPC_PLAGUEMAW_THE_ROTTING              = 7356
 };
 
-enum GameObjectIds
+enum RFDGameObjectIds
 {
     // Used for Tuten Kash summon event
     GO_GONG                                = 148917,
@@ -60,14 +63,10 @@ enum GameObjectIds
     GO_BELNISTRASZS_BRAZIER                = 152097
 };
 
-template<class AI>
-CreatureAI* GetRazorfenDownsAI(Creature* creature)
+template<class AI, class T>
+AI* GetRazorfenDownsAI(T* obj)
 {
-    if (InstanceMap* instance = creature->GetMap()->ToInstanceMap())
-        if (instance->GetInstanceScript())
-            if (instance->GetScriptId() == sObjectMgr->GetScriptId(RFDScriptName))
-                return new AI(creature);
-    return NULL;
+    return GetInstanceAI<AI>(obj, RFDScriptName);
 }
 
 #endif

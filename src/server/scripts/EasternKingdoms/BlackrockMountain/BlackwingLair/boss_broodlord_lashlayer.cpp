@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -50,16 +49,10 @@ public:
 
     struct boss_broodlordAI : public BossAI
     {
-        boss_broodlordAI(Creature* creature) : BossAI(creature, BOSS_BROODLORD) { }
+        boss_broodlordAI(Creature* creature) : BossAI(creature, DATA_BROODLORD_LASHLAYER) { }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
-            if (instance->GetBossState(BOSS_VAELASTRAZ) != DONE)
-            {
-                EnterEvadeMode();
-                return;
-            }
-
             _EnterCombat();
             Talk(SAY_AGGRO);
 
@@ -70,7 +63,7 @@ public:
             events.ScheduleEvent(EVENT_CHECK, 1000);
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -95,15 +88,15 @@ public:
                         break;
                     case EVENT_KNOCKBACK:
                         DoCastVictim(SPELL_KNOCKBACK);
-                        if (DoGetThreat(me->GetVictim()))
-                            DoModifyThreatPercent(me->GetVictim(), -50);
+                        if (GetThreat(me->GetVictim()))
+                            ModifyThreatByPercent(me->GetVictim(), -50);
                         events.ScheduleEvent(EVENT_KNOCKBACK, urand(15000, 30000));
                         break;
                     case EVENT_CHECK:
                         if (me->GetDistance(me->GetHomePosition()) > 150.0f)
                         {
                             Talk(SAY_LEASH);
-                            EnterEvadeMode();
+                            EnterEvadeMode(EVADE_REASON_BOUNDARY);
                         }
                         events.ScheduleEvent(EVENT_CHECK, 1000);
                         break;
@@ -114,9 +107,9 @@ public:
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<boss_broodlordAI>(creature);
+        return GetBlackwingLairAI<boss_broodlordAI>(creature);
     }
 };
 

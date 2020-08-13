@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,18 +23,18 @@ SDComment: Some visual effects are not implemented.
 Script Data End */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "ScriptedGossip.h"
+#include "GameObject.h"
 #include "gnomeregan.h"
-#include "ScriptedEscortAI.h"
+#include "InstanceScript.h"
+#include "Map.h"
+#include "ObjectAccessor.h"
 #include "Player.h"
-
-#define GOSSIP_START_EVENT "I am ready to being"
+#include "ScriptedEscortAI.h"
+#include "ScriptedGossip.h"
+#include "TemporarySummon.h"
 
 enum BlastmasterEmi
 {
-    GOSSIP_TEXT_EMI     = 1693,
-
     SAY_BLASTMASTER_0   = 0,
     SAY_BLASTMASTER_1   = 1,
     SAY_BLASTMASTER_2   = 2,
@@ -88,37 +88,9 @@ class npc_blastmaster_emi_shortfuse : public CreatureScript
 public:
     npc_blastmaster_emi_shortfuse() : CreatureScript("npc_blastmaster_emi_shortfuse") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<npc_blastmaster_emi_shortfuseAI>(creature);
-    }
-
-    bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) OVERRIDE
-    {
-        player->PlayerTalkClass->ClearMenus();
-        if (action == GOSSIP_ACTION_INFO_DEF+1)
-        {
-            if (npc_escortAI* pEscortAI = CAST_AI(npc_blastmaster_emi_shortfuse::npc_blastmaster_emi_shortfuseAI, creature->AI()))
-                pEscortAI->Start(true, false, player->GetGUID());
-
-            creature->setFaction(player->getFaction());
-            creature->AI()->SetData(1, 0);
-
-            player->CLOSE_GOSSIP_MENU();
-        }
-        return true;
-    }
-
-    bool OnGossipHello(Player* player, Creature* creature) OVERRIDE
-    {
-        InstanceScript* instance = creature->GetInstanceScript();
-
-        if (instance && instance->GetData(TYPE_EVENT) == NOT_STARTED)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_START_EVENT, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-
-        player->SEND_GOSSIP_MENU(GOSSIP_TEXT_EMI, creature->GetGUID());
-
-        return true;
+        return GetGnomereganAI<npc_blastmaster_emi_shortfuseAI>(creature);
     }
 
     struct npc_blastmaster_emi_shortfuseAI : public npc_escortAI
@@ -135,10 +107,10 @@ public:
         uint8 uiPhase;
         uint32 uiTimer;
 
-        std::list<uint64> SummonList;
-        std::list<uint64> GoSummonList;
+        GuidList SummonList;
+        GuidList GoSummonList;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
             if (!HasEscortState(STATE_ESCORT_ESCORTING))
             {
@@ -152,6 +124,20 @@ public:
             }
         }
 
+        bool GossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId) override
+        {
+            if (gossipListId == 0)
+            {
+                Start(true, false, player->GetGUID());
+
+                me->SetFaction(player->GetFaction());
+                SetData(1, 0);
+
+                player->PlayerTalkClass->SendCloseGossip();
+            }
+            return false;
+        }
+
         void NextStep(uint32 uiTimerStep, bool bNextStep = true, uint8 uiPhaseStep = 0)
         {
             uiTimer = uiTimerStep;
@@ -161,73 +147,57 @@ public:
                 uiPhase = uiPhaseStep;
         }
 
-        void CaveDestruction(bool bBool)
+        void CaveDestruction(bool isRight)
         {
             if (GoSummonList.empty())
                 return;
 
-            for (std::list<uint64>::const_iterator itr = GoSummonList.begin(); itr != GoSummonList.end(); ++itr)
+            for (GuidList::const_iterator itr = GoSummonList.begin(); itr != GoSummonList.end(); ++itr)
             {
-               if (GameObject* go = GameObject::GetGameObject(*me, *itr))
-               {
-                    if (go)
+                if (GameObject* go = ObjectAccessor::GetGameObject(*me, *itr))
+                {
+                    if (Creature* trigger = go->SummonTrigger(go->GetPositionX(), go->GetPositionY(), go->GetPositionZ(), 0, 1))
                     {
-                        if (Creature* trigger = go->SummonTrigger(go->GetPositionX(), go->GetPositionY(), go->GetPositionZ(), 0, 1))
-                        {
-                            //visual effects are not working!
-                            trigger->CastSpell(trigger, 11542, true);
-                            trigger->CastSpell(trigger, 35470, true);
-                        }
-                        go->RemoveFromWorld();
-                        //go->CastSpell(me, 12158); makes all die?!
+                        //visual effects are not working!
+                        trigger->CastSpell(trigger, 11542, true);
+                        trigger->CastSpell(trigger, 35470, true);
                     }
-               }
+                    go->RemoveFromWorld();
+                    //go->CastSpell(me, 12158); makes all die?!
+                }
             }
 
-           if (bBool)
-           {
-                if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_RIGHT)))
-                    instance->HandleGameObject(0, false, go);
-           }else
-                if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_LEFT)))
-                    instance->HandleGameObject(0, false, go);
+            if (GameObject* go = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(isRight ? DATA_GO_CAVE_IN_RIGHT : DATA_GO_CAVE_IN_LEFT)))
+                instance->HandleGameObject(ObjectGuid::Empty, false, go);
         }
 
-        void SetInFace(bool bBool)
+        void SetInFace(bool isRight)
         {
-            if (bBool)
-            {
-                if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_RIGHT)))
-                    me->SetFacingToObject(go);
-            }else
-                if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_LEFT)))
-                    me->SetFacingToObject(go);
+            if (GameObject* go = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(isRight ? DATA_GO_CAVE_IN_RIGHT : DATA_GO_CAVE_IN_LEFT)))
+                me->SetFacingToObject(go);
         }
 
         void RestoreAll()
         {
-            if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_RIGHT)))
-                instance->HandleGameObject(0, false, go);
+            if (GameObject* go = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(DATA_GO_CAVE_IN_RIGHT)))
+                instance->HandleGameObject(ObjectGuid::Empty, false, go);
 
-            if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_LEFT)))
-                instance->HandleGameObject(0, false, go);
+            if (GameObject* go = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(DATA_GO_CAVE_IN_LEFT)))
+                instance->HandleGameObject(ObjectGuid::Empty, false, go);
 
             if (!GoSummonList.empty())
-                for (std::list<uint64>::const_iterator itr = GoSummonList.begin(); itr != GoSummonList.end(); ++itr)
+                for (GuidList::const_iterator itr = GoSummonList.begin(); itr != GoSummonList.end(); ++itr)
                 {
-                    if (GameObject* go = GameObject::GetGameObject(*me, *itr))
+                    if (GameObject* go = ObjectAccessor::GetGameObject(*me, *itr))
                         go->RemoveFromWorld();
                 }
 
             if (!SummonList.empty())
-                for (std::list<uint64>::const_iterator itr = SummonList.begin(); itr != SummonList.end(); ++itr)
+                for (GuidList::const_iterator itr = SummonList.begin(); itr != SummonList.end(); ++itr)
                 {
-                    if (Creature* summon = Unit::GetCreature(*me, *itr))
+                    if (Creature* summon = ObjectAccessor::GetCreature(*me, *itr))
                     {
-                        if (summon->IsAlive())
-                            summon->DisappearAndDie();
-                        else
-                            summon->RemoveCorpse();
+                        summon->DespawnOrUnsummon();
                     }
                 }
         }
@@ -235,10 +205,6 @@ public:
         void AggroAllPlayers(Creature* temp)
         {
             Map::PlayerList const &PlList = me->GetMap()->GetPlayers();
-
-            if (PlList.isEmpty())
-                return;
-
             for (Map::PlayerList::const_iterator i = PlList.begin(); i != PlList.end(); ++i)
             {
                 if (Player* player = i->GetSource())
@@ -247,21 +213,17 @@ public:
                         continue;
 
                     if (player->IsAlive())
-                    {
-                        temp->SetInCombatWith(player);
-                        player->SetInCombatWith(temp);
-                        temp->AddThreat(player, 0.0f);
-                    }
+                        AddThreat(player, 0.0f, temp);
                 }
             }
         }
 
-        void WaypointReached(uint32 waypointId) OVERRIDE
+        void WaypointReached(uint32 waypointId) override
         {
             //just in case
             if (GetPlayerForEscort())
-                if (me->getFaction() != GetPlayerForEscort()->getFaction())
-                    me->setFaction(GetPlayerForEscort()->getFaction());
+                if (me->GetFaction() != GetPlayerForEscort()->GetFaction())
+                    me->SetFaction(GetPlayerForEscort()->GetFaction());
 
             switch (waypointId)
             {
@@ -300,7 +262,7 @@ public:
             }
         }
 
-        void SetData(uint32 uiI, uint32 uiValue) OVERRIDE
+        void SetData(uint32 uiI, uint32 uiValue) override
         {
             switch (uiI)
             {
@@ -341,10 +303,10 @@ public:
                     me->SummonCreature(NPC_CAVERNDEEP_AMBUSHER, SpawnPosition[9], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1800000);
                     break;
                 case 2:
-                    if (GameObject* go = me->SummonGameObject(183410, -533.140f, -105.322f, -156.016f, 0, 0, 0, 0, 0, 1000))
+                    if (GameObject* go = me->SummonGameObject(183410, -533.140f, -105.322f, -156.016f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE); //We can't use it!
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE); //We can't use it!
                     }
                     Summon(3);
                     break;
@@ -356,10 +318,10 @@ public:
                     Talk(SAY_BLASTMASTER_7);
                     break;
                 case 4:
-                    if (GameObject* go = me->SummonGameObject(183410, -542.199f, -96.854f, -155.790f, 0, 0, 0, 0, 0, 1000))
+                    if (GameObject* go = me->SummonGameObject(183410, -542.199f, -96.854f, -155.790f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE);
                     }
                     break;
                 case 5:
@@ -370,18 +332,18 @@ public:
                     me->SummonCreature(NPC_CAVERNDEEP_AMBUSHER, SpawnPosition[14], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1800000);
                     break;
                 case 6:
-                    if (GameObject* go = me->SummonGameObject(183410, -507.820f, -103.333f, -151.353f, 0, 0, 0, 0, 0, 1000))
+                    if (GameObject* go = me->SummonGameObject(183410, -507.820f, -103.333f, -151.353f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE); //We can't use it!
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE); //We can't use it!
                         Summon(5);
                     }
                     break;
                 case 7:
-                    if (GameObject* go = me->SummonGameObject(183410, -511.829f, -86.249f, -151.431f, 0, 0, 0, 0, 0, 1000))
+                    if (GameObject* go = me->SummonGameObject(183410, -511.829f, -86.249f, -151.431f, 0.f, QuaternionData(), 1))
                     {
                         GoSummonList.push_back(go->GetGUID());
-                        go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE); //We can't use it!
+                        go->AddFlag(GO_FLAG_NOT_SELECTABLE); //We can't use it!
                     }
                     break;
                 case 8:
@@ -390,14 +352,14 @@ public:
                     me->SummonCreature(NPC_CHOMPER, SpawnPosition[16], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1800000);
                     break;
                 case 9:
-                    me->SummonGameObject(GO_RED_ROCKET, SpawnPosition[17].GetPositionX(), SpawnPosition[17].GetPositionY(), SpawnPosition[17].GetPositionZ(), SpawnPosition[17].GetOrientation(), 0, 0, 0, 0, 7200);
-                    me->SummonGameObject(GO_RED_ROCKET, SpawnPosition[18].GetPositionX(), SpawnPosition[18].GetPositionY(), SpawnPosition[18].GetPositionZ(), SpawnPosition[18].GetOrientation(), 0, 0, 0, 0, 7200);
-                    me->SummonGameObject(GO_RED_ROCKET, SpawnPosition[19].GetPositionX(), SpawnPosition[19].GetPositionY(), SpawnPosition[19].GetPositionZ(), SpawnPosition[19].GetOrientation(), 0, 0, 0, 0, 7200);
+                    me->SummonGameObject(GO_RED_ROCKET, SpawnPosition[17], QuaternionData::fromEulerAnglesZYX(SpawnPosition[17].GetOrientation(), 0.0f, 0.0f), 7200);
+                    me->SummonGameObject(GO_RED_ROCKET, SpawnPosition[18], QuaternionData::fromEulerAnglesZYX(SpawnPosition[18].GetOrientation(), 0.0f, 0.0f), 7200);
+                    me->SummonGameObject(GO_RED_ROCKET, SpawnPosition[19], QuaternionData::fromEulerAnglesZYX(SpawnPosition[19].GetOrientation(), 0.0f, 0.0f), 7200);
                     break;
             }
         }
 
-        void UpdateEscortAI(const uint32 uiDiff) OVERRIDE
+        void UpdateEscortAI(uint32 uiDiff) override
         {
             if (uiPhase)
             {
@@ -430,8 +392,8 @@ public:
                             SetInFace(true);
                             Talk(SAY_BLASTMASTER_5);
                             Summon(1);
-                            if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_RIGHT)))
-                                instance->HandleGameObject(0, true, go);
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(DATA_GO_CAVE_IN_RIGHT)))
+                                instance->HandleGameObject(ObjectGuid::Empty, true, go);
                             NextStep(3000, true);
                             break;
                         case 7:
@@ -476,8 +438,8 @@ public:
                         case 16:
                             Talk(SAY_BLASTMASTER_14);
                             SetInFace(false);
-                            if (GameObject* go = GameObject::GetGameObject(*me, instance->GetData64(DATA_GO_CAVE_IN_LEFT)))
-                                instance->HandleGameObject(0, true, go);
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(DATA_GO_CAVE_IN_LEFT)))
+                                instance->HandleGameObject(ObjectGuid::Empty, true, go);
                             NextStep(2000, true);
                             break;
                         case 17:
@@ -524,7 +486,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void JustSummoned(Creature* summon) OVERRIDE
+        void JustSummoned(Creature* summon) override
         {
             SummonList.push_back(summon->GetGUID());
             AggroAllPlayers(summon);
@@ -538,9 +500,9 @@ class boss_grubbis : public CreatureScript
 public:
     boss_grubbis() : CreatureScript("boss_grubbis") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_grubbisAI(creature);
+        return GetGnomereganAI<boss_grubbisAI>(creature);
     }
 
     struct boss_grubbisAI : public ScriptedAI
@@ -560,7 +522,7 @@ public:
                     creature->AI()->SetData(2, 1);
         }
 
-        void UpdateAI(uint32 /*diff*/) OVERRIDE
+        void UpdateAI(uint32 /*diff*/) override
         {
             if (!UpdateVictim())
                 return;
@@ -568,7 +530,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             if (!me->IsSummon())
                 return;

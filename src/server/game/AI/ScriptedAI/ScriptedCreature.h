@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,19 +18,19 @@
 #ifndef SCRIPTEDCREATURE_H_
 #define SCRIPTEDCREATURE_H_
 
-#include "Creature.h"
 #include "CreatureAI.h"
-#include "CreatureAIImpl.h"
-#include "InstanceScript.h"
-
-#define CAST_AI(a, b)   (dynamic_cast<a*>(b))
+#include "Creature.h" // convenience include for scripts, all uses of ScriptedCreature also need Creature (except ScriptedCreature itself doesn't need Creature)
+#include "DBCEnums.h"
+#include "TaskScheduler.h"
 
 class InstanceScript;
+enum SelectTargetType : uint8;
+enum SelectEffect : uint8;
 
-class SummonList
+class TC_GAME_API SummonList
 {
 public:
-    typedef std::list<uint64> StorageType;
+    typedef GuidList StorageType;
     typedef StorageType::iterator iterator;
     typedef StorageType::const_iterator const_iterator;
     typedef StorageType::size_type size_type;
@@ -79,8 +78,14 @@ public:
         return storage_.size();
     }
 
-    void Summon(Creature const* summon) { storage_.push_back(summon->GetGUID()); }
-    void Despawn(Creature const* summon) { storage_.remove(summon->GetGUID()); }
+    // Clear the underlying storage. This does NOT despawn the creatures - use DespawnAll for that!
+    void clear()
+    {
+        storage_.clear();
+    }
+
+    void Summon(Creature const* summon);
+    void Despawn(Creature const* summon);
     void DespawnEntry(uint32 entry);
     void DespawnAll();
 
@@ -91,45 +96,42 @@ public:
     }
 
     template <class Predicate>
-    void DoAction(int32 info, Predicate& predicate, uint16 max = 0)
+    void DoAction(int32 info, Predicate&& predicate, uint16 max = 0)
     {
         // We need to use a copy of SummonList here, otherwise original SummonList would be modified
         StorageType listCopy = storage_;
-        Trinity::Containers::RandomResizeList<uint64, Predicate>(listCopy, predicate, max);
-        for (StorageType::iterator i = listCopy.begin(); i != listCopy.end(); )
-        {
-            Creature* summon = Unit::GetCreature(*me, *i++);
-            if (summon && summon->IsAIEnabled)
-                summon->AI()->DoAction(info);
-        }
+        Trinity::Containers::RandomResize<StorageType, Predicate>(listCopy, std::forward<Predicate>(predicate), max);
+        DoActionImpl(info, listCopy);
     }
 
-    void DoZoneInCombat(uint32 entry = 0);
+    void DoZoneInCombat(uint32 entry = 0, float maxRangeToNearestTarget = 250.0f);
     void RemoveNotExisting();
     bool HasEntry(uint32 entry) const;
 
 private:
+    void DoActionImpl(int32 action, StorageType const& summons);
+
     Creature* me;
     StorageType storage_;
 };
 
-class EntryCheckPredicate
+class TC_GAME_API EntryCheckPredicate
 {
     public:
         EntryCheckPredicate(uint32 entry) : _entry(entry) { }
-        bool operator()(uint64 guid) { return GUID_ENPART(guid) == _entry; }
+        bool operator()(ObjectGuid const& guid) const { return guid.GetEntry() == _entry; }
 
     private:
         uint32 _entry;
 };
 
-class DummyEntryCheckPredicate
+class TC_GAME_API DummyEntryCheckPredicate
 {
     public:
-        bool operator()(uint64) { return true; }
+        bool operator()(ObjectGuid const&) const { return true; }
 };
 
-struct ScriptedAI : public CreatureAI
+struct TC_GAME_API ScriptedAI : public CreatureAI
 {
     explicit ScriptedAI(Creature* creature);
     virtual ~ScriptedAI() { }
@@ -141,31 +143,28 @@ struct ScriptedAI : public CreatureAI
     void AttackStartNoMove(Unit* target);
 
     // Called at any Damage from any attacker (before damage apply)
-    void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/) { }
+    void DamageTaken(Unit* /*attacker*/, uint32& /*damage*/) override { }
 
     //Called at World update tick
-    virtual void UpdateAI(uint32 diff);
+    virtual void UpdateAI(uint32 diff) override;
 
     //Called at creature death
-    void JustDied(Unit* /*killer*/) { }
+    void JustDied(Unit* /*killer*/) override { }
 
     //Called at creature killing another unit
-    void KilledUnit(Unit* /*victim*/) { }
+    void KilledUnit(Unit* /*victim*/) override { }
 
     // Called when the creature summon successfully other creature
-    void JustSummoned(Creature* /*summon*/) { }
+    void JustSummoned(Creature* /*summon*/) override { }
 
     // Called when a summoned creature is despawned
-    void SummonedCreatureDespawn(Creature* /*summon*/) { }
+    void SummonedCreatureDespawn(Creature* /*summon*/) override { }
 
     // Called when hit by a spell
-    void SpellHit(Unit* /*caster*/, SpellInfo const* /*spell*/) { }
+    void SpellHit(Unit* /*caster*/, SpellInfo const* /*spell*/) override { }
 
     // Called when spell hits a target
-    void SpellHitTarget(Unit* /*target*/, SpellInfo const* /*spell*/) { }
-
-    //Called at waypoint reached or PointMovement end
-    void MovementInform(uint32 /*type*/, uint32 /*id*/) { }
+    void SpellHitTarget(Unit* /*target*/, SpellInfo const* /*spell*/) override { }
 
     // Called when AI is temporarily replaced or put back when possess is applied or removed
     void OnPossess(bool /*apply*/) { }
@@ -173,9 +172,6 @@ struct ScriptedAI : public CreatureAI
     // *************
     // Variables
     // *************
-
-    //Pointer to creature we are manipulating
-    Creature* me;
 
     //For fleeing
     bool IsFleeing;
@@ -185,13 +181,13 @@ struct ScriptedAI : public CreatureAI
     // *************
 
     //Called at creature reset either by death or evade
-    void Reset() { }
+    void Reset() override { }
 
     //Called at creature aggro either by MoveInLOS or Attack Start
-    void EnterCombat(Unit* /*victim*/) { }
+    void EnterCombat(Unit* /*victim*/) override { }
 
     // Called before EnterCombat even before the creature is in combat.
-    void AttackStart(Unit* /*target*/);
+    void AttackStart(Unit* /*target*/) override;
 
     // *************
     //AI Helper Functions
@@ -212,11 +208,16 @@ struct ScriptedAI : public CreatureAI
     //Plays a sound to all nearby players
     void DoPlaySoundToSet(WorldObject* source, uint32 soundId);
 
-    //Drops all threat to 0%. Does not remove players from the threat list
-    void DoResetThreat();
-
-    float DoGetThreat(Unit* unit);
-    void DoModifyThreatPercent(Unit* unit, int32 pct);
+    // Add specified amount of threat directly to victim (ignores redirection effects) - also puts victim in combat and engages them if necessary
+    void AddThreat(Unit* victim, float amount, Unit* who = nullptr);
+    // Adds/removes the specified percentage from the specified victim's threat (to who, or me if not specified)
+    void ModifyThreatByPercent(Unit* victim, int32 pct, Unit* who = nullptr);
+    // Resets the victim's threat level to who (or me if not specified) to zero
+    void ResetThreat(Unit* victim, Unit* who = nullptr);
+    // Resets the specified unit's threat list (me if not specified) - does not delete entries, just sets their threat to zero
+    void ResetThreatList(Unit* who = nullptr);
+    // Returns the threat level of victim towards who (or me if not specified)
+    float GetThreat(Unit const* victim, Unit const* who = nullptr);
 
     void DoTeleportTo(float x, float y, float z, uint32 time = 0);
     void DoTeleportTo(float const pos[4]);
@@ -227,6 +228,9 @@ struct ScriptedAI : public CreatureAI
 
     //Returns friendly unit with the most amount of hp missing from max hp
     Unit* DoSelectLowestHpFriendly(float range, uint32 minHPDiff = 1);
+
+    //Returns friendly unit with hp pct below specified and with specified entry
+    Unit* DoSelectBelowHpPctFriendlyWithEntry(uint32 entry, float range, uint8 hpPct = 1, bool excludeSelf = true);
 
     //Returns a list of friendly CC'd units within range
     std::list<Creature*> DoFindFriendlyCC(float range);
@@ -240,11 +244,11 @@ struct ScriptedAI : public CreatureAI
     //Spawns a creature relative to me
     Creature* DoSpawnCreature(uint32 entry, float offsetX, float offsetY, float offsetZ, float angle, uint32 type, uint32 despawntime);
 
-    bool HealthBelowPct(uint32 pct) const { return me->HealthBelowPct(pct); }
-    bool HealthAbovePct(uint32 pct) const { return me->HealthAbovePct(pct); }
+    bool HealthBelowPct(uint32 pct) const;
+    bool HealthAbovePct(uint32 pct) const;
 
     //Returns spells that meet the specified criteria from the creatures spell list
-    SpellInfo const* SelectSpell(Unit* target, uint32 school, uint32 mechanic, SelectTargetType targets, uint32 powerCostMin, uint32 powerCostMax, float rangeMin, float rangeMax, SelectEffect effect);
+    SpellInfo const* SelectSpell(Unit* target, uint32 school, uint32 mechanic, SelectTargetType targets, float rangeMin, float rangeMax, SelectEffect effect);
 
     void SetEquipmentSlots(bool loadDefault, int32 mainHand = EQUIP_NO_CHANGE, int32 offHand = EQUIP_NO_CHANGE, int32 ranged = EQUIP_NO_CHANGE);
 
@@ -255,8 +259,6 @@ struct ScriptedAI : public CreatureAI
     //       It will keep the last value you set.
     void SetCombatMovement(bool allowMovement);
     bool IsCombatMovementAllowed() const { return _isCombatMovementAllowed; }
-
-    bool EnterEvadeIfOutOfCombatArea(uint32 const diff);
 
     // return true for heroic mode. i.e.
     //   - for dungeon in mode 10-heroic,
@@ -269,16 +271,16 @@ struct ScriptedAI : public CreatureAI
     Difficulty GetDifficulty() const { return _difficulty; }
 
     // return true for 25 man or 25 man heroic mode
-    bool Is25ManRaid() const { return _difficulty & RAID_DIFFICULTY_MASK_25MAN; }
+    bool Is25ManRaid() const { return _difficulty == DIFFICULTY_25_N || _difficulty == DIFFICULTY_25_HC; }
 
     template<class T> inline
     const T& DUNGEON_MODE(const T& normal5, const T& heroic10) const
     {
         switch (_difficulty)
         {
-            case DUNGEON_DIFFICULTY_NORMAL:
+            case DIFFICULTY_NORMAL:
                 return normal5;
-            case DUNGEON_DIFFICULTY_HEROIC:
+            case DIFFICULTY_HEROIC:
                 return heroic10;
             default:
                 break;
@@ -292,9 +294,9 @@ struct ScriptedAI : public CreatureAI
     {
         switch (_difficulty)
         {
-            case RAID_DIFFICULTY_10MAN_NORMAL:
+            case DIFFICULTY_10_N:
                 return normal10;
-            case RAID_DIFFICULTY_25MAN_NORMAL:
+            case DIFFICULTY_25_N:
                 return normal25;
             default:
                 break;
@@ -308,13 +310,13 @@ struct ScriptedAI : public CreatureAI
     {
         switch (_difficulty)
         {
-            case RAID_DIFFICULTY_10MAN_NORMAL:
+            case DIFFICULTY_10_N:
                 return normal10;
-            case RAID_DIFFICULTY_25MAN_NORMAL:
+            case DIFFICULTY_25_N:
                 return normal25;
-            case RAID_DIFFICULTY_10MAN_HEROIC:
+            case DIFFICULTY_10_HC:
                 return heroic10;
-            case RAID_DIFFICULTY_25MAN_HEROIC:
+            case DIFFICULTY_25_HC:
                 return heroic25;
             default:
                 break;
@@ -325,24 +327,22 @@ struct ScriptedAI : public CreatureAI
 
     private:
         Difficulty _difficulty;
-        uint32 _evadeCheckCooldown;
         bool _isCombatMovementAllowed;
         bool _isHeroic;
 };
 
-class BossAI : public ScriptedAI
+class TC_GAME_API BossAI : public ScriptedAI
 {
     public:
         BossAI(Creature* creature, uint32 bossId);
         virtual ~BossAI() { }
 
         InstanceScript* const instance;
-        BossBoundaryMap const* GetBoundary() const { return _boundary; }
 
-        void JustSummoned(Creature* summon);
-        void SummonedCreatureDespawn(Creature* summon);
+        void JustSummoned(Creature* summon) override;
+        void SummonedCreatureDespawn(Creature* summon) override;
 
-        virtual void UpdateAI(uint32 diff);
+        virtual void UpdateAI(uint32 diff) override;
 
         // Hook used to execute events scheduled into EventMap without the need
         // to override UpdateAI
@@ -350,47 +350,43 @@ class BossAI : public ScriptedAI
         // is supposed to run more than once
         virtual void ExecuteEvent(uint32 /*eventId*/) { }
 
-        void Reset() { _Reset(); }
-        void EnterCombat(Unit* /*who*/) { _EnterCombat(); }
-        void JustDied(Unit* /*killer*/) { _JustDied(); }
-        void JustReachedHome() { _JustReachedHome(); }
+        virtual void ScheduleTasks() { }
+
+        void Reset() override { _Reset(); }
+        void EnterCombat(Unit* /*who*/) override { _EnterCombat(); }
+        void JustDied(Unit* /*killer*/) override { _JustDied(); }
+        void JustReachedHome() override { _JustReachedHome(); }
+
+        bool CanAIAttack(Unit const* target) const override;
 
     protected:
         void _Reset();
         void _EnterCombat();
         void _JustDied();
-        void _JustReachedHome() { me->setActive(false); }
+        void _JustReachedHome();
+        void _DespawnAtEvade(uint32 delayToRespawn = 30, Creature* who = nullptr);
+        void _DespawnAtEvade(Seconds const& time, Creature* who = nullptr) { _DespawnAtEvade(uint32(time.count()), who); }
 
-        bool CheckInRoom()
-        {
-            if (CheckBoundary(me))
-                return true;
-
-            EnterEvadeMode();
-            return false;
-        }
-
-        bool CheckBoundary(Unit* who);
         void TeleportCheaters();
 
         EventMap events;
         SummonList summons;
+        TaskScheduler scheduler;
 
     private:
-        BossBoundaryMap const* const _boundary;
         uint32 const _bossId;
 };
 
-class WorldBossAI : public ScriptedAI
+class TC_GAME_API WorldBossAI : public ScriptedAI
 {
     public:
         WorldBossAI(Creature* creature);
         virtual ~WorldBossAI() { }
 
-        void JustSummoned(Creature* summon);
-        void SummonedCreatureDespawn(Creature* summon);
+        void JustSummoned(Creature* summon) override;
+        void SummonedCreatureDespawn(Creature* summon) override;
 
-        virtual void UpdateAI(uint32 diff);
+        virtual void UpdateAI(uint32 diff) override;
 
         // Hook used to execute events scheduled into EventMap without the need
         // to override UpdateAI
@@ -398,9 +394,9 @@ class WorldBossAI : public ScriptedAI
         // is supposed to run more than once
         virtual void ExecuteEvent(uint32 /*eventId*/) { }
 
-        void Reset() { _Reset(); }
-        void EnterCombat(Unit* /*who*/) { _EnterCombat(); }
-        void JustDied(Unit* /*killer*/) { _JustDied(); }
+        void Reset() override { _Reset(); }
+        void EnterCombat(Unit* /*who*/) override { _EnterCombat(); }
+        void JustDied(Unit* /*killer*/) override { _JustDied(); }
 
     protected:
         void _Reset();
@@ -412,9 +408,32 @@ class WorldBossAI : public ScriptedAI
 };
 
 // SD2 grid searchers.
-Creature* GetClosestCreatureWithEntry(WorldObject* source, uint32 entry, float maxSearchRange, bool alive = true);
-GameObject* GetClosestGameObjectWithEntry(WorldObject* source, uint32 entry, float maxSearchRange);
-void GetCreatureListWithEntryInGrid(std::list<Creature*>& list, WorldObject* source, uint32 entry, float maxSearchRange);
-void GetGameObjectListWithEntryInGrid(std::list<GameObject*>& list, WorldObject* source, uint32 entry, float maxSearchRange);
+inline Creature* GetClosestCreatureWithEntry(WorldObject* source, uint32 entry, float maxSearchRange, bool alive = true)
+{
+    return source->FindNearestCreature(entry, maxSearchRange, alive);
+}
+
+inline GameObject* GetClosestGameObjectWithEntry(WorldObject* source, uint32 entry, float maxSearchRange)
+{
+    return source->FindNearestGameObject(entry, maxSearchRange);
+}
+
+template <typename Container>
+inline void GetCreatureListWithEntryInGrid(Container& container, WorldObject* source, uint32 entry, float maxSearchRange)
+{
+    source->GetCreatureListWithEntryInGrid(container, entry, maxSearchRange);
+}
+
+template <typename Container>
+inline void GetGameObjectListWithEntryInGrid(Container& container, WorldObject* source, uint32 entry, float maxSearchRange)
+{
+    source->GetGameObjectListWithEntryInGrid(container, entry, maxSearchRange);
+}
+
+template <typename Container>
+inline void GetPlayerListInGrid(Container& container, WorldObject* source, float maxSearchRange)
+{
+    source->GetPlayerListInGrid(container, maxSearchRange);
+}
 
 #endif // SCRIPTEDCREATURE_H_

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,10 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "arcatraz.h"
+#include "InstanceScript.h"
+#include "ObjectAccessor.h"
+#include "ScriptedCreature.h"
 
 enum Say
 {
@@ -59,25 +61,30 @@ class boss_dalliah_the_doomsayer : public CreatureScript
 
         struct boss_dalliah_the_doomsayerAI : public BossAI
         {
-            boss_dalliah_the_doomsayerAI(Creature* creature) : BossAI(creature, DATA_DALLIAH) { }
-
-            void Reset() OVERRIDE
+            boss_dalliah_the_doomsayerAI(Creature* creature) : BossAI(creature, DATA_DALLIAH)
             {
-                _Reset();
+                soccothratesTaunt = false;
                 soccothratesDeath = false;
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void Reset() override
+            {
+                _Reset();
+                soccothratesTaunt = false;
+                soccothratesDeath = false;
+            }
+
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
 
-                if (Creature* soccothrates = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_SOCCOTHRATES)))
+                if (Creature* soccothrates = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_SOCCOTHRATES)))
                     if (soccothrates->IsAlive() && !soccothrates->IsInCombat())
                         soccothrates->AI()->SetData(1, 1);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_GIFT_OF_THE_DOOMSAYER, urand(1000, 4000));
@@ -88,12 +95,12 @@ class boss_dalliah_the_doomsayer : public CreatureScript
                 Talk(SAY_AGGRO);
             }
 
-            void KilledUnit(Unit* /*victim*/) OVERRIDE
+            void KilledUnit(Unit* /*victim*/) override
             {
                 Talk(SAY_SLAY);
             }
 
-            void SetData(uint32 /*type*/, uint32 data) OVERRIDE
+            void SetData(uint32 /*type*/, uint32 data) override
             {
                 switch (data)
                 {
@@ -106,7 +113,7 @@ class boss_dalliah_the_doomsayer : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                 {
@@ -158,18 +165,21 @@ class boss_dalliah_the_doomsayer : public CreatureScript
                             events.ScheduleEvent(EVENT_SHADOW_WAVE, urand(11000, 16000));
                             break;
                         case EVENT_ME_FIRST:
-                            if (Creature* soccothrates = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_SOCCOTHRATES)))
+                            if (Creature* soccothrates = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_SOCCOTHRATES)))
                                 if (soccothrates->IsAlive() && !soccothrates->IsInCombat())
                                     soccothrates->AI()->Talk(SAY_AGGRO_DALLIAH_FIRST);
                             break;
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 if (HealthBelowPct(25) && !soccothratesTaunt)
                 {
-                    if (Creature* soccothrates = ObjectAccessor::GetCreature(*me, instance->GetData64(DATA_SOCCOTHRATES)))
+                    if (Creature* soccothrates = ObjectAccessor::GetCreature(*me, instance->GetGuidData(DATA_SOCCOTHRATES)))
                         soccothrates->AI()->Talk(SAY_DALLIAH_25_PERCENT);
                     soccothratesTaunt = true;
                 }
@@ -182,7 +192,7 @@ class boss_dalliah_the_doomsayer : public CreatureScript
             bool soccothratesDeath;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetArcatrazAI<boss_dalliah_the_doomsayerAI>(creature);
         }

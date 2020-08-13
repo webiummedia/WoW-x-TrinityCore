@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,25 +16,36 @@
  */
 
 #include "OutdoorPvPMgr.h"
+#include "DatabaseEnv.h"
+#include "DB2Stores.h"
+#include "DisableMgr.h"
+#include "Log.h"
 #include "ObjectMgr.h"
 #include "Player.h"
-#include "DisableMgr.h"
 #include "ScriptMgr.h"
 
 OutdoorPvPMgr::OutdoorPvPMgr()
 {
     m_UpdateTimer = 0;
-    //TC_LOG_DEBUG("outdoorpvp", "Instantiating OutdoorPvPMgr");
 }
 
 void OutdoorPvPMgr::Die()
 {
-    //TC_LOG_DEBUG("outdoorpvp", "Deleting OutdoorPvPMgr");
     for (OutdoorPvPSet::iterator itr = m_OutdoorPvPSet.begin(); itr != m_OutdoorPvPSet.end(); ++itr)
         delete *itr;
 
-    for (OutdoorPvPDataMap::iterator itr = m_OutdoorPvPDatas.begin(); itr != m_OutdoorPvPDatas.end(); ++itr)
-        delete itr->second;
+    m_OutdoorPvPSet.clear();
+
+    for (uint32 i = 0; i < MAX_OUTDOORPVP_TYPES; ++i)
+        m_OutdoorPvPDatas[i] = 0;
+
+    m_OutdoorPvPMap.clear();
+}
+
+OutdoorPvPMgr* OutdoorPvPMgr::instance()
+{
+    static OutdoorPvPMgr instance;
+    return &instance;
 }
 
 void OutdoorPvPMgr::InitOutdoorPvP()
@@ -43,7 +54,6 @@ void OutdoorPvPMgr::InitOutdoorPvP()
 
     //                                                 0       1
     QueryResult result = WorldDatabase.Query("SELECT TypeId, ScriptName FROM outdoorpvp_template");
-
     if (!result)
     {
         TC_LOG_ERROR("server.loading", ">> Loaded 0 outdoor PvP definitions. DB table `outdoorpvp_template` is empty.");
@@ -68,11 +78,8 @@ void OutdoorPvPMgr::InitOutdoorPvP()
             continue;
         }
 
-        OutdoorPvPData* data = new OutdoorPvPData();
         OutdoorPvPTypes realTypeId = OutdoorPvPTypes(typeId);
-        data->TypeId = realTypeId;
-        data->ScriptId = sObjectMgr->GetScriptId(fields[1].GetCString());
-        m_OutdoorPvPDatas[realTypeId] = data;
+        m_OutdoorPvPDatas[realTypeId] = sObjectMgr->GetScriptId(fields[1].GetString());
 
         ++count;
     }
@@ -81,14 +88,13 @@ void OutdoorPvPMgr::InitOutdoorPvP()
     OutdoorPvP* pvp;
     for (uint8 i = 1; i < MAX_OUTDOORPVP_TYPES; ++i)
     {
-        OutdoorPvPDataMap::iterator iter = m_OutdoorPvPDatas.find(OutdoorPvPTypes(i));
-        if (iter == m_OutdoorPvPDatas.end())
+        if (!m_OutdoorPvPDatas[i])
         {
             TC_LOG_ERROR("sql.sql", "Could not initialize OutdoorPvP object for type ID %u; no entry in database.", uint32(i));
             continue;
         }
 
-        pvp = sScriptMgr->CreateOutdoorPvP(iter->second);
+        pvp = sScriptMgr->CreateOutdoorPvP(m_OutdoorPvPDatas[i]);
         if (!pvp)
         {
             TC_LOG_ERROR("outdoorpvp", "Could not initialize OutdoorPvP object for type ID %u; got NULL pointer from script.", uint32(i));
@@ -123,7 +129,7 @@ void OutdoorPvPMgr::HandlePlayerEnterZone(Player* player, uint32 zoneid)
         return;
 
     itr->second->HandlePlayerEnterZone(player, zoneid);
-    TC_LOG_DEBUG("outdoorpvp", "Player %u entered outdoorpvp id %u", player->GetGUIDLow(), itr->second->GetTypeId());
+    TC_LOG_DEBUG("outdoorpvp", "%s entered outdoorpvp id %u", player->GetGUID().ToString().c_str(), itr->second->GetTypeId());
 }
 
 void OutdoorPvPMgr::HandlePlayerLeaveZone(Player* player, uint32 zoneid)
@@ -137,7 +143,7 @@ void OutdoorPvPMgr::HandlePlayerLeaveZone(Player* player, uint32 zoneid)
         return;
 
     itr->second->HandlePlayerLeaveZone(player, zoneid);
-    TC_LOG_DEBUG("outdoorpvp", "Player %u left outdoorpvp id %u", player->GetGUIDLow(), itr->second->GetTypeId());
+    TC_LOG_DEBUG("outdoorpvp", "%s left outdoorpvp id %u", player->GetGUID().ToString().c_str(), itr->second->GetTypeId());
 }
 
 OutdoorPvP* OutdoorPvPMgr::GetOutdoorPvPToZoneId(uint32 zoneid)
@@ -181,21 +187,21 @@ ZoneScript* OutdoorPvPMgr::GetZoneScript(uint32 zoneId)
         return NULL;
 }
 
-bool OutdoorPvPMgr::HandleOpenGo(Player* player, uint64 guid)
+bool OutdoorPvPMgr::HandleOpenGo(Player* player, GameObject* go)
 {
     for (OutdoorPvPSet::iterator itr = m_OutdoorPvPSet.begin(); itr != m_OutdoorPvPSet.end(); ++itr)
     {
-        if ((*itr)->HandleOpenGo(player, guid))
+        if ((*itr)->HandleOpenGo(player, go))
             return true;
     }
     return false;
 }
 
-void OutdoorPvPMgr::HandleGossipOption(Player* player, uint64 guid, uint32 gossipid)
+void OutdoorPvPMgr::HandleGossipOption(Player* player, Creature* creature, uint32 gossipid)
 {
     for (OutdoorPvPSet::iterator itr = m_OutdoorPvPSet.begin(); itr != m_OutdoorPvPSet.end(); ++itr)
     {
-        if ((*itr)->HandleGossipOption(player, guid, gossipid))
+        if ((*itr)->HandleGossipOption(player, creature, gossipid))
             return;
     }
 }
@@ -227,4 +233,13 @@ void OutdoorPvPMgr::HandlePlayerResurrects(Player* player, uint32 zoneid)
 
     if (itr->second->HasPlayer(player))
         itr->second->HandlePlayerResurrects(player, zoneid);
+}
+
+std::string OutdoorPvPMgr::GetDefenseMessage(uint32 zoneId, uint32 id, LocaleConstant locale) const
+{
+    if (BroadcastTextEntry const* bct = sBroadcastTextStore.LookupEntry(id))
+        return DB2Manager::GetBroadcastTextValue(bct, locale);
+
+    TC_LOG_ERROR("outdoorpvp", "Can not find DefenseMessage (Zone: %u, Id: %u). BroadcastText (Id: %u) does not exist.", zoneId, id, id);
+    return "";
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,11 +16,14 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "ScriptedGossip.h"
 #include "blackfathom_deeps.h"
-#include "ScriptedEscortAI.h"
+#include "GameObjectAI.h"
+#include "GameObject.h"
+#include "InstanceScript.h"
 #include "Player.h"
+#include "ScriptedEscortAI.h"
+#include "ScriptedGossip.h"
+#include "SpellScript.h"
 
 enum Spells
 {
@@ -35,35 +38,51 @@ const Position HomePosition = {-815.817f, -145.299f, -25.870f, 0};
 
 class go_blackfathom_altar : public GameObjectScript
 {
-public:
-    go_blackfathom_altar() : GameObjectScript("go_blackfathom_altar") { }
+    public:
+        go_blackfathom_altar() : GameObjectScript("go_blackfathom_altar") { }
 
-    bool OnGossipHello(Player* player, GameObject* /*go*/) OVERRIDE
-    {
-        if (!player->HasAura(SPELL_BLESSING_OF_BLACKFATHOM))
-            player->AddAura(SPELL_BLESSING_OF_BLACKFATHOM, player);
-        return true;
-    }
+        struct go_blackfathom_altarAI : public GameObjectAI
+        {
+            go_blackfathom_altarAI(GameObject* go) : GameObjectAI(go) { }
+
+            bool GossipHello(Player* player) override
+            {
+                if (!player->HasAura(SPELL_BLESSING_OF_BLACKFATHOM))
+                    player->AddAura(SPELL_BLESSING_OF_BLACKFATHOM, player);
+                return true;
+            }
+        };
+
+        GameObjectAI* GetAI(GameObject* go) const override
+        {
+            return GetBlackfathomDeepsAI<go_blackfathom_altarAI>(go);
+        }
 };
 
 class go_blackfathom_fire : public GameObjectScript
 {
-public:
-    go_blackfathom_fire() : GameObjectScript("go_blackfathom_fire") { }
+    public:
+        go_blackfathom_fire() : GameObjectScript("go_blackfathom_fire") { }
 
-    bool OnGossipHello(Player* /*player*/, GameObject* go) OVERRIDE
-    {
-        InstanceScript* instance = go->GetInstanceScript();
-
-        if (instance)
+        struct go_blackfathom_fireAI : public GameObjectAI
         {
-            go->SetGoState(GO_STATE_ACTIVE);
-            go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NOT_SELECTABLE);
-            instance->SetData(DATA_FIRE, instance->GetData(DATA_FIRE) + 1);
-            return true;
+            go_blackfathom_fireAI(GameObject* go) : GameObjectAI(go), instance(go->GetInstanceScript()) { }
+
+            InstanceScript* instance;
+
+            bool GossipHello(Player* /*player*/) override
+            {
+                me->SetGoState(GO_STATE_ACTIVE);
+                me->AddFlag(GO_FLAG_NOT_SELECTABLE);
+                instance->SetData(DATA_FIRE, instance->GetData(DATA_FIRE) + 1);
+                return true;
+            }
+        };
+
+        GameObjectAI* GetAI(GameObject* go) const override
+        {
+            return GetBlackfathomDeepsAI<go_blackfathom_fireAI>(go);
         }
-        return false;
-    }
 };
 
 class npc_blackfathom_deeps_event : public CreatureScript
@@ -71,22 +90,29 @@ class npc_blackfathom_deeps_event : public CreatureScript
 public:
     npc_blackfathom_deeps_event() : CreatureScript("npc_blackfathom_deeps_event") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<npc_blackfathom_deeps_eventAI>(creature);
+        return GetBlackfathomDeepsAI<npc_blackfathom_deeps_eventAI>(creature);
     }
 
     struct npc_blackfathom_deeps_eventAI : public ScriptedAI
     {
         npc_blackfathom_deeps_eventAI(Creature* creature) : ScriptedAI(creature)
         {
+            Initialize();
             if (creature->IsSummon())
-            {
                 creature->SetHomePosition(HomePosition);
-                AttackPlayer();
-            }
 
             instance = creature->GetInstanceScript();
+        }
+
+        void Initialize()
+        {
+            Flee = false;
+
+            ravageTimer = urand(5000, 8000);
+            frostNovaTimer = urand(9000, 12000);
+            frostBoltVolleyTimer = urand(2000, 4000);
         }
 
         InstanceScript* instance;
@@ -97,40 +123,17 @@ public:
 
         bool Flee;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            Flee = false;
-
-            ravageTimer           = urand(5000, 8000);
-            frostNovaTimer        = urand(9000, 12000);
-            frostBoltVolleyTimer  = urand(2000, 4000);
+            Initialize();
         }
 
-        void AttackPlayer()
+        void IsSummonedBy(Unit*) override
         {
-            Map::PlayerList const &PlList = me->GetMap()->GetPlayers();
-
-            if (PlList.isEmpty())
-                return;
-
-            for (Map::PlayerList::const_iterator i = PlList.begin(); i != PlList.end(); ++i)
-            {
-                if (Player* player = i->GetSource())
-                {
-                    if (player->IsGameMaster())
-                        continue;
-
-                    if (player->IsAlive())
-                    {
-                        me->SetInCombatWith(player);
-                        player->SetInCombatWith(me);
-                        me->AddThreat(player, 0.0f);
-                    }
-                }
-            }
+            DoZoneInCombat();
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -179,7 +182,7 @@ public:
             DoMeleeAttackIfReady();
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             if (me->IsSummon()) //we are not a normal spawn.
                 instance->SetData(DATA_EVENT, instance->GetData(DATA_EVENT) + 1);
@@ -203,32 +206,62 @@ public:
         npc_morriduneAI(Creature* creature) : npc_escortAI(creature)
         {
             Talk(SAY_MORRIDUNE_1);
-            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            Start(false, false, 0);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
+            Start(false);
         }
 
-        void WaypointReached(uint32 waypointId) OVERRIDE
+        void WaypointReached(uint32 waypointId) override
         {
             switch (waypointId)
             {
                 case 4:
                     SetEscortPaused(true);
                     me->SetFacingTo(1.775791f);
-                    me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    me->AddNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     Talk(SAY_MORRIDUNE_2);
                     break;
             }
         }
 
-        void sGossipSelect(Player* player, uint32 /*sender*/, uint32 /*action*/) OVERRIDE
+        bool GossipSelect(Player* player, uint32 /*menuId*/, uint32 /*gossipListId*/) override
         {
             DoCast(player, SPELL_TELEPORT_DARNASSUS);
+            return false;
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
         return new npc_morriduneAI(creature);
+    }
+};
+
+// 151159 - Darkness Calls
+class spell_subjugator_korul_darkness_calls : public SpellScriptLoader
+{
+public:
+    spell_subjugator_korul_darkness_calls() : SpellScriptLoader("spell_subjugator_korul_darkness_calls") { }
+
+    class spell_subjugator_korul_darkness_calls_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_subjugator_korul_darkness_calls_SpellScript);
+
+        void HandleScript(SpellEffIndex /*effIndex*/)
+        {
+            if (Unit* hitUnit = GetHitUnit())
+                GetCaster()->CastSpell(hitUnit, uint32(GetEffectValue()), true);
+        }
+
+        void Register() override
+        {
+            OnEffectHitTarget += SpellEffectFn(spell_subjugator_korul_darkness_calls_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_DUMMY);
+            OnEffectHitTarget += SpellEffectFn(spell_subjugator_korul_darkness_calls_SpellScript::HandleScript, EFFECT_1, SPELL_EFFECT_DUMMY);
+        }
+    };
+
+    SpellScript* GetSpellScript() const override
+    {
+        return new spell_subjugator_korul_darkness_calls_SpellScript();
     }
 };
 
@@ -238,4 +271,5 @@ void AddSC_blackfathom_deeps()
     new go_blackfathom_fire();
     new npc_blackfathom_deeps_event();
     new npc_morridune();
+    new spell_subjugator_korul_darkness_calls();
 }

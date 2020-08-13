@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,10 +23,14 @@ SDCategory: Coilfang Resevoir, Serpent Shrine Cavern
 EndScriptData */
 
 #include "ScriptMgr.h"
+#include "GameObject.h"
 #include "InstanceScript.h"
-#include "serpent_shrine.h"
+#include "Log.h"
+#include "Map.h"
 #include "Player.h"
+#include "serpent_shrine.h"
 #include "TemporarySummon.h"
+#include "GameObjectAI.h"
 
 #define MAX_ENCOUNTER 6
 
@@ -64,49 +67,38 @@ class go_bridge_console : public GameObjectScript
     public:
         go_bridge_console() : GameObjectScript("go_bridge_console") { }
 
-        bool OnGossipHello(Player* /*player*/, GameObject* go) OVERRIDE
+        struct go_bridge_consoleAI : public GameObjectAI
         {
-            InstanceScript* instance = go->GetInstanceScript();
+            go_bridge_consoleAI(GameObject* go) : GameObjectAI(go), instance(go->GetInstanceScript()) { }
 
-            if (!instance)
-                return false;
+            InstanceScript* instance;
 
-            if (instance)
-                instance->SetData(DATA_CONTROL_CONSOLE, DONE);
+            bool GossipHello(Player* /*player*/) override
+            {
+                if (instance)
+                    instance->SetData(DATA_CONTROL_CONSOLE, DONE);
+                return true;
+            }
+        };
 
-            return true;
+        GameObjectAI* GetAI(GameObject* go) const override
+        {
+            return GetSerpentshrineCavernAI<go_bridge_consoleAI>(go);
         }
 };
 
 class instance_serpent_shrine : public InstanceMapScript
 {
     public:
-        instance_serpent_shrine() : InstanceMapScript("instance_serpent_shrine", 548) { }
+        instance_serpent_shrine() : InstanceMapScript(SSCScriptName, 548) { }
 
         struct instance_serpentshrine_cavern_InstanceMapScript : public InstanceScript
         {
-            instance_serpentshrine_cavern_InstanceMapScript(Map* map) : InstanceScript(map)
+            instance_serpentshrine_cavern_InstanceMapScript(InstanceMap* map) : InstanceScript(map)
             {
-            }
-
-            void Initialize() OVERRIDE
-            {
+                SetHeaders(DataHeader);
                 memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
 
-                LurkerBelow = 0;
-                Sharkkis = 0;
-                Tidalvess = 0;
-                Caribdis = 0;
-                LadyVashj = 0;
-                Karathress = 0;
-                KarathressEvent_Starter = 0;
-                LeotherasTheBlind = 0;
-                LeotherasEventStarter = 0;
-
-                ControlConsole = 0;
-                BridgePart[0] = 0;
-                BridgePart[1] = 0;
-                BridgePart[2] = 0;
                 StrangePool = 0;
                 Water = WATERSTATE_FRENZY;
 
@@ -119,10 +111,9 @@ class instance_serpent_shrine : public InstanceMapScript
                 FrenzySpawnTimer = 2000;
                 DoSpawnFrenzy = false;
                 TrashCount = 0;
-
             }
 
-            bool IsEncounterInProgress() const OVERRIDE
+            bool IsEncounterInProgress() const override
             {
                 for (uint8 i = 0; i < MAX_ENCOUNTER; ++i)
                     if (m_auiEncounter[i] == IN_PROGRESS)
@@ -131,7 +122,7 @@ class instance_serpent_shrine : public InstanceMapScript
                 return false;
             }
 
-            void Update(uint32 diff) OVERRIDE
+            void Update(uint32 diff) override
             {
                 //Water checks
                 if (WaterCheckTimer <= diff)
@@ -191,7 +182,7 @@ class instance_serpent_shrine : public InstanceMapScript
                     FrenzySpawnTimer -= diff;
             }
 
-            void OnGameObjectCreate(GameObject* go) OVERRIDE
+            void OnGameObjectCreate(GameObject* go) override
             {
                 switch (go->GetEntry())
                 {
@@ -216,7 +207,7 @@ class instance_serpent_shrine : public InstanceMapScript
                 }
             }
 
-            void OnCreatureCreate(Creature* creature) OVERRIDE
+            void OnCreatureCreate(Creature* creature) override
             {
                 switch (creature->GetEntry())
                 {
@@ -246,7 +237,7 @@ class instance_serpent_shrine : public InstanceMapScript
                 }
             }
 
-            void SetData64(uint32 type, uint64 data) OVERRIDE
+            void SetGuidData(uint32 type, ObjectGuid data) override
             {
                 if (type == DATA_KARATHRESSEVENT_STARTER)
                     KarathressEvent_Starter = data;
@@ -254,7 +245,7 @@ class instance_serpent_shrine : public InstanceMapScript
                     LeotherasEventStarter = data;
             }
 
-            uint64 GetData64(uint32 identifier) const OVERRIDE
+            ObjectGuid GetGuidData(uint32 identifier) const override
             {
                 switch (identifier)
                 {
@@ -279,10 +270,10 @@ class instance_serpent_shrine : public InstanceMapScript
                     default:
                         break;
                 }
-                return 0;
+                return ObjectGuid::Empty;
             }
 
-            void SetData(uint32 type, uint32 data) OVERRIDE
+            void SetData(uint32 type, uint32 data) override
             {
                 switch (type)
                 {
@@ -293,10 +284,9 @@ class instance_serpent_shrine : public InstanceMapScript
                         if (data == DONE)
                         {
                             HandleGameObject(BridgePart[0], true);
-                            HandleGameObject(BridgePart[0], true);
-                            HandleGameObject(BridgePart[0], true);
+                            HandleGameObject(BridgePart[1], true);
+                            HandleGameObject(BridgePart[2], true);
                         }
-                        ControlConsole = data;
                         break;
                     case DATA_TRASH:
                         if (data == 1 && TrashCount < MIN_KILLS)
@@ -352,7 +342,7 @@ class instance_serpent_shrine : public InstanceMapScript
                     SaveToDB();
             }
 
-            uint32 GetData(uint32 type) const OVERRIDE
+            uint32 GetData(uint32 type) const override
             {
                 switch (type)
                 {
@@ -392,7 +382,7 @@ class instance_serpent_shrine : public InstanceMapScript
                 return 0;
             }
 
-            std::string GetSaveData() OVERRIDE
+            std::string GetSaveData() override
             {
                 OUT_SAVE_INST_DATA;
                 std::ostringstream stream;
@@ -402,7 +392,7 @@ class instance_serpent_shrine : public InstanceMapScript
                 return stream.str();
             }
 
-            void Load(const char* in) OVERRIDE
+            void Load(const char* in) override
             {
                 if (!in)
                 {
@@ -423,18 +413,18 @@ class instance_serpent_shrine : public InstanceMapScript
             }
 
         private:
-            uint64 LurkerBelow;
-            uint64 Sharkkis;
-            uint64 Tidalvess;
-            uint64 Caribdis;
-            uint64 LadyVashj;
-            uint64 Karathress;
-            uint64 KarathressEvent_Starter;
-            uint64 LeotherasTheBlind;
-            uint64 LeotherasEventStarter;
+            ObjectGuid LurkerBelow;
+            ObjectGuid Sharkkis;
+            ObjectGuid Tidalvess;
+            ObjectGuid Caribdis;
+            ObjectGuid LadyVashj;
+            ObjectGuid Karathress;
+            ObjectGuid KarathressEvent_Starter;
+            ObjectGuid LeotherasTheBlind;
+            ObjectGuid LeotherasEventStarter;
 
-            uint64 ControlConsole;
-            uint64 BridgePart[3];
+            ObjectGuid ControlConsole;
+            ObjectGuid BridgePart[3];
             uint32 StrangePool;
             uint32 FishingTimer;
             uint32 WaterCheckTimer;
@@ -447,7 +437,7 @@ class instance_serpent_shrine : public InstanceMapScript
             bool DoSpawnFrenzy;
         };
 
-        InstanceScript* GetInstanceScript(InstanceMap* map) const OVERRIDE
+        InstanceScript* GetInstanceScript(InstanceMap* map) const override
         {
             return new instance_serpentshrine_cavern_InstanceMapScript(map);
         }

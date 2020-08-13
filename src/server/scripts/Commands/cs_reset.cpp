@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,36 +22,42 @@ Comment: All reset related commands
 Category: commandscripts
 EndScriptData */
 
+#include "ScriptMgr.h"
 #include "AchievementMgr.h"
 #include "Chat.h"
+#include "DatabaseEnv.h"
+#include "DB2Stores.h"
 #include "Language.h"
+#include "Log.h"
 #include "ObjectAccessor.h"
-#include "Player.h"
 #include "Pet.h"
-#include "ScriptMgr.h"
+#include "Player.h"
+#include "RBAC.h"
+#include "World.h"
+#include "WorldSession.h"
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 class reset_commandscript : public CommandScript
 {
 public:
     reset_commandscript() : CommandScript("reset_commandscript") { }
 
-    ChatCommand* GetCommands() const OVERRIDE
+    std::vector<ChatCommand> GetCommands() const override
     {
-        static ChatCommand resetCommandTable[] =
+        static std::vector<ChatCommand> resetCommandTable =
         {
-            { "achievements", rbac::RBAC_PERM_COMMAND_RESET_ACHIEVEMENTS, true, &HandleResetAchievementsCommand, "", NULL },
-            { "honor",        rbac::RBAC_PERM_COMMAND_RESET_HONOR,        true, &HandleResetHonorCommand,        "", NULL },
-            { "level",        rbac::RBAC_PERM_COMMAND_RESET_LEVEL,        true, &HandleResetLevelCommand,        "", NULL },
-            { "spells",       rbac::RBAC_PERM_COMMAND_RESET_SPELLS,       true, &HandleResetSpellsCommand,       "", NULL },
-            { "stats",        rbac::RBAC_PERM_COMMAND_RESET_STATS,        true, &HandleResetStatsCommand,        "", NULL },
-            { "talents",      rbac::RBAC_PERM_COMMAND_RESET_TALENTS,      true, &HandleResetTalentsCommand,      "", NULL },
-            { "all",          rbac::RBAC_PERM_COMMAND_RESET_ALL,          true, &HandleResetAllCommand,          "", NULL },
-            { NULL,           0,                                   false, NULL,                            "", NULL }
+            { "achievements", rbac::RBAC_PERM_COMMAND_RESET_ACHIEVEMENTS, true, &HandleResetAchievementsCommand, "" },
+            { "honor",        rbac::RBAC_PERM_COMMAND_RESET_HONOR,        true, &HandleResetHonorCommand,        "" },
+            { "level",        rbac::RBAC_PERM_COMMAND_RESET_LEVEL,        true, &HandleResetLevelCommand,        "" },
+            { "spells",       rbac::RBAC_PERM_COMMAND_RESET_SPELLS,       true, &HandleResetSpellsCommand,       "" },
+            { "stats",        rbac::RBAC_PERM_COMMAND_RESET_STATS,        true, &HandleResetStatsCommand,        "" },
+            { "talents",      rbac::RBAC_PERM_COMMAND_RESET_TALENTS,      true, &HandleResetTalentsCommand,      "" },
+            { "all",          rbac::RBAC_PERM_COMMAND_RESET_ALL,          true, &HandleResetAllCommand,          "" },
         };
-        static ChatCommand commandTable[] =
+        static std::vector<ChatCommand> commandTable =
         {
             { "reset", rbac::RBAC_PERM_COMMAND_RESET, true, NULL, "", resetCommandTable },
-            { NULL,    0,                      false, NULL, "", NULL }
         };
         return commandTable;
     }
@@ -59,14 +65,14 @@ public:
     static bool HandleResetAchievementsCommand(ChatHandler* handler, char const* args)
     {
         Player* target;
-        uint64 targetGuid;
+        ObjectGuid targetGuid;
         if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid))
             return false;
 
         if (target)
             target->ResetAchievements();
         else
-            AchievementMgr::DeleteFromDB(GUID_LOPART(targetGuid));
+            PlayerAchievementMgr::DeleteFromDB(targetGuid);
 
         return true;
     }
@@ -77,12 +83,8 @@ public:
         if (!handler->extractPlayerTarget((char*)args, &target))
             return false;
 
-        target->SetHonorPoints(0);
-        target->SetUInt32Value(PLAYER_FIELD_KILLS, 0);
-        target->SetUInt32Value(PLAYER_FIELD_LIFETIME_HONORABLE_KILLS, 0);
-        target->SetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION, 0);
-        target->SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, 0);
-        target->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_EARN_HONORABLE_KILL);
+        target->ResetHonorStats();
+        target->UpdateCriteria(CRITERIA_TYPE_EARN_HONORABLE_KILL);
 
         return true;
     }
@@ -96,26 +98,25 @@ public:
             return false;
         }
 
-        uint8 powerType = classEntry->powerType;
+        uint8 powerType = classEntry->DisplayPower;
 
         // reset m_form if no aura
         if (!player->HasAuraType(SPELL_AURA_MOD_SHAPESHIFT))
             player->SetShapeshiftForm(FORM_NONE);
 
         player->setFactionForRace(player->getRace());
-
-        player->SetUInt32Value(UNIT_FIELD_BYTES_0, ((player->getRace()) | (player->getClass() << 8) | (player->getGender() << 16) | (powerType << 24)));
+        player->SetPowerType(Powers(powerType));
 
         // reset only if player not in some form;
         if (player->GetShapeshiftForm() == FORM_NONE)
             player->InitDisplayIds();
 
-        player->SetByteValue(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_PVP);
+        player->SetPvpFlags(UNIT_BYTE2_FLAG_PVP);
 
-        player->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE);
+        player->SetUnitFlags(UNIT_FLAG_PVP_ATTACKABLE);
 
         //-1 is default value
-        player->SetUInt32Value(PLAYER_FIELD_WATCHED_FACTION_INDEX, uint32(-1));
+        player->SetWatchedFactionIndex(-1);
         return true;
     }
 
@@ -133,16 +134,15 @@ public:
         // set starting level
         uint32 startLevel = target->getClass() != CLASS_DEATH_KNIGHT
             ? sWorld->getIntConfig(CONFIG_START_PLAYER_LEVEL)
-            : sWorld->getIntConfig(CONFIG_START_HEROIC_PLAYER_LEVEL);
+            : sWorld->getIntConfig(CONFIG_START_DEATH_KNIGHT_PLAYER_LEVEL);
 
         target->_ApplyAllLevelScaleItemMods(false);
         target->SetLevel(startLevel);
         target->InitRunes();
         target->InitStatsForLevel(true);
         target->InitTaxiNodesForLevel();
-        target->InitGlyphsForLevel();
         target->InitTalentForLevel();
-        target->SetUInt32Value(PLAYER_XP, 0);
+        target->SetXP(0);
 
         target->_ApplyAllLevelScaleItemMods(true);
 
@@ -158,14 +158,14 @@ public:
     static bool HandleResetSpellsCommand(ChatHandler* handler, char const* args)
     {
         Player* target;
-        uint64 targetGuid;
+        ObjectGuid targetGuid;
         std::string targetName;
         if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
             return false;
 
         if (target)
         {
-            target->resetSpells(/* bool myClassOnly */);
+            target->ResetSpells(/* bool myClassOnly */);
 
             ChatHandler(target->GetSession()).SendSysMessage(LANG_RESET_SPELLS);
             if (!handler->GetSession() || handler->GetSession()->GetPlayer() != target)
@@ -173,9 +173,9 @@ public:
         }
         else
         {
-            PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
+            CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
             stmt->setUInt16(0, uint16(AT_LOGIN_RESET_SPELLS));
-            stmt->setUInt32(1, GUID_LOPART(targetGuid));
+            stmt->setUInt64(1, targetGuid.GetCounter());
             CharacterDatabase.Execute(stmt);
 
             handler->PSendSysMessage(LANG_RESET_SPELLS_OFFLINE, targetName.c_str());
@@ -196,7 +196,6 @@ public:
         target->InitRunes();
         target->InitStatsForLevel(true);
         target->InitTaxiNodesForLevel();
-        target->InitGlyphsForLevel();
         target->InitTalentForLevel();
 
         return true;
@@ -205,10 +204,12 @@ public:
     static bool HandleResetTalentsCommand(ChatHandler* handler, char const* args)
     {
         Player* target;
-        uint64 targetGuid;
+        ObjectGuid targetGuid;
         std::string targetName;
+
         if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
         {
+            /* TODO: 6.x remove/update pet talents
             // Try reset talents as Hunter Pet
             Creature* creature = handler->getSelectedCreature();
             if (!*args && creature && creature->IsPet())
@@ -225,6 +226,7 @@ public:
                 }
                 return true;
             }
+            */
 
             handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
             handler->SetSentErrorMessage(true);
@@ -233,23 +235,26 @@ public:
 
         if (target)
         {
-            target->resetTalents(true);
-            target->SendTalentsInfoData(false);
+            target->ResetTalents(true);
+            target->ResetTalentSpecialization();
+            target->SendTalentsInfoData();
             ChatHandler(target->GetSession()).SendSysMessage(LANG_RESET_TALENTS);
             if (!handler->GetSession() || handler->GetSession()->GetPlayer() != target)
                 handler->PSendSysMessage(LANG_RESET_TALENTS_ONLINE, handler->GetNameLink(target).c_str());
 
+            /* TODO: 6.x remove/update pet talents
             Pet* pet = target->GetPet();
             Pet::resetTalentsForAllPetsOf(target, pet);
             if (pet)
                 target->SendTalentsInfoData(true);
+            */
             return true;
         }
-        else if (targetGuid)
+        else if (!targetGuid.IsEmpty())
         {
-            PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
+            CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
             stmt->setUInt16(0, uint16(AT_LOGIN_NONE | AT_LOGIN_RESET_PET_TALENTS));
-            stmt->setUInt32(1, GUID_LOPART(targetGuid));
+            stmt->setUInt64(1, targetGuid.GetCounter());
             CharacterDatabase.Execute(stmt);
 
             std::string nameLink = handler->playerLink(targetName);
@@ -293,12 +298,12 @@ public:
             return false;
         }
 
-        PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ALL_AT_LOGIN_FLAGS);
+        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ALL_AT_LOGIN_FLAGS);
         stmt->setUInt16(0, uint16(atLogin));
         CharacterDatabase.Execute(stmt);
 
-        TRINITY_READ_GUARD(HashMapHolder<Player>::LockType, *HashMapHolder<Player>::GetLock());
-        HashMapHolder<Player>::MapType const& plist = sObjectAccessor->GetPlayers();
+        boost::shared_lock<boost::shared_mutex> lock(*HashMapHolder<Player>::GetLock());
+        HashMapHolder<Player>::MapType const& plist = ObjectAccessor::GetPlayers();
         for (HashMapHolder<Player>::MapType::const_iterator itr = plist.begin(); itr != plist.end(); ++itr)
             itr->second->SetAtLoginFlag(atLogin);
 

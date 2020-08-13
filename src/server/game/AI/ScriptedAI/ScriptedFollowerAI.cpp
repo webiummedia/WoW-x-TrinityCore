@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,9 +22,13 @@ SDComment: This AI is under development
 SDCategory: Npc
 EndScriptData */
 
-#include "ScriptedCreature.h"
 #include "ScriptedFollowerAI.h"
+#include "Creature.h"
 #include "Group.h"
+#include "Log.h"
+#include "Map.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
 #include "Player.h"
 
 const float MAX_PLAYER_DISTANCE = 100.0f;
@@ -36,7 +39,6 @@ enum Points
 };
 
 FollowerAI::FollowerAI(Creature* creature) : ScriptedAI(creature),
-    m_uiLeaderGUID(0),
     m_uiUpdateFollowTimer(2500),
     m_uiFollowState(STATE_FOLLOW_NONE),
     m_pQuestForFollow(NULL)
@@ -49,9 +51,7 @@ void FollowerAI::AttackStart(Unit* who)
 
     if (me->Attack(who, true))
     {
-        me->AddThreat(who, 0.0f);
-        me->SetInCombatWith(who);
-        who->SetInCombatWith(me);
+        me->EngageWithTarget(who); // in case it doesn't have threat+combat yet
 
         if (me->HasUnitState(UNIT_STATE_FOLLOW))
             me->ClearUnitState(UNIT_STATE_FOLLOW);
@@ -64,17 +64,17 @@ void FollowerAI::AttackStart(Unit* who)
 //This part provides assistance to a player that are attacked by who, even if out of normal aggro range
 //It will cause me to attack who that are attacking _any_ player (which has been confirmed may happen also on offi)
 //The flag (type_flag) is unconfirmed, but used here for further research and is a good candidate.
-bool FollowerAI::AssistPlayerInCombat(Unit* who)
+bool FollowerAI::AssistPlayerInCombatAgainst(Unit* who)
 {
     if (!who || !who->GetVictim())
         return false;
 
     //experimental (unknown) flag not present
-    if (!(me->GetCreatureTemplate()->type_flags & CREATURE_TYPEFLAGS_AID_PLAYERS))
+    if (!(me->GetCreatureTemplate()->type_flags & CREATURE_TYPE_FLAG_CAN_ASSIST))
         return false;
 
     //not a player
-    if (!who->GetVictim()->GetCharmerOrOwnerPlayerOrPlayerItself())
+    if (!who->EnsureVictim()->GetCharmerOrOwnerPlayerOrPlayerItself())
         return false;
 
     //never attack friendly
@@ -84,18 +84,8 @@ bool FollowerAI::AssistPlayerInCombat(Unit* who)
     //too far away and no free sight?
     if (me->IsWithinDistInMap(who, MAX_PLAYER_DISTANCE) && me->IsWithinLOSInMap(who))
     {
-        //already fighting someone?
-        if (!me->GetVictim())
-        {
-            AttackStart(who);
-            return true;
-        }
-        else
-        {
-            who->SetInCombatWith(me);
-            me->AddThreat(who, 0.0f);
-            return true;
-        }
+        me->EngageWithTarget(who);
+        return true;
     }
 
     return false;
@@ -103,9 +93,9 @@ bool FollowerAI::AssistPlayerInCombat(Unit* who)
 
 void FollowerAI::MoveInLineOfSight(Unit* who)
 {
-    if (!me->HasUnitState(UNIT_STATE_STUNNED) && who->isTargetableForAttack() && who->isInAccessiblePlaceFor(me))
+    if (me->HasReactState(REACT_AGGRESSIVE) && !me->HasUnitState(UNIT_STATE_STUNNED) && who->isTargetableForAttack() && who->isInAccessiblePlaceFor(me))
     {
-        if (HasFollowState(STATE_FOLLOW_INPROGRESS) && AssistPlayerInCombat(who))
+        if (HasFollowState(STATE_FOLLOW_INPROGRESS) && AssistPlayerInCombatAgainst(who))
             return;
 
         if (!me->CanFly() && me->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
@@ -118,14 +108,17 @@ void FollowerAI::MoveInLineOfSight(Unit* who)
             {
                 if (!me->GetVictim())
                 {
-                    who->RemoveAurasByType(SPELL_AURA_MOD_STEALTH);
+                    // Clear distracted state on combat
+                    if (me->HasUnitState(UNIT_STATE_DISTRACTED))
+                    {
+                        me->ClearUnitState(UNIT_STATE_DISTRACTED);
+                        me->GetMotionMaster()->Clear();
+                    }
+
                     AttackStart(who);
                 }
                 else if (me->GetMap()->IsDungeon())
-                {
-                    who->SetInCombatWith(me);
-                    me->AddThreat(who, 0.0f);
-                }
+                  me->EngageWithTarget(who);
             }
         }
     }
@@ -142,19 +135,12 @@ void FollowerAI::JustDied(Unit* /*killer*/)
         if (Group* group = player->GetGroup())
         {
             for (GroupReference* groupRef = group->GetFirstMember(); groupRef != NULL; groupRef = groupRef->next())
-            {
                 if (Player* member = groupRef->GetSource())
-                {
-                    if (member->GetQuestStatus(m_pQuestForFollow->GetQuestId()) == QUEST_STATUS_INCOMPLETE)
+                    if (member->IsInMap(player))
                         member->FailQuest(m_pQuestForFollow->GetQuestId());
-                }
-            }
         }
         else
-        {
-            if (player->GetQuestStatus(m_pQuestForFollow->GetQuestId()) == QUEST_STATUS_INCOMPLETE)
-                player->FailQuest(m_pQuestForFollow->GetQuestId());
-        }
+            player->FailQuest(m_pQuestForFollow->GetQuestId());
     }
 }
 
@@ -165,16 +151,16 @@ void FollowerAI::JustRespawned()
     if (!IsCombatMovementAllowed())
         SetCombatMovement(true);
 
-    if (me->getFaction() != me->GetCreatureTemplate()->faction_A)
-        me->setFaction(me->GetCreatureTemplate()->faction_A);
+    if (me->GetFaction() != me->GetCreatureTemplate()->faction)
+        me->SetFaction(me->GetCreatureTemplate()->faction);
 
     Reset();
 }
 
-void FollowerAI::EnterEvadeMode()
+void FollowerAI::EnterEvadeMode(EvadeReason /*why*/)
 {
     me->RemoveAllAuras();
-    me->DeleteThreatList();
+    me->GetThreatManager().ClearAllThreat();
     me->CombatStop(true);
     me->SetLootRecipient(NULL);
 
@@ -229,7 +215,6 @@ void FollowerAI::UpdateAI(uint32 uiDiff)
                     for (GroupReference* groupRef = group->GetFirstMember(); groupRef != NULL; groupRef = groupRef->next())
                     {
                         Player* member = groupRef->GetSource();
-
                         if (member && me->IsWithinDistInMap(member, MAX_PLAYER_DISTANCE))
                         {
                             bIsMaxRangeExceeded = false;
@@ -303,7 +288,7 @@ void FollowerAI::StartFollow(Player* player, uint32 factionForFollower, const Qu
     m_uiLeaderGUID = player->GetGUID();
 
     if (factionForFollower)
-        me->setFaction(factionForFollower);
+        me->SetFaction(factionForFollower);
 
     m_pQuestForFollow = quest;
 
@@ -314,13 +299,14 @@ void FollowerAI::StartFollow(Player* player, uint32 factionForFollower, const Qu
         TC_LOG_DEBUG("scripts", "FollowerAI start with WAYPOINT_MOTION_TYPE, set to MoveIdle.");
     }
 
-    me->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
+    me->SetNpcFlags(UNIT_NPC_FLAG_NONE);
+    me->SetNpcFlags2(UNIT_NPC_FLAG_2_NONE);
 
     AddFollowState(STATE_FOLLOW_INPROGRESS);
 
     me->GetMotionMaster()->MoveFollow(player, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
 
-    TC_LOG_DEBUG("scripts", "FollowerAI start follow %s (GUID " UI64FMTD ")", player->GetName().c_str(), m_uiLeaderGUID);
+    TC_LOG_DEBUG("scripts", "FollowerAI start follow %s (%s)", player->GetName().c_str(), m_uiLeaderGUID.ToString().c_str());
 }
 
 Player* FollowerAI::GetLeaderForFollower()
@@ -336,8 +322,7 @@ Player* FollowerAI::GetLeaderForFollower()
                 for (GroupReference* groupRef = group->GetFirstMember(); groupRef != NULL; groupRef = groupRef->next())
                 {
                     Player* member = groupRef->GetSource();
-
-                    if (member && member->IsAlive() && me->IsWithinDistInMap(member, MAX_PLAYER_DISTANCE))
+                    if (member && me->IsWithinDistInMap(member, MAX_PLAYER_DISTANCE) && member->IsAlive())
                     {
                         TC_LOG_DEBUG("scripts", "FollowerAI GetLeader changed and returned new leader.");
                         m_uiLeaderGUID = member->GetGUID();

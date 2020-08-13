@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,10 +16,13 @@
  */
 
 #include "ScriptMgr.h"
+#include "GameObject.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
 #include "ScriptedCreature.h"
-#include "utgarde_keep.h"
+#include "SpellInfo.h"
 #include "SpellScript.h"
-#include "SpellAuraEffects.h"
+#include "utgarde_keep.h"
 
 uint32 ForgeSearch[3] =
 {
@@ -41,7 +44,7 @@ class npc_dragonflayer_forge_master : public CreatureScript
                 _forgeId = 0;
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 if (!_forgeId)
                     _forgeId = GetForgeMasterType();
@@ -53,7 +56,7 @@ class npc_dragonflayer_forge_master : public CreatureScript
                     _instance->SetData(DATA_FORGE_1 + _forgeId - 1, NOT_STARTED);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 if (!_forgeId)
                     _forgeId = GetForgeMasterType();
@@ -62,7 +65,7 @@ class npc_dragonflayer_forge_master : public CreatureScript
                     _instance->SetData(DATA_FORGE_1 + _forgeId - 1, DONE);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 if (!_forgeId)
                     _forgeId = GetForgeMasterType();
@@ -70,10 +73,10 @@ class npc_dragonflayer_forge_master : public CreatureScript
                 if (_forgeId)
                     _instance->SetData(DATA_FORGE_1 + _forgeId - 1, IN_PROGRESS);
 
-                me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
+                me->SetEmoteState(EMOTE_ONESHOT_NONE);
             }
 
-            void UpdateAI(uint32 /*diff*/) OVERRIDE
+            void UpdateAI(uint32 /*diff*/) override
             {
                 if (!_forgeId)
                     _forgeId = GetForgeMasterType();
@@ -108,7 +111,7 @@ class npc_dragonflayer_forge_master : public CreatureScript
             uint8 _forgeId;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return GetUtgardeKeepAI<npc_dragonflayer_forge_masterAI>(creature);
         }
@@ -128,11 +131,9 @@ class spell_ticking_time_bomb : public SpellScriptLoader
         {
             PrepareAuraScript(spell_ticking_time_bomb_AuraScript);
 
-            bool Validate(SpellInfo const* /*spellInfo*/) OVERRIDE
+            bool Validate(SpellInfo const* /*spellInfo*/) override
             {
-                if (!sSpellMgr->GetSpellInfo(SPELL_TICKING_TIME_BOMB_EXPLODE))
-                    return false;
-                return true;
+                return ValidateSpellInfo({ SPELL_TICKING_TIME_BOMB_EXPLODE });
             }
 
             void HandleOnEffectRemove(AuraEffect const* /* aurEff */, AuraEffectHandleModes /* mode */)
@@ -141,13 +142,13 @@ class spell_ticking_time_bomb : public SpellScriptLoader
                     GetTarget()->CastSpell(GetTarget(), SPELL_TICKING_TIME_BOMB_EXPLODE, true);
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnEffectRemove += AuraEffectRemoveFn(spell_ticking_time_bomb_AuraScript::HandleOnEffectRemove, EFFECT_0, SPELL_AURA_PERIODIC_DUMMY, AURA_EFFECT_HANDLE_REAL);
             }
         };
 
-        AuraScript* GetAuraScript() const OVERRIDE
+        AuraScript* GetAuraScript() const override
         {
             return new spell_ticking_time_bomb_AuraScript();
         }
@@ -167,11 +168,9 @@ class spell_fixate : public SpellScriptLoader
         {
             PrepareSpellScript(spell_fixate_SpellScript);
 
-            bool Validate(SpellInfo const* /*spellInfo*/) OVERRIDE
+            bool Validate(SpellInfo const* /*spellInfo*/) override
             {
-                if (!sSpellMgr->GetSpellInfo(SPELL_FIXATE_TRIGGER))
-                    return false;
-                return true;
+                return ValidateSpellInfo({ SPELL_FIXATE_TRIGGER });
             }
 
             void HandleScriptEffect(SpellEffIndex /*effIndex*/)
@@ -179,15 +178,64 @@ class spell_fixate : public SpellScriptLoader
                 GetHitUnit()->CastSpell(GetCaster(), SPELL_FIXATE_TRIGGER, true);
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnEffectHitTarget += SpellEffectFn(spell_fixate_SpellScript::HandleScriptEffect, EFFECT_2, SPELL_EFFECT_SCRIPT_EFFECT);
             }
         };
 
-        SpellScript* GetSpellScript() const OVERRIDE
+        SpellScript* GetSpellScript() const override
         {
             return new spell_fixate_SpellScript();
+        }
+};
+
+enum SecondWind
+{
+    SPELL_SECOND_WIND_TRIGGER = 42771
+};
+
+// 42770 - Second Wind
+class spell_uk_second_wind : public SpellScriptLoader
+{
+    public:
+        spell_uk_second_wind() : SpellScriptLoader("spell_uk_second_wind") { }
+
+        class spell_uk_second_wind_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_uk_second_wind_AuraScript);
+
+            bool Validate(SpellInfo const* /*spellInfo*/) override
+            {
+                return ValidateSpellInfo({ SPELL_SECOND_WIND_TRIGGER });
+            }
+
+            bool CheckProc(ProcEventInfo& eventInfo)
+            {
+                SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+                if (!spellInfo)
+                    return false;
+
+                return (spellInfo->GetAllEffectsMechanicMask() & ((1 << MECHANIC_ROOT) | (1 << MECHANIC_STUN))) != 0;
+            }
+
+            void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
+            {
+                PreventDefaultAction();
+                Unit* caster = eventInfo.GetActionTarget();
+                caster->CastSpell(caster, SPELL_SECOND_WIND_TRIGGER, true, nullptr, aurEff);
+            }
+
+            void Register() override
+            {
+                DoCheckProc += AuraCheckProcFn(spell_uk_second_wind_AuraScript::CheckProc);
+                OnEffectProc += AuraEffectProcFn(spell_uk_second_wind_AuraScript::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+            }
+        };
+
+        AuraScript* GetAuraScript() const override
+        {
+            return new spell_uk_second_wind_AuraScript();
         }
 };
 
@@ -223,7 +271,7 @@ class npc_enslaved_proto_drake : public CreatureScript
                 _setData = false;
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 _events.Reset();
                 _events.ScheduleEvent(EVENT_REND, urand(2000, 3000));
@@ -231,25 +279,25 @@ class npc_enslaved_proto_drake : public CreatureScript
                 _events.ScheduleEvent(EVENT_KNOCKAWAY, urand(3500, 6000));
             }
 
-            void MovementInform(uint32 type, uint32 id) OVERRIDE
+            void MovementInform(uint32 type, uint32 id) override
             {
                 if (type == WAYPOINT_MOTION_TYPE && id == POINT_LAST)
                 {
-                    me->RemoveByteFlag(UNIT_FIELD_BYTES_1, 3, UNIT_BYTE1_FLAG_ALWAYS_STAND | UNIT_BYTE1_FLAG_HOVER);
+                    me->SetAnimTier(UNIT_BYTE1_FLAG_NONE, false);
                 }
             }
 
-            void SetData(uint32 type, uint32 data) OVERRIDE
+            void SetData(uint32 type, uint32 data) override
             {
                 if (type == TYPE_PROTODRAKE_AT && data == DATA_PROTODRAKE_MOVE && !_setData && me->GetDistance(protodrakeCheckPos) < 5.0f)
                 {
                     _setData = true;
-                    me->SetByteFlag(UNIT_FIELD_BYTES_1, 3, UNIT_BYTE1_FLAG_ALWAYS_STAND | UNIT_BYTE1_FLAG_HOVER);
+                    me->SetAnimTier(UnitBytes1_Flags(UNIT_BYTE1_FLAG_ALWAYS_STAND | UNIT_BYTE1_FLAG_HOVER), false);
                     me->GetMotionMaster()->MovePath(PATH_PROTODRAKE, false);
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -289,9 +337,9 @@ class npc_enslaved_proto_drake : public CreatureScript
 
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new npc_enslaved_proto_drakeAI(creature);
+            return GetUtgardeKeepAI<npc_enslaved_proto_drakeAI>(creature);
         }
 };
 
@@ -301,4 +349,5 @@ void AddSC_utgarde_keep()
     new npc_enslaved_proto_drake();
     new spell_ticking_time_bomb();
     new spell_fixate();
+    new spell_uk_second_wind();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,9 +23,15 @@ Category: Scholomance
 */
 
 #include "ScriptMgr.h"
+#include "GameObject.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
 #include "ScriptedCreature.h"
 #include "scholomance.h"
+#include "SpellInfo.h"
 #include "SpellScript.h"
+#include "TemporarySummon.h"
 
 enum Says
 {
@@ -56,21 +62,21 @@ class boss_darkmaster_gandling : public CreatureScript
         {
             boss_darkmaster_gandlingAI(Creature* creature) : BossAI(creature, DATA_DARKMASTERGANDLING) { }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 _Reset();
-                if (GameObject* gate = me->GetMap()->GetGameObject(instance->GetData64(GO_GATE_GANDLING)))
+                if (GameObject* gate = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(GO_GATE_GANDLING)))
                     gate->SetGoState(GO_STATE_ACTIVE);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
-                if (GameObject* gate = me->GetMap()->GetGameObject(instance->GetData64(GO_GATE_GANDLING)))
+                if (GameObject* gate = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(GO_GATE_GANDLING)))
                     gate->SetGoState(GO_STATE_ACTIVE);
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_ARCANEMISSILES, 4500);
@@ -78,17 +84,17 @@ class boss_darkmaster_gandling : public CreatureScript
                 events.ScheduleEvent(EVENT_CURSE, 2000);
                 events.ScheduleEvent(EVENT_SHADOW_PORTAL, 16000);
 
-                if (GameObject* gate = me->GetMap()->GetGameObject(instance->GetData64(GO_GATE_GANDLING)))
+                if (GameObject* gate = ObjectAccessor::GetGameObject(*me, instance->GetGuidData(GO_GATE_GANDLING)))
                     gate->SetGoState(GO_STATE_READY);
             }
 
-            void IsSummonedBy(Unit* /*summoner*/) OVERRIDE
+            void IsSummonedBy(Unit* /*summoner*/) override
             {
                 Talk(YELL_SUMMONED);
                 me->GetMotionMaster()->MoveRandom(5);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -121,14 +127,17 @@ class boss_darkmaster_gandling : public CreatureScript
                                 events.ScheduleEvent(EVENT_SHADOW_PORTAL, urand(17000, 27000));
                             }
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
                 DoMeleeAttackIfReady();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return GetInstanceAI<boss_darkmaster_gandlingAI>(creature);
+            return GetScholomanceAI<boss_darkmaster_gandlingAI>(creature);
         }
 };
 
@@ -162,62 +171,77 @@ class spell_shadow_portal : public SpellScriptLoader
         {
             PrepareSpellScript(spell_shadow_portal_SpellScript);
 
+        public:
+            spell_shadow_portal_SpellScript()
+            {
+                _instance = nullptr;
+            }
+
+        private:
+            bool Load() override
+            {
+                _instance = GetCaster()->GetInstanceScript();
+                return _instance != nullptr;
+            }
+
             void HandleCast(SpellEffIndex /*effIndex*/)
             {
-                Creature* caster = GetCaster()->ToCreature();
-                int8 attempts  = 0;
-                int32 spell_to_cast =0;
+                Unit* caster = GetCaster();
+                uint8 attempts = 0;
+                uint32 spellId = 0;
 
-                while (!spell_to_cast)
+                while (!spellId)
                 {
                     if (attempts++ >= 6) break;
 
                     switch (urand(0, 5))
                     {
                         case ROOM_HALL_OF_SECRETS:
-                            if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-                                if (GameObject::GetGameObject(*caster, instance->GetData64(GO_GATE_RAVENIAN))->GetGoState() == GO_STATE_ACTIVE)
-                                    spell_to_cast = SPELL_SHADOW_PORTAL_HALLOFSECRETS;
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*caster, _instance->GetGuidData(GO_GATE_RAVENIAN)))
+                                if (go->GetGoState() == GO_STATE_ACTIVE)
+                                    spellId = SPELL_SHADOW_PORTAL_HALLOFSECRETS;
                             break;
                         case ROOM_HALL_OF_THE_DAMNED:
-                            if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-                                if (GameObject::GetGameObject(*caster, instance->GetData64(GO_GATE_THEOLEN))->GetGoState() == GO_STATE_ACTIVE)
-                                    spell_to_cast = SPELL_SHADOW_PORTAL_HALLOFTHEDAMNED;
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*caster, _instance->GetGuidData(GO_GATE_THEOLEN)))
+                                if (go->GetGoState() == GO_STATE_ACTIVE)
+                                    spellId = SPELL_SHADOW_PORTAL_HALLOFTHEDAMNED;
                             break;
                         case ROOM_THE_COVEN:
-                            if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-                                if (GameObject::GetGameObject(*caster, instance->GetData64(GO_GATE_MALICIA))->GetGoState() == GO_STATE_ACTIVE)
-                                    spell_to_cast = SPELL_SHADOW_PORTAL_THECOVEN;
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*caster, _instance->GetGuidData(GO_GATE_MALICIA)))
+                                if (go->GetGoState() == GO_STATE_ACTIVE)
+                                    spellId = SPELL_SHADOW_PORTAL_THECOVEN;
                             break;
                         case ROOM_THE_SHADOW_VAULT:
-                            if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-                                if (GameObject::GetGameObject(*caster, instance->GetData64(GO_GATE_ILLUCIA))->GetGoState() == GO_STATE_ACTIVE)
-                                    spell_to_cast = SPELL_SHADOW_PORTAL_THESHADOWVAULT;
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*caster, _instance->GetGuidData(GO_GATE_ILLUCIA)))
+                                if (go->GetGoState() == GO_STATE_ACTIVE)
+                                    spellId = SPELL_SHADOW_PORTAL_THESHADOWVAULT;
                             break;
                         case ROOM_BAROV_FAMILY_VAULT:
-                            if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-                                if (GameObject::GetGameObject(*caster, instance->GetData64(GO_GATE_BAROV))->GetGoState() == GO_STATE_ACTIVE)
-                                    spell_to_cast = SPELL_SHADOW_PORTAL_BAROVFAMILYVAULT;
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*caster, _instance->GetGuidData(GO_GATE_BAROV)))
+                                if (go->GetGoState() == GO_STATE_ACTIVE)
+                                    spellId = SPELL_SHADOW_PORTAL_BAROVFAMILYVAULT;
                             break;
                         case ROOM_VAULT_OF_THE_RAVENIAN:
-                            if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-                                if (GameObject::GetGameObject(*caster, instance->GetData64(GO_GATE_POLKELT))->GetGoState() == GO_STATE_ACTIVE)
-                                    spell_to_cast = SPELL_SHADOW_PORTAL_VAULTOFTHERAVENIAN;
+                            if (GameObject* go = ObjectAccessor::GetGameObject(*caster, _instance->GetGuidData(GO_GATE_POLKELT)))
+                                if (go->GetGoState() == GO_STATE_ACTIVE)
+                                    spellId = SPELL_SHADOW_PORTAL_VAULTOFTHERAVENIAN;
                             break;
                     }
 
-                    if (spell_to_cast)
-                        GetHitUnit()->CastSpell(GetHitUnit(), spell_to_cast);
+                    if (spellId)
+                        GetHitUnit()->CastSpell(GetHitUnit(), spellId);
                 }
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnEffectHitTarget += SpellEffectFn(spell_shadow_portal_SpellScript::HandleCast, EFFECT_0, SPELL_EFFECT_DUMMY);
             }
+
+            InstanceScript* _instance;
         };
 
-        SpellScript* GetSpellScript() const OVERRIDE
+        SpellScript* GetSpellScript() const override
         {
             return new spell_shadow_portal_SpellScript();
         }
@@ -276,18 +300,30 @@ class spell_shadow_portal_rooms : public SpellScriptLoader
         {
             PrepareSpellScript(spell_shadow_portal_rooms_SpellScript);
 
+        public:
+            spell_shadow_portal_rooms_SpellScript()
+            {
+                _instance = nullptr;
+            }
+
+        private:
+            bool Load() override
+            {
+                _instance = GetCaster()->GetInstanceScript();
+                return InstanceHasScript(GetCaster(), ScholomanceScriptName);
+            }
+
             void HandleSendEvent(SpellEffIndex effIndex)
             {
                 // If only one player in threat list fail spell
 
-                Creature* Summoned = NULL;
-                Creature* caster = GetCaster()->ToCreature();
+                Unit* caster = GetCaster();
 
                 int8 pos_to_summon = 0;
                 int8 phase_to_set = 0;
                 int32 gate_to_close = 0;
 
-                switch (GetSpellInfo()->Effects[effIndex].MiscValue)
+                switch (GetSpellInfo()->GetEffect(effIndex)->MiscValue)
                 {
                     case SPELL_EVENT_HALLOFSECRETS:
                         pos_to_summon = 0; // Not yet spawned
@@ -323,31 +359,31 @@ class spell_shadow_portal_rooms : public SpellScriptLoader
                         break;
                 }
 
-                if (gate_to_close && (GetCaster()->GetMap()->GetId() == 289))
+                if (gate_to_close)
                 {
                     for (uint8 i = 0; i < 3; ++i)
                     {
-                        Summoned = GetCaster()->SummonCreature(NPC_RISEN_GUARDIAN, SummonPos[pos_to_summon++], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
-                        if (Summoned)
+                        if (Creature* Summoned = caster->SummonCreature(NPC_RISEN_GUARDIAN, SummonPos[pos_to_summon++], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000))
                         {
                             Summoned->GetMotionMaster()->MoveRandom(5);
                             Summoned->AI()->SetData(0, phase_to_set);
                         }
                     }
 
-                    if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-                        if (GameObject* gate = GameObject::GetGameObject(*caster, instance->GetData64(gate_to_close)))
-                            gate->SetGoState(GO_STATE_READY);
+                    if (GameObject* gate = ObjectAccessor::GetGameObject(*caster, _instance->GetGuidData(gate_to_close)))
+                        gate->SetGoState(GO_STATE_READY);
                 }
             }
 
-            void Register() OVERRIDE
+            void Register() override
             {
                 OnEffectHit += SpellEffectFn(spell_shadow_portal_rooms_SpellScript::HandleSendEvent, EFFECT_1, SPELL_EFFECT_SEND_EVENT);
             }
+
+            InstanceScript* _instance;
         };
 
-        SpellScript* GetSpellScript() const OVERRIDE
+        SpellScript* GetSpellScript() const override
         {
             return new spell_shadow_portal_rooms_SpellScript();
         }

@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,8 +23,9 @@ SDCategory: Tempest Keep, The Mechanar
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "mechanar.h"
+#include "ScriptedCreature.h"
+#include "TemporarySummon.h"
 
 enum Says
 {
@@ -75,7 +75,7 @@ class boss_pathaleon_the_calculator : public CreatureScript
         {
             boss_pathaleon_the_calculatorAI(Creature* creature) : BossAI(creature, DATA_PATHALEON_THE_CALCULATOR) { }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_SUMMON, 30000);
@@ -86,18 +86,18 @@ class boss_pathaleon_the_calculator : public CreatureScript
                 Talk(SAY_AGGRO);
             }
 
-            void KilledUnit(Unit* /*victim*/) OVERRIDE
+            void KilledUnit(Unit* /*victim*/) override
             {
                 Talk(SAY_SLAY);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
             }
 
-            void DamageTaken(Unit* /*attacker*/, uint32& damage) OVERRIDE
+            void DamageTaken(Unit* /*attacker*/, uint32& damage) override
             {
                 if (me->HealthBelowPctDamaged(20, damage) && !me->HasAura(SPELL_FRENZY))
                 {
@@ -106,7 +106,7 @@ class boss_pathaleon_the_calculator : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -152,15 +152,18 @@ class boss_pathaleon_the_calculator : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_pathaleon_the_calculatorAI(creature);
+            return GetMechanarAI<boss_pathaleon_the_calculatorAI>(creature);
         }
 };
 
@@ -172,14 +175,12 @@ class npc_nether_wraith : public CreatureScript
 
         struct npc_nether_wraithAI : public ScriptedAI
         {
-            npc_nether_wraithAI(Creature* creature) : ScriptedAI(creature) { }
+            npc_nether_wraithAI(Creature* creature) : ScriptedAI(creature)
+            {
+                Initialize();
+            }
 
-            uint32 ArcaneMissiles_Timer;
-            uint32 Detonation_Timer;
-            uint32 Die_Timer;
-            bool Detonation;
-
-            void Reset() OVERRIDE
+            void Initialize()
             {
                 ArcaneMissiles_Timer = urand(1000, 4000);
                 Detonation_Timer = 20000;
@@ -187,9 +188,19 @@ class npc_nether_wraith : public CreatureScript
                 Detonation = false;
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE { }
+            uint32 ArcaneMissiles_Timer;
+            uint32 Detonation_Timer;
+            uint32 Die_Timer;
+            bool Detonation;
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void Reset() override
+            {
+                Initialize();
+            }
+
+            void EnterCombat(Unit* /*who*/) override { }
+
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -220,8 +231,8 @@ class npc_nether_wraith : public CreatureScript
                 {
                     if (Die_Timer <= diff)
                     {
-                        me->setDeathState(JUST_DIED);
-                        me->RemoveCorpse();
+                        me->DespawnOrUnsummon();
+                        return;
                     }
                     else
                         Die_Timer -= diff;
@@ -230,9 +241,9 @@ class npc_nether_wraith : public CreatureScript
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new npc_nether_wraithAI(creature);
+            return GetMechanarAI<npc_nether_wraithAI>(creature);
         }
 };
 
@@ -241,4 +252,3 @@ void AddSC_boss_pathaleon_the_calculator()
     new boss_pathaleon_the_calculator();
     new npc_nether_wraith();
 }
-

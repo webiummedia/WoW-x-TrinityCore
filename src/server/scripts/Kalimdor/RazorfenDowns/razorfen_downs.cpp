@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -28,83 +27,18 @@ npc_henry_stern
 EndContentData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "ScriptedGossip.h"
-#include "razorfen_downs.h"
-#include "Player.h"
-#include "GridNotifiers.h"
-#include "GridNotifiersImpl.h"
-#include "Cell.h"
 #include "CellImpl.h"
+#include "GridNotifiersImpl.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "Player.h"
+#include "razorfen_downs.h"
+#include "ScriptedCreature.h"
+#include "GameObjectAI.h"
+#include "ScriptedGossip.h"
+#include "TemporarySummon.h"
 
 /*###
-# npc_henry_stern
-####*/
-
-enum Spells
-{
-    SPELL_TEACHING_GOLDTHORN_TEA                = 13029,
-    SPELL_TEACHING_MIGHTY_TROLLS_BLOOD_POTION   = 13030
-};
-
-enum Gossips
-{
-    GOSSIP_COOKING_SKILL_HIGH                   = 1444,
-    GOSSIP_COOKING_SKILL_LOW                    = 1501,
-    GOSSIP_ALCHEMY_SKILL_HIGH                   = 1442,
-    GOSSIP_ALCHEMY_SKILL_LOW                    = 1502
-};
-
-class npc_henry_stern : public CreatureScript
-{
-public:
-    npc_henry_stern() : CreatureScript("npc_henry_stern") { }
-
-    struct npc_henry_sternAI : public ScriptedAI
-    {
-        npc_henry_sternAI(Creature* creature) : ScriptedAI(creature) { }
-
-        void sGossipSelect(Player* player, uint32 /*sender*/, uint32 action) OVERRIDE
-        {
-            if (action == 0)
-            {
-                if (player->GetBaseSkillValue(SKILL_COOKING) >= 175)
-                {
-                    player->PrepareGossipMenu(me, GOSSIP_COOKING_SKILL_HIGH);
-                    player->SendPreparedGossip(me);
-                    DoCast(player, SPELL_TEACHING_GOLDTHORN_TEA);
-                }
-                else
-                {
-                    player->PrepareGossipMenu(me, GOSSIP_COOKING_SKILL_LOW);
-                    player->SendPreparedGossip(me);
-                }
-            }
-
-            if (action == 1)
-            {
-                if (player->GetBaseSkillValue(SKILL_ALCHEMY) >= 180)
-                {
-                    player->PrepareGossipMenu(me, GOSSIP_ALCHEMY_SKILL_HIGH);
-                    player->SendPreparedGossip(me);
-                    DoCast(player, SPELL_TEACHING_MIGHTY_TROLLS_BLOOD_POTION);
-                }
-                else
-                {
-                    player->PrepareGossipMenu(me, GOSSIP_ALCHEMY_SKILL_LOW);
-                    player->SendPreparedGossip(me);
-                }
-            }
-        }
-    };
-
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
-    {
-        return new npc_henry_sternAI(creature);
-    }
-};
-
-/*######
 ## npc_belnistrasz for Quest 3525 "Extinguishing the Idol"
 ######*/
 
@@ -123,8 +57,6 @@ enum Belnistrasz
     EVENT_COMPLETE               = 4,
     EVENT_FIREBALL               = 5,
     EVENT_FROST_NOVA             = 6,
-
-    FACTION_ESCORT               = 250,
 
     PATH_ESCORT                  = 871710,
     POINT_REACH_IDOL             = 17,
@@ -158,10 +90,12 @@ public:
         {
             instance = creature->GetInstanceScript();
             eventInProgress = false;
+            channeling = false;
+            eventProgress = 0;
             spawnerCount = 0;
         }
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
             if (!eventInProgress)
             {
@@ -171,11 +105,11 @@ public:
                 channeling = false;
                 eventProgress = 0;
                 spawnerCount  = 0;
-                me->SetFlag(UNIT_NPC_FLAGS, GOSSIP_OPTION_QUESTGIVER);
+                me->AddNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
             }
         }
 
-        void EnterCombat(Unit* who) OVERRIDE
+        void EnterCombat(Unit* who) override
         {
             if (channeling)
                 Talk(SAY_WATCH_OUT, who);
@@ -188,25 +122,25 @@ public:
             }
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             instance->SetBossState(DATA_EXTINGUISHING_THE_IDOL, DONE);
             me->DespawnOrUnsummon(5000);
         }
 
-        void sQuestAccept(Player* /*player*/, Quest const* quest) OVERRIDE
+        void QuestAccept(Player* /*player*/, Quest const* quest) override
         {
             if (quest->GetQuestId() == QUEST_EXTINGUISHING_THE_IDOL)
             {
                 eventInProgress = true;
                 Talk(SAY_QUEST_ACCEPTED);
-                me->RemoveFlag(UNIT_NPC_FLAGS, GOSSIP_OPTION_QUESTGIVER);
-                me->setFaction(FACTION_ESCORT);
+                me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                me->SetFaction(FACTION_ESCORTEE_N_NEUTRAL_ACTIVE);
                 me->GetMotionMaster()->MovePath(PATH_ESCORT, false);
             }
         }
 
-        void MovementInform(uint32 type, uint32 id) OVERRIDE
+        void MovementInform(uint32 type, uint32 id) override
         {
             if (type == WAYPOINT_MOTION_TYPE && id == POINT_REACH_IDOL)
             {
@@ -215,7 +149,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!eventInProgress)
                 return;
@@ -269,11 +203,11 @@ public:
                     case EVENT_COMPLETE:
                     {
                         DoCast(me, SPELL_IDOM_ROOM_CAMERA_SHAKE);
-                        me->SummonGameObject(GO_BELNISTRASZS_BRAZIER, 2577.196f, 947.0781f, 53.16757f, 2.356195f, 0, 0, 0.9238796f, 0.3826832f, 3600000);
+                        me->SummonGameObject(GO_BELNISTRASZS_BRAZIER, 2577.196f, 947.0781f, 53.16757f, 2.356195f, QuaternionData(0.f, 0.f, 0.9238796f, 0.3826832f), 3600);
                         std::list<WorldObject*> ClusterList;
                         Trinity::AllWorldObjectsInRange objects(me, 50.0f);
                         Trinity::WorldObjectListSearcher<Trinity::AllWorldObjectsInRange> searcher(me, ClusterList, objects);
-                        me->VisitNearbyObject(50.0f, searcher);
+                        Cell::VisitAllObjects(me, searcher, 50.0f);
                         for (std::list<WorldObject*>::const_iterator itr = ClusterList.begin(); itr != ClusterList.end(); ++itr)
                         {
                             if (Player* player = (*itr)->ToPlayer())
@@ -318,9 +252,9 @@ public:
         uint8 spawnerCount;
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<npc_belnistraszAI>(creature);
+        return GetRazorfenDownsAI<npc_belnistraszAI>(creature);
     }
 };
 
@@ -336,17 +270,17 @@ public:
             instance = creature->GetInstanceScript();
         }
 
-        void Reset() OVERRIDE { }
+        void Reset() override { }
 
-        void SetData(uint32 /*type*/, uint32 data) OVERRIDE
+        void SetData(uint32 /*type*/, uint32 data) override
         {
             if (data < 7)
             {
                 me->SummonCreature(NPC_WITHERED_BATTLE_BOAR, me->GetPositionX(),  me->GetPositionY(),  me->GetPositionZ(),  me->GetOrientation());
                 if (data > 0 && me->GetOrientation() < 4.0f)
                     me->SummonCreature(NPC_WITHERED_BATTLE_BOAR, me->GetPositionX(),  me->GetPositionY(),  me->GetPositionZ(),  me->GetOrientation());
-                me->SummonCreature(NPC_DEATHS_HEAD_GEOMANCER, me->GetPositionX() + (cos(me->GetOrientation() - (M_PI/2)) * 2), me->GetPositionY() + (sin(me->GetOrientation() - (M_PI/2)) * 2), me->GetPositionZ(),  me->GetOrientation());
-                me->SummonCreature(NPC_WITHERED_QUILGUARD, me->GetPositionX() + (cos(me->GetOrientation() + (M_PI/2)) * 2), me->GetPositionY() + (sin(me->GetOrientation() + (M_PI/2)) * 2), me->GetPositionZ(),  me->GetOrientation());
+                me->SummonCreature(NPC_DEATHS_HEAD_GEOMANCER, me->GetPositionX() + (std::cos(me->GetOrientation() - (float(M_PI) / 2)) * 2), me->GetPositionY() + (std::sin(me->GetOrientation() - (float(M_PI) / 2)) * 2), me->GetPositionZ(), me->GetOrientation());
+                me->SummonCreature(NPC_WITHERED_QUILGUARD, me->GetPositionX() + (std::cos(me->GetOrientation() + (float(M_PI) / 2)) * 2), me->GetPositionY() + (std::sin(me->GetOrientation() + (float(M_PI) / 2)) * 2), me->GetPositionZ(), me->GetOrientation());
             }
             else if (data == 7)
                 me->SummonCreature(NPC_PLAGUEMAW_THE_ROTTING, me->GetPositionX(),  me->GetPositionY(),  me->GetPositionZ(),  me->GetOrientation());
@@ -356,9 +290,9 @@ public:
         InstanceScript* instance;
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<npc_idol_room_spawnerAI>(creature);
+        return GetRazorfenDownsAI<npc_idol_room_spawnerAI>(creature);
     }
 };
 
@@ -382,7 +316,7 @@ public:
             instance = creature->GetInstanceScript();
         }
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
             if (!me->HasAura(SPELL_POISON_PROC) && me->GetEntry() == NPC_TOMB_FIEND)
                 DoCast(me, SPELL_POISON_PROC);
@@ -391,17 +325,17 @@ public:
                 DoCast(me, SPELL_VIRULENT_POISON_PROC);
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             instance->SetData(DATA_WAVE, me->GetEntry());
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
             events.ScheduleEvent(EVENT_WEB, urand(5000, 8000));
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -426,9 +360,9 @@ public:
         EventMap events;
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<npc_tomb_creatureAI>(creature);
+        return GetRazorfenDownsAI<npc_tomb_creatureAI>(creature);
     }
 };
 
@@ -441,24 +375,28 @@ class go_gong : public GameObjectScript
 public:
     go_gong() : GameObjectScript("go_gong") { }
 
-    bool OnGossipHello(Player* /*player*/, GameObject* go) OVERRIDE
+    struct go_gongAI : public GameObjectAI
     {
-        InstanceScript* instance = go->GetInstanceScript();
+        go_gongAI(GameObject* go) : GameObjectAI(go), instance(go->GetInstanceScript()) { }
 
-        if (instance)
+        InstanceScript* instance;
+
+        bool GossipHello(Player* /*player*/) override
         {
-            go->SendCustomAnim(0);
+            me->SendCustomAnim(0);
             instance->SetData(DATA_WAVE, IN_PROGRESS);
             return true;
         }
-        return false;
-    }
+    };
 
+    GameObjectAI* GetAI(GameObject* go) const override
+    {
+        return GetRazorfenDownsAI<go_gongAI>(go);
+    }
 };
 
 void AddSC_razorfen_downs()
 {
-    new npc_henry_stern();
     new npc_belnistrasz();
     new npc_idol_room_spawner();
     new npc_tomb_creature();

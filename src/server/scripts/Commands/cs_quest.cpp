@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,38 +22,40 @@ Comment: All quest related commands
 Category: commandscripts
 EndScriptData */
 
+#include "ScriptMgr.h"
 #include "Chat.h"
+#include "DatabaseEnv.h"
+#include "DB2Stores.h"
 #include "ObjectMgr.h"
 #include "Player.h"
+#include "RBAC.h"
 #include "ReputationMgr.h"
-#include "ScriptMgr.h"
+#include "World.h"
 
 class quest_commandscript : public CommandScript
 {
 public:
     quest_commandscript() : CommandScript("quest_commandscript") { }
 
-    ChatCommand* GetCommands() const OVERRIDE
+    std::vector<ChatCommand> GetCommands() const override
     {
-        static ChatCommand questCommandTable[] =
+        static std::vector<ChatCommand> questCommandTable =
         {
-            { "add",      rbac::RBAC_PERM_COMMAND_QUEST_ADD,      false, &HandleQuestAdd,      "", NULL },
-            { "complete", rbac::RBAC_PERM_COMMAND_QUEST_COMPLETE, false, &HandleQuestComplete, "", NULL },
-            { "remove",   rbac::RBAC_PERM_COMMAND_QUEST_REMOVE,   false, &HandleQuestRemove,   "", NULL },
-            { "reward",   rbac::RBAC_PERM_COMMAND_QUEST_REWARD,   false, &HandleQuestReward,   "", NULL },
-            { NULL,       0,                                false, NULL,                 "", NULL }
+            { "add",      rbac::RBAC_PERM_COMMAND_QUEST_ADD,      false, &HandleQuestAdd,      "" },
+            { "complete", rbac::RBAC_PERM_COMMAND_QUEST_COMPLETE, false, &HandleQuestComplete, "" },
+            { "remove",   rbac::RBAC_PERM_COMMAND_QUEST_REMOVE,   false, &HandleQuestRemove,   "" },
+            { "reward",   rbac::RBAC_PERM_COMMAND_QUEST_REWARD,   false, &HandleQuestReward,   "" },
         };
-        static ChatCommand commandTable[] =
+        static std::vector<ChatCommand> commandTable =
         {
             { "quest", rbac::RBAC_PERM_COMMAND_QUEST,  false, NULL, "", questCommandTable },
-            { NULL,    0,                        false, NULL,              "", NULL }
         };
         return commandTable;
     }
 
     static bool HandleQuestAdd(ChatHandler* handler, const char* args)
     {
-        Player* player = handler->getSelectedPlayer();
+        Player* player = handler->getSelectedPlayerOrSelf();
         if (!player)
         {
             handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
@@ -62,12 +64,12 @@ public:
         }
 
         // .addquest #entry'
-        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
+        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level:min_level:max_level:scaling_faction|h[name]|h|r
         char* cId = handler->extractKeyFromLink((char*)args, "Hquest");
         if (!cId)
             return false;
 
-        uint32 entry = atol(cId);
+        uint32 entry = atoul(cId);
 
         Quest const* quest = sObjectMgr->GetQuestTemplate(entry);
 
@@ -80,23 +82,21 @@ public:
 
         // check item starting quest (it can work incorrectly if added without item in inventory)
         ItemTemplateContainer const* itc = sObjectMgr->GetItemTemplateStore();
-        ItemTemplateContainer::const_iterator result = find_if (itc->begin(), itc->end(), Finder<uint32, ItemTemplate>(entry, &ItemTemplate::StartQuest));
+        ItemTemplateContainer::const_iterator result = std::find_if(itc->begin(), itc->end(), [quest](ItemTemplateContainer::value_type const& value)
+        {
+            return value.second.GetStartQuest() == quest->GetQuestId();
+        });
 
         if (result != itc->end())
         {
-            handler->PSendSysMessage(LANG_COMMAND_QUEST_STARTFROMITEM, entry, result->second.ItemId);
+            handler->PSendSysMessage(LANG_COMMAND_QUEST_STARTFROMITEM, entry, result->second.GetId());
             handler->SetSentErrorMessage(true);
             return false;
         }
 
         // ok, normal (creature/GO starting) quest
         if (player->CanAddQuest(quest, true))
-        {
             player->AddQuestAndCheckCompletion(quest, NULL);
-
-            if (player->CanCompleteQuest(entry))
-                player->CompleteQuest(entry);
-        }
 
         return true;
     }
@@ -112,12 +112,12 @@ public:
         }
 
         // .removequest #entry'
-        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
+        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level:min_level:max_level:scaling_faction|h[name]|h|r
         char* cId = handler->extractKeyFromLink((char*)args, "Hquest");
         if (!cId)
             return false;
 
-        uint32 entry = atol(cId);
+        uint32 entry = atoul(cId);
 
         Quest const* quest = sObjectMgr->GetQuestTemplate(entry);
 
@@ -127,6 +127,8 @@ public:
             handler->SetSentErrorMessage(true);
             return false;
         }
+
+        QuestStatus oldStatus = player->GetQuestStatus(entry);
 
         // remove all quest entries for 'entry' from quest log
         for (uint8 slot = 0; slot < MAX_QUEST_LOG_SIZE; ++slot)
@@ -147,8 +149,11 @@ public:
             }
         }
 
-        player->RemoveActiveQuest(entry);
+        player->RemoveActiveQuest(entry, false);
         player->RemoveRewardedQuest(entry);
+
+        sScriptMgr->OnQuestStatusChange(player, entry);
+        sScriptMgr->OnQuestStatusChange(player, quest, oldStatus, QUEST_STATUS_NONE);
 
         handler->SendSysMessage(LANG_COMMAND_QUEST_REMOVED);
         return true;
@@ -156,7 +161,7 @@ public:
 
     static bool HandleQuestComplete(ChatHandler* handler, const char* args)
     {
-        Player* player = handler->getSelectedPlayer();
+        Player* player = handler->getSelectedPlayerOrSelf();
         if (!player)
         {
             handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
@@ -165,12 +170,12 @@ public:
         }
 
         // .quest complete #entry
-        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
+        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level:min_level:max_level:scaling_faction|h[name]|h|r
         char* cId = handler->extractKeyFromLink((char*)args, "Hquest");
         if (!cId)
             return false;
 
-        uint32 entry = atol(cId);
+        uint32 entry = atoul(cId);
 
         Quest const* quest = sObjectMgr->GetQuestTemplate(entry);
 
@@ -182,66 +187,71 @@ public:
             return false;
         }
 
-        // Add quest items for quests that require items
-        for (uint8 x = 0; x < QUEST_ITEM_OBJECTIVES_COUNT; ++x)
+        for (uint32 i = 0; i < quest->Objectives.size(); ++i)
         {
-            uint32 id = quest->RequiredItemId[x];
-            uint32 count = quest->RequiredItemCount[x];
-            if (!id || !count)
-                continue;
+            QuestObjective const& obj = quest->Objectives[i];
 
-            uint32 curItemCount = player->GetItemCount(id, true);
-
-            ItemPosCountVec dest;
-            uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, id, count-curItemCount);
-            if (msg == EQUIP_ERR_OK)
+            switch (obj.Type)
             {
-                Item* item = player->StoreNewItem(dest, id, true);
-                player->SendNewItem(item, count-curItemCount, true, false);
+                case QUEST_OBJECTIVE_ITEM:
+                {
+                    uint32 curItemCount = player->GetItemCount(obj.ObjectID, true);
+                    ItemPosCountVec dest;
+                    uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, obj.ObjectID, obj.Amount - curItemCount);
+                    if (msg == EQUIP_ERR_OK)
+                    {
+                        Item* item = player->StoreNewItem(dest, obj.ObjectID, true);
+                        player->SendNewItem(item, obj.Amount - curItemCount, true, false);
+                    }
+                    break;
+                }
+                case QUEST_OBJECTIVE_MONSTER:
+                {
+                    if (CreatureTemplate const* creatureInfo = sObjectMgr->GetCreatureTemplate(obj.ObjectID))
+                        for (uint16 z = 0; z < obj.Amount; ++z)
+                            player->KilledMonster(creatureInfo, ObjectGuid::Empty);
+                    break;
+                }
+                case QUEST_OBJECTIVE_GAMEOBJECT:
+                {
+                    for (uint16 z = 0; z < obj.Amount; ++z)
+                        player->KillCreditGO(obj.ObjectID);
+                    break;
+                }
+                case QUEST_OBJECTIVE_MIN_REPUTATION:
+                {
+                    uint32 curRep = player->GetReputationMgr().GetReputation(obj.ObjectID);
+                    if (curRep < uint32(obj.Amount))
+                        if (FactionEntry const* factionEntry = sFactionStore.LookupEntry(obj.ObjectID))
+                            player->GetReputationMgr().SetReputation(factionEntry, obj.Amount);
+                    break;
+                }
+                case QUEST_OBJECTIVE_MAX_REPUTATION:
+                {
+                    uint32 curRep = player->GetReputationMgr().GetReputation(obj.ObjectID);
+                    if (curRep > uint32(obj.Amount))
+                        if (FactionEntry const* factionEntry = sFactionStore.LookupEntry(obj.ObjectID))
+                            player->GetReputationMgr().SetReputation(factionEntry, obj.Amount);
+                    break;
+                }
+                case QUEST_OBJECTIVE_MONEY:
+                {
+                    player->ModifyMoney(obj.Amount);
+                    break;
+                }
             }
         }
 
-        // All creature/GO slain/cast (not required, but otherwise it will display "Creature slain 0/10")
-        for (uint8 i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
+        if (sWorld->getBoolConfig(CONFIG_QUEST_ENABLE_QUEST_TRACKER)) // check if Quest Tracker is enabled
         {
-            int32 creature = quest->RequiredNpcOrGo[i];
-            uint32 creatureCount = quest->RequiredNpcOrGoCount[i];
+            // prepare Quest Tracker datas
+            CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_QUEST_TRACK_GM_COMPLETE);
+            stmt->setUInt32(0, quest->GetQuestId());
+            stmt->setUInt64(1, player->GetGUID().GetCounter());
 
-            if (creature > 0)
-            {
-                if (CreatureTemplate const* creatureInfo = sObjectMgr->GetCreatureTemplate(creature))
-                    for (uint16 z = 0; z < creatureCount; ++z)
-                        player->KilledMonster(creatureInfo, 0);
-            }
-            else if (creature < 0)
-                for (uint16 z = 0; z < creatureCount; ++z)
-                    player->KillCreditGO(creature, 0);
+            // add to Quest Tracker
+            CharacterDatabase.Execute(stmt);
         }
-
-        // If the quest requires reputation to complete
-        if (uint32 repFaction = quest->GetRepObjectiveFaction())
-        {
-            uint32 repValue = quest->GetRepObjectiveValue();
-            uint32 curRep = player->GetReputationMgr().GetReputation(repFaction);
-            if (curRep < repValue)
-                if (FactionEntry const* factionEntry = sFactionStore.LookupEntry(repFaction))
-                    player->GetReputationMgr().SetReputation(factionEntry, repValue);
-        }
-
-        // If the quest requires a SECOND reputation to complete
-        if (uint32 repFaction = quest->GetRepObjectiveFaction2())
-        {
-            uint32 repValue2 = quest->GetRepObjectiveValue2();
-            uint32 curRep = player->GetReputationMgr().GetReputation(repFaction);
-            if (curRep < repValue2)
-                if (FactionEntry const* factionEntry = sFactionStore.LookupEntry(repFaction))
-                    player->GetReputationMgr().SetReputation(factionEntry, repValue2);
-        }
-
-        // If the quest requires money
-        int32 ReqOrRewMoney = quest->GetRewOrReqMoney();
-        if (ReqOrRewMoney < 0)
-            player->ModifyMoney(-ReqOrRewMoney);
 
         player->CompleteQuest(entry);
         return true;
@@ -258,12 +268,12 @@ public:
         }
 
         // .quest reward #entry
-        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
+        // number or [name] Shift-click form |color|Hquest:quest_id:quest_level:min_level:max_level:scaling_faction|h[name]|h|r
         char* cId = handler->extractKeyFromLink((char*)args, "Hquest");
         if (!cId)
             return false;
 
-        uint32 entry = atol(cId);
+        uint32 entry = atoul(cId);
 
         Quest const* quest = sObjectMgr->GetQuestTemplate(entry);
 

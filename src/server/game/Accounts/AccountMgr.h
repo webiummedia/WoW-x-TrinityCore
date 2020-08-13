@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,9 +19,8 @@
 #define _ACCMGR_H
 
 #include "RBAC.h"
-#include <ace/Singleton.h>
 
-enum AccountOpResult
+enum class AccountOpResult : uint8
 {
     AOR_OK,
     AOR_NAME_TOO_LONG,
@@ -30,7 +28,8 @@ enum AccountOpResult
     AOR_EMAIL_TOO_LONG,
     AOR_NAME_ALREADY_EXIST,
     AOR_NAME_NOT_EXIST,
-    AOR_DB_INTERNAL_ERROR
+    AOR_DB_INTERNAL_ERROR,
+    AOR_ACCOUNT_BAD_LINK
 };
 
 enum PasswordChangeSecurity
@@ -40,6 +39,7 @@ enum PasswordChangeSecurity
     PW_RBAC
 };
 
+#define MAX_PASS_STR 16
 #define MAX_ACCOUNT_STR 16
 #define MAX_EMAIL_STR 64
 
@@ -49,16 +49,16 @@ typedef std::map<uint32, rbac::RBACPermission*> RBACPermissionsContainer;
 typedef std::map<uint8, rbac::RBACPermissionContainer> RBACDefaultPermissionsContainer;
 }
 
-class AccountMgr
+class TC_GAME_API AccountMgr
 {
-    friend class ACE_Singleton<AccountMgr, ACE_Null_Mutex>;
-
     private:
         AccountMgr();
         ~AccountMgr();
 
     public:
-        AccountOpResult CreateAccount(std::string username, std::string password, std::string email);
+        static AccountMgr* instance();
+
+        AccountOpResult CreateAccount(std::string username, std::string password, std::string email = "", uint32 bnetAccountId = 0, uint8 bnetIndex = 0);
         static AccountOpResult DeleteAccount(uint32 accountId);
         static AccountOpResult ChangeUsername(uint32 accountId, std::string newUsername, std::string newPassword);
         static AccountOpResult ChangePassword(uint32 accountId, std::string newPassword);
@@ -74,8 +74,7 @@ class AccountMgr
         static bool GetEmail(uint32 accountId, std::string& email);
         static uint32 GetCharactersCount(uint32 accountId);
 
-        static std::string CalculateShaPassHash(std::string const& name, std::string const& password);
-        static bool normalizeString(std::string& utf8String);
+        static bool IsBannedAccount(std::string const& name);
         static bool IsPlayerAccount(uint32 gmlevel);
         static bool IsAdminAccount(uint32 gmlevel);
         static bool IsConsoleAccount(uint32 gmlevel);
@@ -95,5 +94,5 @@ class AccountMgr
         rbac::RBACDefaultPermissionsContainer _defaultPermissions;
 };
 
-#define sAccountMgr ACE_Singleton<AccountMgr, ACE_Null_Mutex>::instance()
+#define sAccountMgr AccountMgr::instance()
 #endif

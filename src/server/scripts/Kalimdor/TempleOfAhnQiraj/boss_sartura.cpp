@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -25,6 +24,7 @@ EndScriptData */
 
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
+#include "temple_of_ahnqiraj.h"
 
 enum Sartura
 {
@@ -46,14 +46,32 @@ class boss_sartura : public CreatureScript
 public:
     boss_sartura() : CreatureScript("boss_sartura") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_sarturaAI(creature);
+        return GetAQ40AI<boss_sarturaAI>(creature);
     }
 
     struct boss_sarturaAI : public ScriptedAI
     {
-        boss_sarturaAI(Creature* creature) : ScriptedAI(creature) { }
+        boss_sarturaAI(Creature* creature) : ScriptedAI(creature)
+        {
+            Initialize();
+        }
+
+        void Initialize()
+        {
+            WhirlWind_Timer = 30000;
+            WhirlWindRandom_Timer = urand(3000, 7000);
+            WhirlWindEnd_Timer = 15000;
+            AggroReset_Timer = urand(45000, 55000);
+            AggroResetEnd_Timer = 5000;
+            EnrageHard_Timer = 10 * 60000;
+
+            WhirlWind = false;
+            AggroReset = false;
+            Enraged = false;
+            EnragedHard = false;
+        }
 
         uint32 WhirlWind_Timer;
         uint32 WhirlWindRandom_Timer;
@@ -67,38 +85,27 @@ public:
         bool WhirlWind;
         bool AggroReset;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            WhirlWind_Timer = 30000;
-            WhirlWindRandom_Timer = urand(3000, 7000);
-            WhirlWindEnd_Timer = 15000;
-            AggroReset_Timer = urand(45000, 55000);
-            AggroResetEnd_Timer = 5000;
-            EnrageHard_Timer = 10*60000;
-
-            WhirlWind = false;
-            AggroReset = false;
-            Enraged = false;
-            EnragedHard = false;
-
+            Initialize();
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
             Talk(SAY_AGGRO);
         }
 
-         void JustDied(Unit* /*killer*/) OVERRIDE
+         void JustDied(Unit* /*killer*/) override
          {
              Talk(SAY_DEATH);
          }
 
-         void KilledUnit(Unit* /*victim*/) OVERRIDE
+         void KilledUnit(Unit* /*victim*/) override
          {
              Talk(SAY_SLAY);
          }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             //Return since we have no target
             if (!UpdateVictim())
@@ -111,8 +118,7 @@ public:
                     //Attack random Gamers
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 100.0f, true))
                     {
-                        me->AddThreat(target, 1.0f);
-                        me->TauntApply(target);
+                        AddThreat(target, 1.0f);
                         AttackStart(target);
                     }
                     WhirlWindRandom_Timer = urand(3000, 7000);
@@ -139,8 +145,7 @@ public:
                     //Attack random Gamers
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 100.0f, true))
                     {
-                        me->AddThreat(target, 1.0f);
-                        me->TauntApply(target);
+                        AddThreat(target, 1.0f);
                         AttackStart(target);
                     }
                     AggroReset = true;
@@ -189,26 +194,19 @@ class npc_sartura_royal_guard : public CreatureScript
 public:
     npc_sartura_royal_guard() : CreatureScript("npc_sartura_royal_guard") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new npc_sartura_royal_guardAI(creature);
+        return GetAQ40AI<npc_sartura_royal_guardAI>(creature);
     }
 
     struct npc_sartura_royal_guardAI : public ScriptedAI
     {
-        npc_sartura_royal_guardAI(Creature* creature) : ScriptedAI(creature) { }
+        npc_sartura_royal_guardAI(Creature* creature) : ScriptedAI(creature)
+        {
+            Initialize();
+        }
 
-        uint32 WhirlWind_Timer;
-        uint32 WhirlWindRandom_Timer;
-        uint32 WhirlWindEnd_Timer;
-        uint32 AggroReset_Timer;
-        uint32 AggroResetEnd_Timer;
-        uint32 KnockBack_Timer;
-
-        bool WhirlWind;
-        bool AggroReset;
-
-        void Reset() OVERRIDE
+        void Initialize()
         {
             WhirlWind_Timer = 30000;
             WhirlWindRandom_Timer = urand(3000, 7000);
@@ -221,11 +219,26 @@ public:
             AggroReset = false;
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        uint32 WhirlWind_Timer;
+        uint32 WhirlWindRandom_Timer;
+        uint32 WhirlWindEnd_Timer;
+        uint32 AggroReset_Timer;
+        uint32 AggroResetEnd_Timer;
+        uint32 KnockBack_Timer;
+
+        bool WhirlWind;
+        bool AggroReset;
+
+        void Reset() override
+        {
+            Initialize();
+        }
+
+        void EnterCombat(Unit* /*who*/) override
         {
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             //Return since we have no target
             if (!UpdateVictim())
@@ -246,8 +259,7 @@ public:
                     //Attack random Gamers
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 100.0f, true))
                     {
-                        me->AddThreat(target, 1.0f);
-                        me->TauntApply(target);
+                        AddThreat(target, 1.0f);
                         AttackStart(target);
                     }
 
@@ -267,8 +279,7 @@ public:
                     //Attack random Gamers
                     if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 1, 100.0f, true))
                     {
-                        me->AddThreat(target, 1.0f);
-                        me->TauntApply(target);
+                        AddThreat(target, 1.0f);
                         AttackStart(target);
                     }
 

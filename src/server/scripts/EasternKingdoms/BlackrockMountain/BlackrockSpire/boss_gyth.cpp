@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,8 +16,11 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "blackrock_spire.h"
+#include "GameObject.h"
+#include "InstanceScript.h"
+#include "MotionMaster.h"
+#include "ScriptedCreature.h"
 
 enum Spells
 {
@@ -53,13 +56,21 @@ public:
 
     struct boss_gythAI : public BossAI
     {
-        boss_gythAI(Creature* creature) : BossAI(creature, DATA_GYTH) { }
+        boss_gythAI(Creature* creature) : BossAI(creature, DATA_GYTH)
+        {
+            Initialize();
+        }
+
+        void Initialize()
+        {
+            SummonedRend = false;
+        }
 
         bool SummonedRend;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            SummonedRend = false;
+            Initialize();
             if (instance->GetBossState(DATA_GYTH) == IN_PROGRESS)
             {
                 instance->SetBossState(DATA_GYTH, DONE);
@@ -67,7 +78,7 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
             _EnterCombat();
 
@@ -77,12 +88,12 @@ public:
             events.ScheduleEvent(EVENT_KNOCK_AWAY, urand(12000, 18000));
         }
 
-        void JustDied(Unit* /*killer*/) OVERRIDE
+        void JustDied(Unit* /*killer*/) override
         {
             instance->SetBossState(DATA_GYTH, DONE);
         }
 
-        void SetData(uint32 /*type*/, uint32 data) OVERRIDE
+        void SetData(uint32 /*type*/, uint32 data) override
         {
             switch (data)
             {
@@ -94,7 +105,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
 
             if (!SummonedRend && HealthBelowPct(5))
@@ -132,6 +143,9 @@ public:
 
             events.Update(diff);
 
+            if (me->HasUnitState(UNIT_STATE_CASTING))
+                return;
+
             while (uint32 eventId = events.ExecuteEvent())
             {
                 switch (eventId)
@@ -155,14 +169,17 @@ public:
                     default:
                         break;
                 }
+
+                if (me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
             }
             DoMeleeAttackIfReady();
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<boss_gythAI>(creature);
+        return GetBlackrockSpireAI<boss_gythAI>(creature);
     }
 };
 

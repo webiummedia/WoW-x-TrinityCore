@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -17,12 +16,15 @@
  */
 
 #include "Common.h"
-#include "AchievementMgr.h"
+#include "CriteriaHandler.h"
 #include "CharacterDatabaseCleaner.h"
+#include "DB2Stores.h"
+#include "Log.h"
 #include "World.h"
 #include "Database/DatabaseEnv.h"
 #include "SpellMgr.h"
-#include "DBCStores.h"
+#include "SpellInfo.h"
+#include <sstream>
 
 void CharacterDatabaseCleaner::CleanDatabase()
 {
@@ -108,7 +110,7 @@ void CharacterDatabaseCleaner::CheckUnique(const char* column, const char* table
 
 bool CharacterDatabaseCleaner::AchievementProgressCheck(uint32 criteria)
 {
-    return sAchievementMgr->GetAchievementCriteria(criteria);
+    return sCriteriaMgr->GetCriteria(criteria) != nullptr;
 }
 
 void CharacterDatabaseCleaner::CleanCharacterAchievementProgress()
@@ -118,7 +120,7 @@ void CharacterDatabaseCleaner::CleanCharacterAchievementProgress()
 
 bool CharacterDatabaseCleaner::SkillCheck(uint32 skill)
 {
-    return sSkillLineStore.LookupEntry(skill);
+    return sSkillLineStore.LookupEntry(skill) != nullptr;
 }
 
 void CharacterDatabaseCleaner::CleanCharacterSkills()
@@ -128,7 +130,8 @@ void CharacterDatabaseCleaner::CleanCharacterSkills()
 
 bool CharacterDatabaseCleaner::SpellCheck(uint32 spell_id)
 {
-    return sSpellMgr->GetSpellInfo(spell_id) && !GetTalentSpellPos(spell_id);
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spell_id, DIFFICULTY_NONE);
+    return spellInfo && !spellInfo->HasAttribute(SPELL_ATTR0_CU_IS_TALENT);
 }
 
 void CharacterDatabaseCleaner::CleanCharacterSpell()
@@ -142,17 +145,16 @@ bool CharacterDatabaseCleaner::TalentCheck(uint32 talent_id)
     if (!talentInfo)
         return false;
 
-    return sTalentTabStore.LookupEntry(talentInfo->TalentTab);
+    return sChrSpecializationStore.LookupEntry(talentInfo->SpecID) != nullptr;
 }
 
 void CharacterDatabaseCleaner::CleanCharacterTalent()
 {
-    CharacterDatabase.DirectPExecute("DELETE FROM character_talent WHERE spec > %u", MAX_TALENT_SPECS);
-    CheckUnique("spell", "character_talent", &TalentCheck);
+    CharacterDatabase.DirectPExecute("DELETE FROM character_talent WHERE talentGroup > %u", MAX_SPECIALIZATIONS);
+    CheckUnique("talentId", "character_talent", &TalentCheck);
 }
 
 void CharacterDatabaseCleaner::CleanCharacterQuestStatus()
 {
     CharacterDatabase.DirectExecute("DELETE FROM character_queststatus WHERE status = 0");
 }
-

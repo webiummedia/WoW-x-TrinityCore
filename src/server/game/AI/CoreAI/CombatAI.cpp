@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -17,21 +16,27 @@
  */
 
 #include "CombatAI.h"
-#include "SpellMgr.h"
-#include "SpellInfo.h"
-#include "Vehicle.h"
+#include "ConditionMgr.h"
+#include "Creature.h"
+#include "CreatureAIImpl.h"
+#include "Log.h"
+#include "Map.h"
+#include "MotionMaster.h"
 #include "ObjectAccessor.h"
 #include "Player.h"
+#include "SpellInfo.h"
+#include "SpellMgr.h"
+#include "Vehicle.h"
 
 /////////////////
 // AggressorAI
 /////////////////
 
-int AggressorAI::Permissible(const Creature* creature)
+int32 AggressorAI::Permissible(Creature const* creature)
 {
     // have some hostile factions, it will be selected by IsHostileTo check at MoveInLineOfSight
     if (!creature->IsCivilian() && !creature->IsNeutralToAll())
-        return PERMIT_BASE_PROACTIVE;
+        return PERMIT_BASE_REACTIVE;
 
     return PERMIT_BASE_NO;
 }
@@ -50,8 +55,8 @@ void AggressorAI::UpdateAI(uint32 /*diff*/)
 
 void CombatAI::InitializeAI()
 {
-    for (uint32 i = 0; i < CREATURE_MAX_SPELLS; ++i)
-        if (me->m_spells[i] && sSpellMgr->GetSpellInfo(me->m_spells[i]))
+    for (uint32 i = 0; i < MAX_CREATURE_SPELLS; ++i)
+        if (me->m_spells[i] && sSpellMgr->GetSpellInfo(me->m_spells[i], me->GetMap()->GetDifficultyID()))
             spells.push_back(me->m_spells[i]);
 
     CreatureAI::InitializeAI();
@@ -65,18 +70,22 @@ void CombatAI::Reset()
 void CombatAI::JustDied(Unit* killer)
 {
     for (SpellVct::iterator i = spells.begin(); i != spells.end(); ++i)
-        if (AISpellInfo[*i].condition == AICOND_DIE)
-            me->CastSpell(killer, *i, true);
+        if (AISpellInfoType const* info = GetAISpellInfo(*i, me->GetMap()->GetDifficultyID()))
+            if (info->condition == AICOND_DIE)
+                me->CastSpell(killer, *i, true);
 }
 
 void CombatAI::EnterCombat(Unit* who)
 {
     for (SpellVct::iterator i = spells.begin(); i != spells.end(); ++i)
     {
-        if (AISpellInfo[*i].condition == AICOND_AGGRO)
-            me->CastSpell(who, *i, false);
-        else if (AISpellInfo[*i].condition == AICOND_COMBAT)
-            events.ScheduleEvent(*i, AISpellInfo[*i].cooldown + rand()%AISpellInfo[*i].cooldown);
+        if (AISpellInfoType const* info = GetAISpellInfo(*i, me->GetMap()->GetDifficultyID()))
+        {
+            if (info->condition == AICOND_AGGRO)
+                me->CastSpell(who, *i, false);
+            else if (info->condition == AICOND_COMBAT)
+                events.ScheduleEvent(*i, info->cooldown + rand32() % info->cooldown);
+        }
     }
 }
 
@@ -93,7 +102,8 @@ void CombatAI::UpdateAI(uint32 diff)
     if (uint32 spellId = events.ExecuteEvent())
     {
         DoCast(spellId);
-        events.ScheduleEvent(spellId, AISpellInfo[spellId].cooldown + rand()%AISpellInfo[spellId].cooldown);
+        if (AISpellInfoType const* info = GetAISpellInfo(spellId, me->GetMap()->GetDifficultyID()))
+            events.ScheduleEvent(spellId, info->cooldown + rand32() % info->cooldown);
     }
     else
         DoMeleeAttackIfReady();
@@ -114,8 +124,10 @@ void CasterAI::InitializeAI()
 
     m_attackDist = 30.0f;
     for (SpellVct::iterator itr = spells.begin(); itr != spells.end(); ++itr)
-        if (AISpellInfo[*itr].condition == AICOND_COMBAT && m_attackDist > GetAISpellInfo(*itr)->maxRange)
-            m_attackDist = GetAISpellInfo(*itr)->maxRange;
+        if (AISpellInfoType const* info = GetAISpellInfo(*itr, me->GetMap()->GetDifficultyID()))
+            if (info->condition == AICOND_COMBAT && m_attackDist > info->maxRange)
+                m_attackDist = info->maxRange;
+
     if (m_attackDist == 30.0f)
         m_attackDist = MELEE_RANGE;
 }
@@ -125,21 +137,24 @@ void CasterAI::EnterCombat(Unit* who)
     if (spells.empty())
         return;
 
-    uint32 spell = rand()%spells.size();
+    uint32 spell = rand32() % spells.size();
     uint32 count = 0;
     for (SpellVct::iterator itr = spells.begin(); itr != spells.end(); ++itr, ++count)
     {
-        if (AISpellInfo[*itr].condition == AICOND_AGGRO)
-            me->CastSpell(who, *itr, false);
-        else if (AISpellInfo[*itr].condition == AICOND_COMBAT)
+        if (AISpellInfoType const* info = GetAISpellInfo(*itr, me->GetMap()->GetDifficultyID()))
         {
-            uint32 cooldown = GetAISpellInfo(*itr)->realCooldown;
-            if (count == spell)
+            if (info->condition == AICOND_AGGRO)
+                me->CastSpell(who, *itr, false);
+            else if (info->condition == AICOND_COMBAT)
             {
-                DoCast(spells[spell]);
-                cooldown += me->GetCurrentSpellCastTime(*itr);
+                uint32 cooldown = info->realCooldown;
+                if (count == spell)
+                {
+                    DoCast(spells[spell]);
+                    cooldown += me->GetCurrentSpellCastTime(*itr);
+                }
+                events.ScheduleEvent(*itr, cooldown);
             }
-            events.ScheduleEvent(*itr, cooldown);
         }
     }
 }
@@ -151,7 +166,7 @@ void CasterAI::UpdateAI(uint32 diff)
 
     events.Update(diff);
 
-    if (me->GetVictim()->HasBreakableByDamageCrowdControlAura(me))
+    if (me->GetVictim() && me->EnsureVictim()->HasBreakableByDamageCrowdControlAura(me))
     {
         me->InterruptNonMeleeSpells(false);
         return;
@@ -164,7 +179,8 @@ void CasterAI::UpdateAI(uint32 diff)
     {
         DoCast(spellId);
         uint32 casttime = me->GetCurrentSpellCastTime(spellId);
-        events.ScheduleEvent(spellId, (casttime ? casttime : 500) + GetAISpellInfo(spellId)->realCooldown);
+        if (AISpellInfoType const* info = GetAISpellInfo(spellId, me->GetMap()->GetDifficultyID()))
+            events.ScheduleEvent(spellId, (casttime ? casttime : 500) + info->realCooldown);
     }
 }
 
@@ -177,7 +193,7 @@ ArcherAI::ArcherAI(Creature* c) : CreatureAI(c)
     if (!me->m_spells[0])
         TC_LOG_ERROR("misc", "ArcherAI set for creature (entry = %u) with spell1=0. AI will do nothing", me->GetEntry());
 
-    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(me->m_spells[0]);
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(me->m_spells[0], me->GetMap()->GetDifficultyID());
     m_minRange = spellInfo ? spellInfo->GetMinRange(false) : 0;
 
     if (!m_minRange)
@@ -226,7 +242,7 @@ TurretAI::TurretAI(Creature* c) : CreatureAI(c)
     if (!me->m_spells[0])
         TC_LOG_ERROR("misc", "TurretAI set for creature (entry = %u) with spell1=0. AI will do nothing", me->GetEntry());
 
-    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(me->m_spells[0]);
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(me->m_spells[0], me->GetMap()->GetDifficultyID());
     m_minRange = spellInfo ? spellInfo->GetMinRange(false) : 0;
     me->m_CombatDistance = spellInfo ? spellInfo->GetMaxRange(false) : 0;
     me->m_SightDistance = me->m_CombatDistance;
@@ -259,7 +275,7 @@ void TurretAI::UpdateAI(uint32 /*diff*/)
 // VehicleAI
 //////////////
 
-VehicleAI::VehicleAI(Creature* creature) : CreatureAI(creature), m_ConditionsTimer(VEHICLE_CONDITION_CHECK_TIME)
+VehicleAI::VehicleAI(Creature* creature) : CreatureAI(creature), m_HasConditions(false), m_ConditionsTimer(VEHICLE_CONDITION_CHECK_TIME)
 {
     LoadConditions();
     m_DoDismiss = false;
@@ -285,7 +301,7 @@ void VehicleAI::UpdateAI(uint32 diff)
 
 void VehicleAI::OnCharmed(bool apply)
 {
-    if (!me->GetVehicleKit()->IsVehicleInUse() && !apply && !conditions.empty()) // was used and has conditions
+    if (!me->GetVehicleKit()->IsVehicleInUse() && !apply && m_HasConditions) // was used and has conditions
     {
         m_DoDismiss = true; // needs reset
     }
@@ -297,33 +313,42 @@ void VehicleAI::OnCharmed(bool apply)
 
 void VehicleAI::LoadConditions()
 {
-    conditions = sConditionMgr->GetConditionsForNotGroupedEntry(CONDITION_SOURCE_TYPE_CREATURE_TEMPLATE_VEHICLE, me->GetEntry());
-    if (!conditions.empty())
-        TC_LOG_DEBUG("condition", "VehicleAI::LoadConditions: loaded %u conditions", uint32(conditions.size()));
+    m_HasConditions = sConditionMgr->HasConditionsForNotGroupedEntry(CONDITION_SOURCE_TYPE_CREATURE_TEMPLATE_VEHICLE, me->GetEntry());
 }
 
 void VehicleAI::CheckConditions(uint32 diff)
 {
-    if (m_ConditionsTimer < diff)
+    if (!m_HasConditions)
+        return;
+
+    if (m_ConditionsTimer <= diff)
     {
-        if (!conditions.empty())
+        if (Vehicle * vehicleKit = me->GetVehicleKit())
         {
-            if (Vehicle* vehicleKit = me->GetVehicleKit())
-                for (SeatMap::iterator itr = vehicleKit->Seats.begin(); itr != vehicleKit->Seats.end(); ++itr)
-                    if (Unit* passenger = ObjectAccessor::GetUnit(*me, itr->second.Passenger.Guid))
+            for (SeatMap::iterator itr = vehicleKit->Seats.begin(); itr != vehicleKit->Seats.end(); ++itr)
+                if (Unit * passenger = ObjectAccessor::GetUnit(*me, itr->second.Passenger.Guid))
+                {
+                    if (Player * player = passenger->ToPlayer())
                     {
-                        if (Player* player = passenger->ToPlayer())
+                        if (!sConditionMgr->IsObjectMeetingNotGroupedConditions(CONDITION_SOURCE_TYPE_CREATURE_TEMPLATE_VEHICLE, me->GetEntry(), player, me))
                         {
-                            if (!sConditionMgr->IsObjectMeetToConditions(player, me, conditions))
-                            {
-                                player->ExitVehicle();
-                                return; // check other pessanger in next tick
-                            }
+                            player->ExitVehicle();
+                            return; // check other pessanger in next tick
                         }
                     }
+                }
         }
+
         m_ConditionsTimer = VEHICLE_CONDITION_CHECK_TIME;
     }
     else
         m_ConditionsTimer -= diff;
+}
+
+int32 VehicleAI::Permissible(Creature const* creature)
+{
+    if (creature->IsVehicle())
+        return PERMIT_BASE_SPECIAL;
+
+    return PERMIT_BASE_NO;
 }

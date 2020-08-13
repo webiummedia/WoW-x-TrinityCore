@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,8 +23,8 @@ SDCategory: Hellfire Citadel, Hellfire Ramparts
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "hellfire_ramparts.h"
+#include "ScriptedCreature.h"
 
 enum Says
 {
@@ -40,7 +39,6 @@ enum Says
 enum Spells
 {
     SPELL_MORTAL_WOUND     = 30641,
-    H_SPELL_MORTAL_WOUND   = 36814,
     SPELL_SURGE            = 34645,
     SPELL_RETALIATION      = 22857
 };
@@ -59,17 +57,25 @@ class boss_watchkeeper_gargolmar : public CreatureScript
 
         struct boss_watchkeeper_gargolmarAI : public BossAI
         {
-            boss_watchkeeper_gargolmarAI(Creature* creature) : BossAI(creature, DATA_WATCHKEEPER_GARGOLMAR) { }
-
-            void Reset() OVERRIDE
+            boss_watchkeeper_gargolmarAI(Creature* creature) : BossAI(creature, DATA_WATCHKEEPER_GARGOLMAR)
             {
-                hasTaunted    = false;
+                Initialize();
+            }
+
+            void Initialize()
+            {
+                hasTaunted = false;
                 yelledForHeal = false;
-                retaliation   = false;
+                retaliation = false;
+            }
+
+            void Reset() override
+            {
+                Initialize();
                 _Reset();
             }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 Talk(SAY_AGGRO);
                 events.ScheduleEvent(EVENT_MORTAL_WOUND, 5000);
@@ -77,8 +83,7 @@ class boss_watchkeeper_gargolmar : public CreatureScript
                 _EnterCombat();
             }
 
-            void MoveInLineOfSight(Unit* who) OVERRIDE
-
+            void MoveInLineOfSight(Unit* who) override
             {
                 if (!me->GetVictim() && me->CanCreatureAttack(who))
                 {
@@ -99,18 +104,18 @@ class boss_watchkeeper_gargolmar : public CreatureScript
                 }
             }
 
-            void KilledUnit(Unit* /*victim*/) OVERRIDE
+            void KilledUnit(Unit* /*victim*/) override
             {
                 Talk(SAY_KILL);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 Talk(SAY_DIE);
                 _JustDied();
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -167,9 +172,9 @@ class boss_watchkeeper_gargolmar : public CreatureScript
                 bool retaliation;
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_watchkeeper_gargolmarAI(creature);
+            return GetHellfireRampartsAI<boss_watchkeeper_gargolmarAI>(creature);
         }
 };
 
@@ -177,4 +182,3 @@ void AddSC_boss_watchkeeper_gargolmar()
 {
     new boss_watchkeeper_gargolmar();
 }
-

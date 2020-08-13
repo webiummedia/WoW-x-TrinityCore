@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -42,7 +41,7 @@ void WaypointMgr::Load()
     uint32 oldMSTime = getMSTime();
 
     //                                                0    1         2           3          4            5           6        7      8           9
-    QueryResult result = WorldDatabase.Query("SELECT id, point, position_x, position_y, position_z, orientation, move_flag, delay, action, action_chance FROM waypoint_data ORDER BY id, point");
+    QueryResult result = WorldDatabase.Query("SELECT id, point, position_x, position_y, position_z, orientation, move_type, delay, action, action_chance FROM waypoint_data ORDER BY id, point");
 
     if (!result)
     {
@@ -73,7 +72,15 @@ void WaypointMgr::Load()
         wp->y = y;
         wp->z = z;
         wp->orientation = o;
-        wp->run = fields[6].GetBool();
+        wp->move_type = fields[6].GetUInt32();
+
+        if (wp->move_type >= WAYPOINT_MOVE_TYPE_MAX)
+        {
+            TC_LOG_ERROR("sql.sql", "Waypoint %u in waypoint_data has invalid move_type, ignoring", wp->id);
+            delete wp;
+            continue;
+        }
+
         wp->delay = fields[7].GetUInt32();
         wp->event_id = fields[8].GetUInt32();
         wp->event_chance = fields[9].GetInt16();
@@ -84,6 +91,12 @@ void WaypointMgr::Load()
     while (result->NextRow());
 
     TC_LOG_INFO("server.loading", ">> Loaded %u waypoints in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
+}
+
+WaypointMgr* WaypointMgr::instance()
+{
+    static WaypointMgr instance;
+    return &instance;
 }
 
 void WaypointMgr::ReloadPath(uint32 id)
@@ -97,7 +110,7 @@ void WaypointMgr::ReloadPath(uint32 id)
         _waypointStore.erase(itr);
     }
 
-    PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_WAYPOINT_DATA_BY_ID);
+    WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_WAYPOINT_DATA_BY_ID);
 
     stmt->setUInt32(0, id);
 
@@ -126,7 +139,15 @@ void WaypointMgr::ReloadPath(uint32 id)
         wp->y = y;
         wp->z = z;
         wp->orientation = o;
-        wp->run = fields[5].GetBool();
+        wp->move_type = fields[5].GetUInt32();
+
+        if (wp->move_type >= WAYPOINT_MOVE_TYPE_MAX)
+        {
+            TC_LOG_ERROR("sql.sql", "Waypoint %u in waypoint_data has invalid move_type, ignoring", wp->id);
+            delete wp;
+            continue;
+        }
+
         wp->delay = fields[6].GetUInt32();
         wp->event_id = fields[7].GetUInt32();
         wp->event_chance = fields[8].GetUInt8();

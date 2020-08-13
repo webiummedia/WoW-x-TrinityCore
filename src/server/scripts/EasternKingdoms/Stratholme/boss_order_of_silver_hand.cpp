@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,9 +23,10 @@ SDCategory: Stratholme
 EndScriptData */
 
 #include "ScriptMgr.h"
+#include "InstanceScript.h"
+#include "Player.h"
 #include "ScriptedCreature.h"
 #include "stratholme.h"
-#include "Player.h"
 
 /*#####
 # Additional:
@@ -56,16 +56,23 @@ class boss_silver_hand_bosses : public CreatureScript
 public:
     boss_silver_hand_bosses() : CreatureScript("boss_silver_hand_bosses") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<boss_silver_hand_bossesAI>(creature);
+        return GetStratholmeAI<boss_silver_hand_bossesAI>(creature);
     }
 
     struct boss_silver_hand_bossesAI : public ScriptedAI
     {
         boss_silver_hand_bossesAI(Creature* creature) : ScriptedAI(creature)
         {
+            Initialize();
             instance = creature->GetInstanceScript();
+        }
+
+        void Initialize()
+        {
+            HolyLight_Timer = 20000;
+            DivineShield_Timer = 20000;
         }
 
         InstanceScript* instance;
@@ -73,10 +80,9 @@ public:
         uint32 HolyLight_Timer;
         uint32 DivineShield_Timer;
 
-        void Reset() OVERRIDE
+        void Reset() override
         {
-            HolyLight_Timer = 20000;
-            DivineShield_Timer = 20000;
+            Initialize();
 
             switch (me->GetEntry())
             {
@@ -98,11 +104,11 @@ public:
             }
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
         }
 
-        void JustDied(Unit* killer) OVERRIDE
+        void JustDied(Unit* killer) override
         {
             switch (me->GetEntry())
             {
@@ -126,11 +132,11 @@ public:
             if (instance->GetData(TYPE_SH_QUEST))
             {
                 if (Player* player = killer->ToPlayer())
-                    player->KilledMonsterCredit(SH_QUEST_CREDIT, 0);
+                    player->KilledMonsterCredit(SH_QUEST_CREDIT);
             }
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             //Return since we have no target
             if (!UpdateVictim())

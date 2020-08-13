@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,9 +21,9 @@
 #include "PathCommon.h"
 #include "WorldModel.h"
 
-#include "G3D/Array.h"
-#include "G3D/Vector3.h"
-#include "G3D/Matrix3.h"
+#include <G3D/Array.h>
+#include <G3D/Vector3.h>
+#include <G3D/Matrix3.h>
 
 namespace MMAP
 {
@@ -51,7 +50,7 @@ namespace MMAP
     static const float GRID_PART_SIZE = GRID_SIZE/V8_SIZE;
 
     // see contrib/extractor/system.cpp, CONF_use_minHeight
-    static const float INVALID_MAP_LIQ_HEIGHT = -500.f;
+    static const float INVALID_MAP_LIQ_HEIGHT = -2000.f;
     static const float INVALID_MAP_LIQ_HEIGHT_MAX = 5000.0f;
 
     // see following files:
@@ -114,7 +113,7 @@ namespace MMAP
             void getHeightTriangle(int square, Spot triangle, int* indices, bool liquid = false);
 
             /// Determines if the specific position's triangles should be rendered
-            bool isHole(int square, const uint16 holes[16][16]);
+            bool isHole(int square, uint8 const holes[16][16][8]);
 
             /// Get the liquid vector coordinate for a specific position
             void getLiquidCoord(int index, int index2, float xOffset, float yOffset, float* coord, float* v);
@@ -129,4 +128,3 @@ namespace MMAP
 }
 
 #endif
-

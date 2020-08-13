@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,18 +23,19 @@ SDCategory: Dragonblight
 EndScriptData */
 
 /* ContentData
-npc_alexstrasza_wr_gate
 EndContentData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
-#include "ScriptedGossip.h"
-#include "SpellScript.h"
-#include "SpellAuraEffects.h"
-#include "ScriptedEscortAI.h"
-#include "Vehicle.h"
 #include "CombatAI.h"
+#include "MotionMaster.h"
+#include "ObjectAccessor.h"
+#include "ObjectMgr.h"
 #include "Player.h"
+#include "ScriptedEscortAI.h"
+#include "ScriptedGossip.h"
+#include "SpellAuraEffects.h"
+#include "SpellScript.h"
+#include "Vehicle.h"
 
 /*#####
 # npc_commander_eligor_dawnbringer
@@ -155,49 +155,48 @@ class npc_commander_eligor_dawnbringer : public CreatureScript
                 talkWing = 0;
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 talkWing = 0;
-                memset(audienceList, 0, sizeof(audienceList));
-                memset(imageList, 0, sizeof(imageList));
+                for (ObjectGuid& guid : audienceList)
+                    guid.Clear();
+
+                for (ObjectGuid& guid : imageList)
+                    guid.Clear();
+
                 _events.ScheduleEvent(EVENT_GET_TARGETS, 5000);
                 _events.ScheduleEvent(EVENT_START_RANDOM, 20000);
             }
 
-            void MovementInform(uint32 type, uint32 id) OVERRIDE
+            void MovementInform(uint32 type, uint32 id) override
             {
                 if (type == POINT_MOTION_TYPE)
                 {
                     if (id == 1)
                     {
-                        me->SetFacingTo(PosTalkLocations[talkWing].m_orientation);
+                        me->SetFacingTo(PosTalkLocations[talkWing].GetOrientation());
                         TurnAudience();
 
                         switch (talkWing)
                         {
-                        case 0: // Pinnacle of Naxxramas
-                            {
-                                switch (urand (0, 1))
+                            case 0: // Pinnacle of Naxxramas
+                                switch (urand(0, 1))
                                 {
                                     case 0: ChangeImage(NPC_IMAGE_OF_KELTHUZAD, MODEL_IMAGE_OF_KELTHUZAD, SAY_KELTHUZAD_1);
-                                            _events.ScheduleEvent(EVENT_KELTHUZAD_2, 8000); break;
+                                        _events.ScheduleEvent(EVENT_KELTHUZAD_2, 8000); break;
                                     case 1: ChangeImage(NPC_IMAGE_OF_SAPPHIRON, MODEL_IMAGE_OF_SAPPHIRON, SAY_SAPPHIRON); break;
                                 }
-                            }
-                            break;
-                        case 1: // Death knight wing of Naxxramas
-                            {
-                                switch (urand (0, 2))
+                                break;
+                            case 1: // Death knight wing of Naxxramas
+                                switch (urand(0, 2))
                                 {
                                     case 0: ChangeImage(NPC_IMAGE_OF_RAZUVIOUS, MODEL_IMAGE_OF_RAZUVIOUS, SAY_RAZUVIOUS); break;
                                     case 1: ChangeImage(NPC_IMAGE_OF_GOTHIK, MODEL_IMAGE_OF_GOTHIK, SAY_GOTHIK); break;
                                     case 2: ChangeImage(NPC_IMAGE_OF_THANE, MODEL_IMAGE_OF_THANE, SAY_DEATH_KNIGHTS_1);
-                                            _events.ScheduleEvent(EVENT_DEATH_KNIGHTS_2, 10000); break;
+                                        _events.ScheduleEvent(EVENT_DEATH_KNIGHTS_2, 10000); break;
                                 }
-                            }
-                            break;
-                        case 2: // Blighted abomination wing of Naxxramas
-                            {
+                                break;
+                            case 2: // Blighted abomination wing of Naxxramas
                                 switch (urand (0, 3))
                                 {
                                     case 0: ChangeImage(NPC_IMAGE_OF_PATCHWERK, MODEL_IMAGE_OF_PATCHWERK, SAY_PATCHWERK); break;
@@ -205,20 +204,16 @@ class npc_commander_eligor_dawnbringer : public CreatureScript
                                     case 2: ChangeImage(NPC_IMAGE_OF_THADDIUS, MODEL_IMAGE_OF_THADDIUS, SAY_THADDIUS); break;
                                     case 3: ChangeImage(NPC_IMAGE_OF_GLUTH, MODEL_IMAGE_OF_GLUTH, SAY_GLUTH); break;
                                 }
-                            }
-                            break;
-                        case 3: // Accursed spider wing of Naxxramas
-                            {
+                                break;
+                            case 3: // Accursed spider wing of Naxxramas
                                 switch (urand (0, 2))
                                 {
                                     case 0: ChangeImage(NPC_IMAGE_OF_ANUBREKHAN, MODEL_IMAGE_OF_ANUBREKHAN, SAY_ANUBREKHAN); break;
                                     case 1: ChangeImage(NPC_IMAGE_OF_FAERLINA, MODEL_IMAGE_OF_FAERLINA, SAY_FAERLINA); break;
                                     case 2: ChangeImage(NPC_IMAGE_OF_MAEXXNA, MODEL_IMAGE_OF_MAEXXNA, SAY_MAEXXNA); break;
                                 }
-                            }
-                            break;
-                        case 4: // Dread plague wing of Naxxramas
-                            {
+                                break;
+                            case 4: // Dread plague wing of Naxxramas
                                 switch (urand (0, 2))
                                 {
                                     case 0: ChangeImage(NPC_IMAGE_OF_NOTH, MODEL_IMAGE_OF_NOTH, SAY_NOTH); break;
@@ -226,11 +221,10 @@ class npc_commander_eligor_dawnbringer : public CreatureScript
                                             _events.ScheduleEvent(EVENT_HEIGAN_2, 8000); break;
                                     case 2: ChangeImage(NPC_IMAGE_OF_LOATHEB, MODEL_IMAGE_OF_LOATHEB, SAY_LOATHEB); break;
                                 }
-                            }
-                            break;
-                        case 5: // Home
-                            _events.ScheduleEvent(EVENT_START_RANDOM, 30000);
-                            break;
+                                break;
+                            case 5: // Home
+                                _events.ScheduleEvent(EVENT_START_RANDOM, 30000);
+                                break;
                         }
                     }
                 }
@@ -246,13 +240,10 @@ class npc_commander_eligor_dawnbringer : public CreatureScript
                 {
                     std::list<Creature*> creatureList;
                     GetCreatureListWithEntryInGrid(creatureList, me, AudienceMobs[ii], 15.0f);
-                    for (std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                    for (Creature* creature : creatureList)
                     {
-                        if (Creature* creatureList = *itr)
-                        {
-                            audienceList[creaturecount] = creatureList->GetGUID();
-                            ++creaturecount;
-                        }
+                        audienceList[creaturecount] = creature->GetGUID();
+                        ++creaturecount;
                     }
                 }
 
@@ -289,7 +280,7 @@ class npc_commander_eligor_dawnbringer : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                _events.Update(diff);
 
@@ -354,12 +345,12 @@ class npc_commander_eligor_dawnbringer : public CreatureScript
             }
             private:
                 EventMap _events;
-                uint64   audienceList[10];
-                uint64   imageList[5];
+                ObjectGuid audienceList[10];
+                ObjectGuid imageList[5];
                 uint8    talkWing;
         };
 
-        CreatureAI* GetAI(Creature* creature) const
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return new npc_commander_eligor_dawnbringerAI(creature);
         }
@@ -375,38 +366,6 @@ enum AlexstraszaWrGate
     MOVIE_ID_GATES          = 14
 };
 
-#define GOSSIP_ITEM_WHAT_HAPPENED   "Alexstrasza, can you show me what happened here?"
-
-class npc_alexstrasza_wr_gate : public CreatureScript
-{
-public:
-    npc_alexstrasza_wr_gate() : CreatureScript("npc_alexstrasza_wr_gate") { }
-
-    bool OnGossipHello(Player* player, Creature* creature) OVERRIDE
-    {
-        if (creature->IsQuestGiver())
-            player->PrepareQuestMenu(creature->GetGUID());
-
-        if (player->GetQuestRewardStatus(QUEST_RETURN_TO_AG_A) || player->GetQuestRewardStatus(QUEST_RETURN_TO_AG_H))
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_WHAT_HAPPENED, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-
-        player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
-        return true;
-    }
-
-    bool OnGossipSelect(Player* player, Creature* /*creature*/, uint32 /*sender*/, uint32 action) OVERRIDE
-    {
-        player->PlayerTalkClass->ClearMenus();
-        if (action == GOSSIP_ACTION_INFO_DEF+1)
-        {
-            player->CLOSE_GOSSIP_MENU();
-            player->SendMovieStart(MOVIE_ID_GATES);
-        }
-
-        return true;
-    }
-};
-
 /*######
 ## Quest Strengthen the Ancients (12096|12092)
 ######*/
@@ -420,9 +379,7 @@ enum StrengthenAncientsMisc
     SPELL_CREATE_ITEM_BARK      = 47550,
     SPELL_CONFUSED              = 47044,
 
-    NPC_LOTHALOR                = 26321,
-
-    FACTION_WALKER_ENEMY        = 14,
+    NPC_LOTHALOR                = 26321
 };
 
 class spell_q12096_q12092_dummy : public SpellScriptLoader // Strengthen the Ancients: On Interact Dummy to Woodlands Walker
@@ -436,7 +393,7 @@ public:
 
         void HandleDummy(SpellEffIndex /*effIndex*/)
         {
-            uint32 roll = rand() % 2;
+            uint32 roll = rand32() % 2;
 
             Creature* tree = GetHitCreature();
             Player* player = GetCaster()->ToPlayer();
@@ -444,7 +401,7 @@ public:
             if (!tree || !player)
                 return;
 
-            tree->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+            tree->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
 
             if (roll == 1) // friendly version
             {
@@ -455,18 +412,18 @@ public:
             else if (roll == 0) // enemy version
             {
                 tree->AI()->Talk(SAY_WALKER_ENEMY, player);
-                tree->setFaction(FACTION_WALKER_ENEMY);
+                tree->SetFaction(FACTION_MONSTER);
                 tree->Attack(player, true);
             }
         }
 
-        void Register() OVERRIDE
+        void Register() override
         {
             OnEffectHitTarget += SpellEffectFn(spell_q12096_q12092_dummy_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
         }
     };
 
-    SpellScript* GetSpellScript() const OVERRIDE
+    SpellScript* GetSpellScript() const override
     {
         return new spell_q12096_q12092_dummy_SpellScript();
     }
@@ -492,13 +449,13 @@ public:
             lothalor->DespawnOrUnsummon(4000);
         }
 
-        void Register() OVERRIDE
+        void Register() override
         {
             OnEffectHitTarget += SpellEffectFn(spell_q12096_q12092_bark_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
         }
     };
 
-    SpellScript* GetSpellScript() const OVERRIDE
+    SpellScript* GetSpellScript() const override
     {
         return new spell_q12096_q12092_bark_SpellScript();
     }
@@ -535,43 +492,14 @@ class npc_wyrmrest_defender : public CreatureScript
     public:
         npc_wyrmrest_defender() : CreatureScript("npc_wyrmrest_defender") { }
 
-        bool OnGossipHello(Player* player, Creature* creature) OVERRIDE
-        {
-            if (player->GetQuestStatus(QUEST_DEFENDING_WYRMREST_TEMPLE) == QUEST_STATUS_INCOMPLETE)
-            {
-                player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-                player->SEND_GOSSIP_MENU(GOSSIP_TEXTID_DEF1, creature->GetGUID());
-            }
-            else
-                player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
-
-            return true;
-        }
-
-        bool OnGossipSelect(Player* player, Creature* creature, uint32 /*sender*/, uint32 action) OVERRIDE
-        {
-            player->PlayerTalkClass->ClearMenus();
-            if (action == GOSSIP_ACTION_INFO_DEF+1)
-            {
-                player->SEND_GOSSIP_MENU(GOSSIP_TEXTID_DEF2, creature->GetGUID());
-                // Makes player cast trigger spell for 49207 on self
-                player->CastSpell(player, SPELL_CHARACTER_SCRIPT, true);
-                // The gossip should not auto close
-            }
-
-            return true;
-        }
-
         struct npc_wyrmrest_defenderAI : public VehicleAI
         {
-            npc_wyrmrest_defenderAI(Creature* creature) : VehicleAI(creature) { }
+            npc_wyrmrest_defenderAI(Creature* creature) : VehicleAI(creature)
+            {
+                Initialize();
+            }
 
-            bool hpWarningReady;
-            bool renewRecoveryCanCheck;
-
-            uint32 RenewRecoveryChecker;
-
-            void Reset() OVERRIDE
+            void Initialize()
             {
                 hpWarningReady = true;
                 renewRecoveryCanCheck = false;
@@ -579,8 +507,20 @@ class npc_wyrmrest_defender : public CreatureScript
                 RenewRecoveryChecker = 0;
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            bool hpWarningReady;
+            bool renewRecoveryCanCheck;
+
+            uint32 RenewRecoveryChecker;
+
+            void Reset() override
             {
+                Initialize();
+            }
+
+            void UpdateAI(uint32 diff) override
+            {
+                VehicleAI::UpdateAI(diff);
+
                 // Check system for Health Warning should happen first time whenever get under 30%,
                 // after it should be able to happen only after recovery of last renew is fully done (20 sec),
                 // next one used won't interfere
@@ -597,18 +537,19 @@ class npc_wyrmrest_defender : public CreatureScript
                         renewRecoveryCanCheck = false;
                         hpWarningReady = true;
                     }
-                    else RenewRecoveryChecker -= diff;
+                    else
+                        RenewRecoveryChecker -= diff;
                 }
             }
 
-            void SpellHit(Unit* /*caster*/, SpellInfo const* spell) OVERRIDE
+            void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
             {
                 switch (spell->Id)
                 {
                     case SPELL_WYRMREST_DEFENDER_MOUNT:
                         Talk(WHISPER_MOUNTED, me->GetCharmerOrOwner());
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC);
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE);
+                        me->RemoveUnitFlag(UnitFlags(UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_IMMUNE_TO_NPC));
+                        me->AddUnitFlag(UNIT_FLAG_PVP_ATTACKABLE);
                         break;
                     // Both below are for checking low hp warning
                     case SPELL_DEFENDER_ON_LOW_HEALTH_EMOTE:
@@ -616,16 +557,43 @@ class npc_wyrmrest_defender : public CreatureScript
                         break;
                     case SPELL_RENEW:
                         if (!hpWarningReady && RenewRecoveryChecker <= 100)
-                        {
                             RenewRecoveryChecker = 20000;
-                        }
+
                         renewRecoveryCanCheck = true;
                         break;
                 }
             }
+
+            bool GossipHello(Player* player) override
+            {
+                if (player->GetQuestStatus(QUEST_DEFENDING_WYRMREST_TEMPLE) == QUEST_STATUS_INCOMPLETE)
+                {
+                    AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+                    SendGossipMenuFor(player, GOSSIP_TEXTID_DEF1, me->GetGUID());
+                }
+                else
+                    SendGossipMenuFor(player, player->GetGossipTextId(me), me->GetGUID());
+
+                return true;
+            }
+
+            bool GossipSelect(Player* player, uint32 /*menuId*/, uint32 gossipListId) override
+            {
+                uint32 const action = player->PlayerTalkClass->GetGossipOptionAction(gossipListId);
+                ClearGossipMenuFor(player);
+                if (action == GOSSIP_ACTION_INFO_DEF + 1)
+                {
+                    SendGossipMenuFor(player, GOSSIP_TEXTID_DEF2, me->GetGUID());
+                    // Makes player cast trigger spell for 49207 on self
+                    player->CastSpell(player, SPELL_CHARACTER_SCRIPT, true);
+                    // The gossip should not auto close
+                }
+
+                return true;
+            }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return new npc_wyrmrest_defenderAI(creature);
         }
@@ -654,16 +622,16 @@ class npc_torturer_lecraft : public CreatureScript
         {
             npc_torturer_lecraftAI(Creature* creature) : ScriptedAI(creature)
             {
-                _playerGUID = 0;
+                _textCounter = 1;
             }
 
-            void Reset() OVERRIDE
+            void Reset() override
             {
                 _textCounter = 1;
-                _playerGUID  = 0;
+                _playerGUID.Clear();
             }
 
-            void EnterCombat(Unit* who) OVERRIDE
+            void EnterCombat(Unit* who) override
             {
                 _events.ScheduleEvent(EVENT_HEMORRHAGE, urand(5000, 8000));
                 _events.ScheduleEvent(EVENT_KIDNEY_SHOT, urand(12000, 15000));
@@ -672,7 +640,7 @@ class npc_torturer_lecraft : public CreatureScript
                     Talk (SAY_AGGRO, player);
             }
 
-            void SpellHit(Unit* caster, const SpellInfo* spell) OVERRIDE
+            void SpellHit(Unit* caster, const SpellInfo* spell) override
             {
                 if (spell->Id != SPELL_HIGH_EXECUTORS_BRANDING_IRON)
                     return;
@@ -688,7 +656,7 @@ class npc_torturer_lecraft : public CreatureScript
                     Talk(_textCounter, player);
 
                     if (_textCounter == 5)
-                        player->KilledMonsterCredit(NPC_TORTURER_LECRAFT, 0);
+                        player->KilledMonsterCredit(NPC_TORTURER_LECRAFT);
 
                     ++_textCounter;
 
@@ -697,7 +665,7 @@ class npc_torturer_lecraft : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                if (!UpdateVictim())
                    return;
@@ -725,21 +693,46 @@ class npc_torturer_lecraft : public CreatureScript
             private:
                 EventMap _events;
                 uint8    _textCounter;
-                uint64   _playerGUID;
+                ObjectGuid _playerGUID;
         };
 
-        CreatureAI* GetAI(Creature* creature) const
+        CreatureAI* GetAI(Creature* creature) const override
         {
             return new npc_torturer_lecraftAI(creature);
         }
 };
 
+enum MessengerTorvus
+{
+    NPC_MESSENGER_TORVUS        = 26649,
+    QUEST_MESSAGE_FROM_THE_WEST = 12033,
+
+    TALK_0 = 0
+};
+
+class at_nearby_messenger_torvus : public AreaTriggerScript
+{
+public:
+    at_nearby_messenger_torvus() : AreaTriggerScript("at_nearby_messenger_torvus") { }
+
+    bool OnTrigger(Player* player, const AreaTriggerEntry* /*at*/, bool entered) override
+    {
+        if (player->IsAlive() && entered)
+            if (Quest const* quest = sObjectMgr->GetQuestTemplate(QUEST_MESSAGE_FROM_THE_WEST))
+                if (player->CanTakeQuest(quest, false))
+                    if (Creature* creature = player->FindNearestCreature(NPC_MESSENGER_TORVUS, 50.0f, true))
+                        creature->AI()->Talk(TALK_0, player);
+
+        return true;
+    }
+};
+
 void AddSC_dragonblight()
 {
     new npc_commander_eligor_dawnbringer();
-    new npc_alexstrasza_wr_gate();
     new spell_q12096_q12092_dummy();
     new spell_q12096_q12092_bark();
     new npc_wyrmrest_defender();
     new npc_torturer_lecraft();
+    new at_nearby_messenger_torvus();
 }

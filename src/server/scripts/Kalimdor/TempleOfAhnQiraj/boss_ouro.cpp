@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -41,26 +40,19 @@ class boss_ouro : public CreatureScript
 public:
     boss_ouro() : CreatureScript("boss_ouro") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return new boss_ouroAI(creature);
+        return GetAQ40AI<boss_ouroAI>(creature);
     }
 
     struct boss_ouroAI : public ScriptedAI
     {
-        boss_ouroAI(Creature* creature) : ScriptedAI(creature) { }
+        boss_ouroAI(Creature* creature) : ScriptedAI(creature)
+        {
+            Initialize();
+        }
 
-        uint32 Sweep_Timer;
-        uint32 SandBlast_Timer;
-        uint32 Submerge_Timer;
-        uint32 Back_Timer;
-        uint32 ChangeTarget_Timer;
-        uint32 Spawn_Timer;
-
-        bool Enrage;
-        bool Submerged;
-
-        void Reset() OVERRIDE
+        void Initialize()
         {
             Sweep_Timer = urand(5000, 10000);
             SandBlast_Timer = urand(20000, 35000);
@@ -73,12 +65,27 @@ public:
             Submerged = false;
         }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        uint32 Sweep_Timer;
+        uint32 SandBlast_Timer;
+        uint32 Submerge_Timer;
+        uint32 Back_Timer;
+        uint32 ChangeTarget_Timer;
+        uint32 Spawn_Timer;
+
+        bool Enrage;
+        bool Submerged;
+
+        void Reset() override
+        {
+            Initialize();
+        }
+
+        void EnterCombat(Unit* /*who*/) override
         {
             DoCastVictim(SPELL_BIRTH);
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             //Return since we have no target
             if (!UpdateVictim())
@@ -103,8 +110,8 @@ public:
             {
                 //Cast
                 me->HandleEmoteCommand(EMOTE_ONESHOT_SUBMERGE);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                me->setFaction(35);
+                me->AddUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFaction(FACTION_FRIENDLY);
                 DoCast(me, SPELL_DIRTMOUND_PASSIVE);
 
                 Submerged = true;
@@ -126,8 +133,8 @@ public:
             //Back_Timer
             if (Submerged && Back_Timer <= diff)
             {
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                me->setFaction(14);
+                me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFaction(FACTION_MONSTER);
 
                 DoCastVictim(SPELL_GROUND_RUPTURE);
 

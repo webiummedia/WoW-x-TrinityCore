@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -20,6 +19,7 @@
 #define TRINITYCORE_DYNAMICOBJECT_H
 
 #include "Object.h"
+#include "MapObject.h"
 
 class Unit;
 class Aura;
@@ -32,17 +32,26 @@ enum DynamicObjectType
     DYNAMIC_OBJECT_FARSIGHT_FOCUS   = 0x2
 };
 
-class DynamicObject : public WorldObject, public GridObject<DynamicObject>
+class TC_GAME_API DynamicObject : public WorldObject, public GridObject<DynamicObject>, public MapObject
 {
     public:
         DynamicObject(bool isWorldObject);
         ~DynamicObject();
 
-        void AddToWorld();
-        void RemoveFromWorld();
+    protected:
+        void BuildValuesCreate(ByteBuffer* data, Player const* target) const override;
+        void BuildValuesUpdate(ByteBuffer* data, Player const* target) const override;
+        void ClearUpdateMask(bool remove) override;
 
-        bool CreateDynamicObject(uint32 guidlow, Unit* caster, uint32 spellId, Position const& pos, float radius, DynamicObjectType type);
-        void Update(uint32 p_time);
+    public:
+        void BuildValuesUpdateForPlayerWithMask(UpdateData* data, UF::ObjectData::Mask const& requestedObjectMask,
+            UF::DynamicObjectData::Mask const& requestedDynamicObjectMask, Player const* target) const;
+
+        void AddToWorld() override;
+        void RemoveFromWorld() override;
+
+        bool CreateDynamicObject(ObjectGuid::LowType guidlow, Unit* caster, SpellInfo const* spell, Position const& pos, float radius, DynamicObjectType type, uint32 spellXSpellVisualId);
+        void Update(uint32 p_time) override;
         void Remove();
         void SetDuration(int32 newDuration);
         int32 GetDuration() const;
@@ -54,9 +63,12 @@ class DynamicObject : public WorldObject, public GridObject<DynamicObject>
         Unit* GetCaster() const { return _caster; }
         void BindToCaster();
         void UnbindFromCaster();
-        uint32 GetSpellId() const {  return GetUInt32Value(DYNAMICOBJECT_SPELLID); }
-        uint64 GetCasterGUID() const { return GetUInt64Value(DYNAMICOBJECT_CASTER); }
-        float GetRadius() const { return GetFloatValue(DYNAMICOBJECT_RADIUS); }
+        uint32 GetSpellId() const {  return m_dynamicObjectData->SpellID; }
+        SpellInfo const* GetSpellInfo() const;
+        ObjectGuid GetCasterGUID() const { return m_dynamicObjectData->Caster; }
+        float GetRadius() const { return m_dynamicObjectData->Radius; }
+
+        UF::UpdateField<UF::DynamicObjectData, 0, TYPEID_DYNAMICOBJECT> m_dynamicObjectData;
 
     protected:
         Aura* _aura;

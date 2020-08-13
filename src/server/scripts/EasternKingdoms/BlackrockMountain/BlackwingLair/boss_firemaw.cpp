@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -41,15 +40,10 @@ public:
 
     struct boss_firemawAI : public BossAI
     {
-        boss_firemawAI(Creature* creature) : BossAI(creature, BOSS_FIREMAW) { }
+        boss_firemawAI(Creature* creature) : BossAI(creature, DATA_FIREMAW) { }
 
-        void EnterCombat(Unit* /*who*/) OVERRIDE
+        void EnterCombat(Unit* /*who*/) override
         {
-            if (instance && instance->GetBossState(BOSS_BROODLORD) != DONE)
-            {
-                EnterEvadeMode();
-                return;
-            }
             _EnterCombat();
 
             events.ScheduleEvent(EVENT_SHADOWFLAME, urand(10000, 20000));
@@ -57,7 +51,7 @@ public:
             events.ScheduleEvent(EVENT_FLAMEBUFFET, 5000);
         }
 
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
@@ -77,8 +71,8 @@ public:
                         break;
                     case EVENT_WINGBUFFET:
                         DoCastVictim(SPELL_WINGBUFFET);
-                        if (DoGetThreat(me->GetVictim()))
-                            DoModifyThreatPercent(me->GetVictim(), -75);
+                        if (GetThreat(me->GetVictim()))
+                            ModifyThreatByPercent(me->GetVictim(), -75);
                         events.ScheduleEvent(EVENT_WINGBUFFET, 30000);
                         break;
                     case EVENT_FLAMEBUFFET:
@@ -86,15 +80,18 @@ public:
                         events.ScheduleEvent(EVENT_FLAMEBUFFET, 5000);
                         break;
                 }
+
+                if (me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
             }
 
             DoMeleeAttackIfReady();
         }
     };
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    CreatureAI* GetAI(Creature* creature) const override
     {
-        return GetInstanceAI<boss_firemawAI>(creature);
+        return GetBlackwingLairAI<boss_firemawAI>(creature);
     }
 };
 

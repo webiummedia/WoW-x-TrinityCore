@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,24 +18,20 @@
 #ifndef DEF_MAGISTERS_TERRACE_H
 #define DEF_MAGISTERS_TERRACE_H
 
-#define ERROR_INST_DATA      "TSCR Error: Instance Data not set properly for Magister's Terrace instance (map 585). Encounters will be buggy."
+#include "CreatureAIImpl.h"
 
-enum Data
+#define MGTScriptName "instance_magisters_terrace"
+#define DataHeader "MT"
+
+uint32 const EncounterCount = 4;
+
+enum MTDataTypes
 {
-    DATA_SELIN_EVENT,
-    DATA_VEXALLUS_EVENT,
-    DATA_DELRISSA_EVENT,
-    DATA_KAELTHAS_EVENT,
-
     DATA_SELIN,
-    DATA_FEL_CRYSTAL,
-    DATA_FEL_CRYSTAL_SIZE,
-
-    DATA_VEXALLUS_DOOR,
+    DATA_VEXALLUS,
     DATA_DELRISSA,
-    DATA_DELRISSA_DOOR,
+    DATA_KAELTHAS,
 
-    DATA_KAEL_DOOR,
     DATA_KAEL_STATUE_LEFT,
     DATA_KAEL_STATUE_RIGHT,
 
@@ -44,5 +39,47 @@ enum Data
     DATA_KAELTHAS_STATUES,
     DATA_ESCAPE_ORB
 };
+
+enum MTCreatureIds
+{
+    NPC_SELIN               = 24723,
+    NPC_DELRISSA            = 24560,
+    NPC_FEL_CRYSTAL         = 24722,
+    NPC_KALECGOS            = 24844,
+    NPC_HUMAN_KALECGOS      = 24848
+};
+
+enum MTGameObjectIds
+{
+    GO_VEXALLUS_DOOR        = 187896,
+    GO_SELIN_DOOR           = 187979,
+    GO_SELIN_ENCOUNTER_DOOR = 188065,
+    GO_DELRISSA_DOOR        = 187770,
+    GO_KAEL_DOOR            = 188064,
+    GO_KAEL_STATUE_1        = 188165,
+    GO_KAEL_STATUE_2        = 188166,
+    GO_ESCAPE_ORB           = 188173
+};
+
+enum MTInstanceEventIds
+{
+    EVENT_SPAWN_KALECGOS    = 16547
+};
+
+enum MTInstanceText
+{
+    SAY_KALECGOS_SPAWN      = 0
+};
+
+enum MTMovementData
+{
+    PATH_KALECGOS_FLIGHT    = 248440
+};
+
+template<typename AI>
+inline AI* GetMagistersTerraceAI(Creature* creature)
+{
+    return GetInstanceAI<AI>(creature, MGTScriptName);
+}
 
 #endif

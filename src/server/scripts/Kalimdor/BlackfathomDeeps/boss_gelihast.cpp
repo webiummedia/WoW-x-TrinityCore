@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -16,12 +16,17 @@
  */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "blackfathom_deeps.h"
+#include "ScriptedCreature.h"
 
 enum Spells
 {
-    SPELL_NET                                              = 6533
+    SPELL_NET         = 6533
+};
+
+enum Events
+{
+    EVENT_THROW_NET   = 1
 };
 
 class boss_gelihast : public CreatureScript
@@ -29,52 +34,40 @@ class boss_gelihast : public CreatureScript
 public:
     boss_gelihast() : CreatureScript("boss_gelihast") { }
 
-    CreatureAI* GetAI(Creature* creature) const OVERRIDE
+    struct boss_gelihastAI : public BossAI
     {
-        return GetInstanceAI<boss_gelihastAI>(creature);
-    }
+        boss_gelihastAI(Creature* creature) : BossAI(creature, DATA_GELIHAST) { }
 
-    struct boss_gelihastAI : public ScriptedAI
-    {
-        boss_gelihastAI(Creature* creature) : ScriptedAI(creature)
+        void EnterCombat(Unit* /*who*/) override
         {
-            instance = creature->GetInstanceScript();
+            _EnterCombat();
+            events.ScheduleEvent(EVENT_THROW_NET, urand(2000, 4000));
         }
 
-        uint32 netTimer;
-
-        InstanceScript* instance;
-
-        void Reset() OVERRIDE
-        {
-            netTimer = urand(2000, 4000);
-            instance->SetData(TYPE_GELIHAST, NOT_STARTED);
-        }
-
-        void EnterCombat(Unit* /*who*/) OVERRIDE
-        {
-            instance->SetData(TYPE_GELIHAST, IN_PROGRESS);
-        }
-
-        void JustDied(Unit* /*killer*/) OVERRIDE
-        {
-            instance->SetData(TYPE_GELIHAST, DONE);
-        }
-
-        void UpdateAI(uint32 diff) OVERRIDE
+        void UpdateAI(uint32 diff) override
         {
             if (!UpdateVictim())
                 return;
 
-            if (netTimer < diff)
+            events.Update(diff);
+
+            while (uint32 eventId = events.ExecuteEvent())
             {
-                DoCastVictim(SPELL_NET);
-                netTimer = urand(4000, 7000);
-            } else netTimer -= diff;
+                if (eventId == EVENT_THROW_NET)
+                {
+                    DoCastVictim(SPELL_NET);
+                    events.ScheduleEvent(EVENT_THROW_NET, urand(4000, 7000));
+                }
+            }
 
             DoMeleeAttackIfReady();
         }
     };
+
+    CreatureAI* GetAI(Creature* creature) const override
+    {
+        return GetBlackfathomDeepsAI<boss_gelihastAI>(creature);
+    }
 };
 
 void AddSC_boss_gelihast()

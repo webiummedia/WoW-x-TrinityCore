@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -21,11 +20,15 @@
 #include "WorldSession.h"
 #include "Log.h"
 #include "Database/DatabaseEnv.h"
-#include "Util.h"
 #include "WardenCheckMgr.h"
 #include "Warden.h"
+#include "World.h"
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
-WardenCheckMgr::WardenCheckMgr() { }
+WardenCheckMgr::WardenCheckMgr() : _checkStoreLock(new boost::shared_mutex())
+{
+}
 
 WardenCheckMgr::~WardenCheckMgr()
 {
@@ -34,6 +37,8 @@ WardenCheckMgr::~WardenCheckMgr()
 
     for (CheckResultContainer::iterator itr = CheckResultStore.begin(); itr != CheckResultStore.end(); ++itr)
         delete itr->second;
+
+    delete _checkStoreLock;
 }
 
 void WardenCheckMgr::LoadWardenChecks()
@@ -84,19 +89,7 @@ void WardenCheckMgr::LoadWardenChecks()
         wardenCheck->Action = WardenActions(sWorld->getIntConfig(CONFIG_WARDEN_CLIENT_FAIL_ACTION));
 
         if (checkType == PAGE_CHECK_A || checkType == PAGE_CHECK_B || checkType == DRIVER_CHECK)
-        {
             wardenCheck->Data.SetHexStr(data.c_str());
-            int len = data.size() / 2;
-
-            if (wardenCheck->Data.GetNumBytes() < len)
-            {
-                uint8 temp[24];
-                memset(temp, 0, len);
-                memcpy(temp, wardenCheck->Data.AsByteArray().get(), wardenCheck->Data.GetNumBytes());
-                std::reverse(temp, temp + len);
-                wardenCheck->Data.SetBinary((uint8*)temp, len);
-            }
-        }
 
         if (checkType == MEM_CHECK || checkType == MODULE_CHECK)
             MemChecksIdPool.push_back(id);
@@ -119,16 +112,6 @@ void WardenCheckMgr::LoadWardenChecks()
         {
             WardenCheckResult* wr = new WardenCheckResult();
             wr->Result.SetHexStr(checkResult.c_str());
-            int len = checkResult.size() / 2;
-            if (wr->Result.GetNumBytes() < len)
-            {
-                uint8 *temp = new uint8[len];
-                memset(temp, 0, len);
-                memcpy(temp, wr->Result.AsByteArray().get(), wr->Result.GetNumBytes());
-                std::reverse(temp, temp + len);
-                wr->Result.SetBinary((uint8*)temp, len);
-                delete [] temp;
-            }
             CheckResultStore[id] = wr;
         }
 
@@ -164,7 +147,7 @@ void WardenCheckMgr::LoadWardenOverrides()
 
     uint32 count = 0;
 
-    ACE_WRITE_GUARD(ACE_RW_Mutex, g, _checkStoreLock);
+    boost::unique_lock<boost::shared_mutex> lock(*sWardenCheckMgr->_checkStoreLock);
 
     do
     {
@@ -188,6 +171,12 @@ void WardenCheckMgr::LoadWardenOverrides()
     while (result->NextRow());
 
     TC_LOG_INFO("server.loading", ">> Loaded %u warden action overrides.", count);
+}
+
+WardenCheckMgr* WardenCheckMgr::instance()
+{
+    static WardenCheckMgr instance;
+    return &instance;
 }
 
 WardenCheck* WardenCheckMgr::GetWardenDataById(uint16 Id)

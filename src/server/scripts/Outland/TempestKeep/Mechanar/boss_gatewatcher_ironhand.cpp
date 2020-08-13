@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2008-2014 TrinityCore <http://www.trinitycore.org/>
- * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+ * This file is part of the TrinityCore Project. See AUTHORS file for Copyright information
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -24,8 +23,8 @@ SDCategory: Tempest Keep, The Mechanar
 EndScriptData */
 
 #include "ScriptMgr.h"
-#include "ScriptedCreature.h"
 #include "mechanar.h"
+#include "ScriptedCreature.h"
 
 enum Says
 {
@@ -48,9 +47,9 @@ enum Spells
 
 enum Events
 {
-    EVENT_STREAM_OF_MACHINE_FLUID   = 0,
-    EVENT_JACKHAMMER                = 1,
-    EVENT_SHADOW_POWER              = 2
+    EVENT_STREAM_OF_MACHINE_FLUID   = 1,
+    EVENT_JACKHAMMER                = 2,
+    EVENT_SHADOW_POWER              = 3
 };
 
 class boss_gatewatcher_iron_hand : public CreatureScript
@@ -62,7 +61,7 @@ class boss_gatewatcher_iron_hand : public CreatureScript
         {
             boss_gatewatcher_iron_handAI(Creature* creature) : BossAI(creature, DATA_GATEWATCHER_IRON_HAND) { }
 
-            void EnterCombat(Unit* /*who*/) OVERRIDE
+            void EnterCombat(Unit* /*who*/) override
             {
                 _EnterCombat();
                 events.ScheduleEvent(EVENT_STREAM_OF_MACHINE_FLUID, 55000);
@@ -71,19 +70,19 @@ class boss_gatewatcher_iron_hand : public CreatureScript
                 Talk(SAY_AGGRO);
             }
 
-            void KilledUnit(Unit* /*victim*/) OVERRIDE
+            void KilledUnit(Unit* /*victim*/) override
             {
                 if (roll_chance_i(50))
                     Talk(SAY_SLAY);
             }
 
-            void JustDied(Unit* /*killer*/) OVERRIDE
+            void JustDied(Unit* /*killer*/) override
             {
                 _JustDied();
                 Talk(SAY_DEATH);
             }
 
-            void UpdateAI(uint32 diff) OVERRIDE
+            void UpdateAI(uint32 diff) override
             {
                 if (!UpdateVictim())
                     return;
@@ -116,15 +115,18 @@ class boss_gatewatcher_iron_hand : public CreatureScript
                         default:
                             break;
                     }
+
+                    if (me->HasUnitState(UNIT_STATE_CASTING))
+                        return;
                 }
 
                 DoMeleeAttackIfReady();
             }
         };
 
-        CreatureAI* GetAI(Creature* creature) const OVERRIDE
+        CreatureAI* GetAI(Creature* creature) const override
         {
-            return new boss_gatewatcher_iron_handAI(creature);
+            return GetMechanarAI<boss_gatewatcher_iron_handAI>(creature);
         }
 };
 
@@ -132,4 +134,3 @@ void AddSC_boss_gatewatcher_iron_hand()
 {
     new boss_gatewatcher_iron_hand();
 }
-
